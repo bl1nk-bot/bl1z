@@ -24,7 +24,7 @@ exclude = [
 jiff = "0.2"
 
 [dev-dependencies]
-criterion = { version = "0.5", features = ["html_reports"] }
+criterion = { version = "0.8", features = ["html_reports"] }
 insta = "1.34"
 
 [[bench]]
