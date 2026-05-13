@@ -142,7 +142,7 @@ pub use value::Value;
 /// let tokens = tokenize("1 + 2 * 3").unwrap();
 /// assert_eq!(tokens.len(), 5); // 3 numbers, 2 operators, 1 EOF
 /// ```
-
+///
 /// Parses a sequence of tokens into an Abstract Syntax Tree (AST).
 ///
 /// The parser builds a tree structure representing the formula's syntax,
