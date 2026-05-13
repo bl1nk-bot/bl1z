@@ -202,7 +202,7 @@ mod tests {
         match result {
             Value::String(s) => {
                 // Basic check that it returns a string and looks like a timestamp
-                assert!(s.len() > 0);
+                assert!(!s.is_empty());
                 assert!(s.contains('T'));
             }
             _ => panic!("expected string"),
