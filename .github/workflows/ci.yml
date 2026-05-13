@@ -20,7 +20,7 @@ jobs:
         rust:
           - stable
           - beta
-          - 1.70.0  # MSRV (Minimum Supported Rust Version)
+          - 1.90.0  # MSRV (Minimum Supported Rust Version)
 
     steps:
       - name: Checkout repository
