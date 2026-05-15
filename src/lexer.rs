@@ -25,6 +25,7 @@ pub enum TokenKind {
     True,       // true
     False,      // false
     Null,       // null
+    Dot,        // .
     LBracket,   // [
     RBracket,   // ]
     LBrace,     // {
@@ -322,6 +323,12 @@ impl<'a> Lexer<'a> {
                 }
                 '"' => {
                     self.scan_string()?;
+                }
+                '.' => {
+                    let sl = self.line;
+                    let sc = self.col;
+                    self.advance();
+                    self.push_token(TokenKind::Dot, ".".to_string(), sl, sc);
                 }
                 '[' => {
                     let sl = self.line;

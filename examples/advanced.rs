@@ -48,7 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Date manipulation
     println!("\n4. Date Manipulation:");
-    evaluate_and_print("date_diff(now(), \"2023-01-01\")", &ctx, &registry)?;
+    evaluate_and_print("date_diff(now(), \"2023-01-01\", \"days\")", &ctx, &registry)?;
     evaluate_and_print("month(date_add(user.created_at, 365))", &ctx, &registry)?;
 
     // Nested expressions

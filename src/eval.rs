@@ -14,14 +14,79 @@ pub fn evaluate(
     let span = expr.meta.span;
     match &expr.expr {
         Expr::Literal(val) => Ok(val.clone()),
-        Expr::Variable(name) => ctx.get(name).cloned().ok_or_else(|| {
-            FormulaError::new(
-                ErrorKind::ContextError,
-                "E005",
-                &format!("ไม่พบตัวแปร '{}'", name),
-                Some(span),
-            )
-        }),
+        Expr::Variable(name) => {
+            let parts: Vec<&str> = name.split('.').collect();
+            if parts.is_empty() {
+                return Err(FormulaError::new(
+                    ErrorKind::ContextError,
+                    "E005",
+                    &format!("ไม่พบตัวแปร '{}'", name),
+                    Some(span),
+                ));
+            }
+
+            // Look up the first part in the root context
+            let mut current = ctx.get(parts[0]).cloned();
+            if current.is_none() {
+                return Err(FormulaError::new(
+                    ErrorKind::ContextError,
+                    "E005",
+                    &format!("ไม่พบตัวแปร '{}'", parts[0]),
+                    Some(span),
+                ));
+            }
+
+            // Traverse the remaining parts
+            for i in 1..parts.len() {
+                let part = parts[i];
+                match &current {
+                    Some(Value::Map(map)) => {
+                        current = map.get(part).cloned();
+                        if current.is_none() {
+                            return Err(FormulaError::new(
+                                ErrorKind::ContextError,
+                                "E005",
+                                &format!("ไม่พบตัวแปร '{}'", part),
+                                Some(span),
+                            ));
+                        }
+                    }
+                    Some(Value::Array(_)) => {
+                        return Err(FormulaError::new(
+                            ErrorKind::TypeError,
+                            "E006",
+                            &format!("คาดหวังแผนที่ แต่ได้อาร์เรย์ที่ '{}'", parts[i-1]),
+                            Some(span),
+                        ));
+                    }
+                    Some(_) => {
+                        return Err(FormulaError::new(
+                            ErrorKind::TypeError,
+                            "E006",
+                            &format!("คาดหวังแผนที่ แต่ได้ค่าที่ไม่ใช่แผนที่ที่ '{}'", parts[i-1]),
+                            Some(span),
+                        ));
+                    }
+                    None => {
+                        return Err(FormulaError::new(
+                            ErrorKind::ContextError,
+                            "E005",
+                            &format!("ไม่พบตัวแปร '{}'", part),
+                            Some(span),
+                        ));
+                    }
+                }
+            }
+
+            current.ok_or_else(|| {
+                FormulaError::new(
+                    ErrorKind::ContextError,
+                    "E005",
+                    &format!("ไม่พบตัวแปร '{}'", name),
+                    Some(span),
+                )
+            })
+        },
         Expr::Grouping(inner) => evaluate(inner, ctx, registry),
         Expr::UnaryExpr { op, expr } => {
             let val = evaluate(expr, ctx, registry)?;

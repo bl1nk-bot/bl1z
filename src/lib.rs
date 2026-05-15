@@ -161,10 +161,8 @@ pub use value::Value;
 /// let tokens = tokenize("1 + 2 * 3").unwrap();
 /// let ast = parse(&tokens).unwrap();
 /// // AST represents (1 + (2 * 3))
-/// ```
-
+/// 
 /// Evaluates an AST using the provided context and function registry.
-///
 /// This executes the formula, resolving variables and calling functions
 /// as needed. Type checking occurs during evaluation.
 ///
