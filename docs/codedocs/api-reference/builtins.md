@@ -96,7 +96,7 @@ pub fn count() -> BuiltinFunction
 Notes:
 
 - `sum([])` returns `0`.
-- `avg([])`, `min([])`, and `max([])` return `E011`.
+- `avg([])`, `min([])`, and `max([])` return `E504`.
 - `count` is similar to `len` for arrays.
 
 Example:

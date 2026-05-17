@@ -2,4 +2,4 @@
 source: tests/error_snapshots.rs
 expression: "format_error(\"sum(\\\"not_an_array\\\")\", &err)"
 ---
-[E006] ต้องการ array
+[E401] ต้องการ array

@@ -2,6 +2,6 @@
 source: tests/error_snapshots.rs
 expression: "format_error(\"1 + @\", &err)"
 ---
-[E001] อักขระไม่รู้จัก '@'
+[E101] อักขระไม่รู้จัก '@'
     1 | 1 + @
            ^

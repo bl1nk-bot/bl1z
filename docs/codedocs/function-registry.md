@@ -24,8 +24,8 @@ This design keeps the evaluator small and makes the formula language application
 The evaluator branch for `Expr::FunctionCall` in `src/eval.rs` does four things in order:
 
 1. Finds the function in `FunctionRegistry`.
-2. Returns `E007` if it is missing.
-3. Checks exact arity and returns `E008` on mismatch.
+2. Returns `E502` if it is missing.
+3. Checks exact arity and returns `E503` on mismatch.
 4. Evaluates every argument and invokes the stored function pointer.
 
 That fourth step is important. Functions are eager because the evaluator resolves arguments before calling the function implementation. The `if` helper in `src/builtins/logic.rs` therefore acts like a normal eager function, not a special lazy control-flow form.
@@ -33,9 +33,9 @@ That fourth step is important. Functions are eager because the evaluator resolve
 ```mermaid
 flowchart TD
   A[Expr::FunctionCall] --> B[FunctionRegistry::find]
-  B -->|missing| C[E007 FunctionError]
+  B -->|missing| C[E502 FunctionError]
   B -->|found| D[Check arity]
-  D -->|wrong| E[E008 FunctionError]
+  D -->|wrong| E[E503 FunctionError]
   D -->|ok| F[Evaluate all args]
   F --> G[call fn(&[Value])]
   G --> H[Value or FormulaError]
@@ -78,7 +78,7 @@ fn clamp(args: &[Value]) -> Result<Value, FormulaError> {
         }
         _ => Err(FormulaError::new(
             ErrorKind::TypeError,
-            "E006",
+            "E401",
             "clamp expects value, min, and max as numbers",
             None,
         )),

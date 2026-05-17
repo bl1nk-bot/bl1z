@@ -14,7 +14,7 @@ pub fn abs() -> BuiltinFunction {
             } else {
                 Err(FormulaError::new(
                     ErrorKind::FunctionError,
-                    "E006",
+                    "E501",
                     "abs ต้องการตัวเลข",
                     None,
                 ))

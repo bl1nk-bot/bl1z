@@ -2,5 +2,5 @@
 source: tests/error_snapshots.rs
 expression: "format_error(\"{key: value\", &err)"
 ---
-[E002] ต้องการ '}' ปิดท้าย map
+[E201] ต้องการ '}' ปิดท้าย map
     1 | {key: value

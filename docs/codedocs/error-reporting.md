@@ -59,7 +59,7 @@ fn main() {
 Example output:
 
 ```text
-[E001] ไม่พบเครื่องหมายปิดข้อความ
+[E101] ไม่พบเครื่องหมายปิดข้อความ
     1 | "unterminated
       | ^^^^^^^^^^^^^
 ```
@@ -84,7 +84,7 @@ fn main() {
     .unwrap_err();
 
     match err.kind {
-        ErrorKind::ContextError if err.code == "E005" => {
+        ErrorKind::ContextError if err.code == "E601" => {
             println!("Undefined variable: {}", err.message);
         }
         _ => {
@@ -100,7 +100,7 @@ fn main() {
 
 <Accordions>
 <Accordion title="Why error codes are valuable even when messages already exist">
-The message field is descriptive, but message text is a poor long-term integration contract because it can be reworded, localized, or made more detailed over time. The crate’s explicit codes such as `E001`, `E005`, `E006`, and `E008` are much better for automated handling in applications that store formulas or surface validation hints in a UI. This is especially useful because some messages are Thai and some are English. If you need stable machine behavior, branch on `kind` and `code`, then use `message` only as a fallback display string.
+The message field is descriptive, but message text is a poor long-term integration contract because it can be reworded, localized, or made more detailed over time. The crate’s explicit codes such as `E101`, `E601`, `E401`, and `E503` are much better for automated handling in applications that store formulas or surface validation hints in a UI. This is especially useful because some messages are Thai and some are English. If you need stable machine behavior, branch on `kind` and `code`, then use `message` only as a fallback display string.
 </Accordion>
 <Accordion title="Why spans are optional instead of mandatory">
 Not every failure naturally points to a source slice. Some function implementations return `FormulaError` with `None` spans because the failure occurs after argument evaluation and without direct knowledge of the original token positions. Keeping spans optional allows the crate to preserve location information where available without forcing awkward plumbing into every built-in. The trade-off is that host applications need to handle both cases gracefully: render source carets when a span exists, and show a plain structured error when it does not.

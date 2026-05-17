@@ -86,7 +86,7 @@ fn register_custom_functions(registry: &mut FunctionRegistry) {
             }
             _ => Err(FormulaError::new(
                 bl1z::error::ErrorKind::TypeError,
-                "E006",
+                "E401",
                 "fibonacci expects non-negative integer",
                 None,
             )),
@@ -109,7 +109,7 @@ fn register_custom_functions(registry: &mut FunctionRegistry) {
             }
             _ => Err(FormulaError::new(
                 bl1z::error::ErrorKind::TypeError,
-                "E006",
+                "E401",
                 "power expects two numbers",
                 None,
             )),
@@ -122,7 +122,7 @@ fn register_custom_functions(registry: &mut FunctionRegistry) {
             Some(Value::Number(n)) if n.fract() == 0.0 => Ok(Value::Bool((*n as i64) % 2 == 0)),
             _ => Err(FormulaError::new(
                 bl1z::error::ErrorKind::TypeError,
-                "E006",
+                "E401",
                 "is_even expects integer",
                 None,
             )),
@@ -138,7 +138,7 @@ fn register_custom_functions(registry: &mut FunctionRegistry) {
             }
             _ => Err(FormulaError::new(
                 bl1z::error::ErrorKind::TypeError,
-                "E006",
+                "E401",
                 "clamp expects three numbers: value, min, max",
                 None,
             )),

@@ -2,6 +2,6 @@
 source: tests/error_snapshots.rs
 expression: "format_error(\"unknown_var\", &err)"
 ---
-[E005] ไม่พบตัวแปร 'unknown_var'
+[E601] ไม่พบตัวแปร 'unknown_var'
     1 | unknown_var
        ^^^^^^^^^^^^

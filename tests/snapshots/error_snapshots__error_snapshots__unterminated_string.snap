@@ -2,6 +2,6 @@
 source: tests/error_snapshots.rs
 expression: "format_error(\"\\\"hello world\", &err)"
 ---
-[E001] ไม่พบเครื่องหมายปิดข้อความ
+[E101] ไม่พบเครื่องหมายปิดข้อความ
     1 | "hello world
        ^^^^^^^^^^^^^

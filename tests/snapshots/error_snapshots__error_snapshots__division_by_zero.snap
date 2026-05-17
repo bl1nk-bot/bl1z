@@ -2,6 +2,6 @@
 source: tests/error_snapshots.rs
 expression: "format_error(\"10 / 0\", &err)"
 ---
-[E010] หารด้วยศูนย์
+[E301] หารด้วยศูนย์
     1 | 10 / 0
        ^^^^^^^

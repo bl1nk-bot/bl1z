@@ -2,6 +2,6 @@
 source: tests/error_snapshots.rs
 expression: "format_error(\"1 + \\\"string\\\"\", &err)"
 ---
-[E006] การบวกใช้ได้กับ number+number หรือ string+string เท่านั้น
+[E401] การบวกใช้ได้กับ number+number หรือ string+string เท่านั้น
     1 | 1 + "string"
        ^^^^^^^^^^^^^

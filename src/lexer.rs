@@ -158,7 +158,7 @@ impl<'a> Lexer<'a> {
                 None => {
                     return Err(FormulaError::new(
                         ErrorKind::LexError,
-                        "E001",
+                        "E101",
                         "ไม่พบเครื่องหมายปิดข้อความ",
                         Some(self.make_span(start_line, start_col)),
                     ));
@@ -261,7 +261,7 @@ impl<'a> Lexer<'a> {
                     } else {
                         return Err(FormulaError::new(
                             ErrorKind::LexError,
-                            "E001",
+                            "E101",
                             "พบ '=' โดยไม่มี '=' ตามหลัง (อาจหมายถึง ==?)",
                             Some(self.make_span(sl, sc)),
                         ));
@@ -299,7 +299,7 @@ impl<'a> Lexer<'a> {
                     } else {
                         return Err(FormulaError::new(
                             ErrorKind::LexError,
-                            "E001",
+                            "E101",
                             "พบ '&' ตัวเดียว ต้องใช้ '&&'",
                             Some(self.make_span(sl, sc)),
                         ));
@@ -315,7 +315,7 @@ impl<'a> Lexer<'a> {
                     } else {
                         return Err(FormulaError::new(
                             ErrorKind::LexError,
-                            "E001",
+                            "E101",
                             "พบ '|' ตัวเดียว ต้องใช้ '||'",
                             Some(self.make_span(sl, sc)),
                         ));
@@ -371,7 +371,7 @@ impl<'a> Lexer<'a> {
                     let sc = self.col;
                     return Err(FormulaError::new(
                         ErrorKind::LexError,
-                        "E001",
+                        "E101",
                         &format!("อักขระไม่รู้จัก '{}'", c),
                         Some(self.make_span(sl, sc)),
                     ));
@@ -433,7 +433,7 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(err.kind, ErrorKind::LexError);
-        assert_eq!(err.code, "E001");
+        assert_eq!(err.code, "E101");
     }
 
     #[test]
@@ -442,7 +442,7 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(err.kind, ErrorKind::LexError);
-        assert_eq!(err.code, "E001");
+        assert_eq!(err.code, "E101");
     }
 
     #[test]
@@ -451,7 +451,7 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(err.kind, ErrorKind::LexError);
-        assert_eq!(err.code, "E001");
+        assert_eq!(err.code, "E101");
     }
 
     #[test]
@@ -460,7 +460,7 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(err.kind, ErrorKind::LexError);
-        assert_eq!(err.code, "E001");
+        assert_eq!(err.code, "E101");
     }
 
     // -- Tests for LBracket/RBracket (added in Phase 6.1) --

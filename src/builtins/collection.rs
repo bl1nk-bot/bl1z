@@ -32,7 +32,7 @@ pub fn avg() -> BuiltinFunction {
             if arr.is_empty() {
                 return Err(FormulaError::new(
                     ErrorKind::FunctionError,
-                    "E011",
+                    "E504",
                     "avg ไม่สามารถใช้กับ array ว่าง",
                     None,
                 ));
@@ -57,7 +57,7 @@ pub fn min_arr() -> BuiltinFunction {
             if arr.is_empty() {
                 return Err(FormulaError::new(
                     ErrorKind::FunctionError,
-                    "E011",
+                    "E504",
                     "min ไม่สามารถใช้กับ array ว่าง",
                     None,
                 ));
@@ -92,7 +92,7 @@ pub fn max_arr() -> BuiltinFunction {
             if arr.is_empty() {
                 return Err(FormulaError::new(
                     ErrorKind::FunctionError,
-                    "E011",
+                    "E504",
                     "max ไม่สามารถใช้กับ array ว่าง",
                     None,
                 ));
@@ -151,7 +151,7 @@ fn require_array(value: &Value) -> Result<&Vec<Value>, FormulaError> {
         Value::Array(arr) => Ok(arr),
         _ => Err(FormulaError::new(
             ErrorKind::FunctionError,
-            "E006",
+            "E501",
             "ต้องการ array",
             None,
         )),
@@ -163,7 +163,7 @@ fn require_number(value: &Value) -> Result<f64, FormulaError> {
         Value::Number(n) => Ok(*n),
         _ => Err(FormulaError::new(
             ErrorKind::FunctionError,
-            "E006",
+            "E501",
             "ต้องการตัวเลข",
             None,
         )),
@@ -175,7 +175,7 @@ fn require_string(value: &Value) -> Result<String, FormulaError> {
         Value::String(s) => Ok(s.clone()),
         _ => Err(FormulaError::new(
             ErrorKind::FunctionError,
-            "E006",
+            "E501",
             "ต้องการข้อความ",
             None,
         )),
@@ -234,7 +234,7 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(err.kind, ErrorKind::FunctionError);
-        assert_eq!(err.code, "E006");
+        assert_eq!(err.code, "E501");
     }
 
     #[test]
@@ -249,7 +249,7 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(err.kind, ErrorKind::FunctionError);
-        assert_eq!(err.code, "E006");
+        assert_eq!(err.code, "E501");
     }
 
     #[test]
@@ -294,7 +294,7 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(err.kind, ErrorKind::FunctionError);
-        assert_eq!(err.code, "E011");
+        assert_eq!(err.code, "E504");
     }
 
     #[test]
@@ -302,7 +302,7 @@ mod tests {
         let result = call_fn(avg(), vec![Value::Bool(true)]);
         assert!(result.is_err());
         let err = result.unwrap_err();
-        assert_eq!(err.code, "E006");
+        assert_eq!(err.code, "E501");
     }
 
     #[test]
@@ -313,7 +313,7 @@ mod tests {
         );
         assert!(result.is_err());
         let err = result.unwrap_err();
-        assert_eq!(err.code, "E006");
+        assert_eq!(err.code, "E501");
     }
 
     // -- min_arr() tests --
@@ -372,7 +372,7 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(err.kind, ErrorKind::FunctionError);
-        assert_eq!(err.code, "E011");
+        assert_eq!(err.code, "E504");
     }
 
     #[test]
@@ -380,7 +380,7 @@ mod tests {
         let result = call_fn(min_arr(), vec![Value::Null]);
         assert!(result.is_err());
         let err = result.unwrap_err();
-        assert_eq!(err.code, "E006");
+        assert_eq!(err.code, "E501");
     }
 
     #[test]
@@ -394,7 +394,7 @@ mod tests {
         );
         assert!(result.is_err());
         let err = result.unwrap_err();
-        assert_eq!(err.code, "E006");
+        assert_eq!(err.code, "E501");
     }
 
     // -- max_arr() tests --
@@ -449,7 +449,7 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(err.kind, ErrorKind::FunctionError);
-        assert_eq!(err.code, "E011");
+        assert_eq!(err.code, "E504");
     }
 
     #[test]
@@ -457,7 +457,7 @@ mod tests {
         let result = call_fn(max_arr(), vec![Value::String("hello".to_string())]);
         assert!(result.is_err());
         let err = result.unwrap_err();
-        assert_eq!(err.code, "E006");
+        assert_eq!(err.code, "E501");
     }
 
     #[test]
@@ -468,7 +468,7 @@ mod tests {
         );
         assert!(result.is_err());
         let err = result.unwrap_err();
-        assert_eq!(err.code, "E006");
+        assert_eq!(err.code, "E501");
     }
 
     // -- join() tests --
@@ -540,7 +540,7 @@ mod tests {
         );
         assert!(result.is_err());
         let err = result.unwrap_err();
-        assert_eq!(err.code, "E006");
+        assert_eq!(err.code, "E501");
     }
 
     #[test]
@@ -554,7 +554,7 @@ mod tests {
         );
         assert!(result.is_err());
         let err = result.unwrap_err();
-        assert_eq!(err.code, "E006");
+        assert_eq!(err.code, "E501");
     }
 
     #[test]
@@ -568,7 +568,7 @@ mod tests {
         );
         assert!(result.is_err());
         let err = result.unwrap_err();
-        assert_eq!(err.code, "E006");
+        assert_eq!(err.code, "E501");
     }
 
     // -- count() tests --
@@ -614,6 +614,6 @@ mod tests {
         let result = call_fn(count(), vec![Value::Number(5.0)]);
         assert!(result.is_err());
         let err = result.unwrap_err();
-        assert_eq!(err.code, "E006");
+        assert_eq!(err.code, "E501");
     }
 }

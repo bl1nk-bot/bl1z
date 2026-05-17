@@ -28,7 +28,7 @@ fn percent_of(args: &[Value]) -> Result<Value, FormulaError> {
         }
         _ => Err(FormulaError::new(
             ErrorKind::TypeError,
-            "E006",
+            "E401",
             "percent_of expects two numbers",
             None,
         )),
@@ -91,7 +91,7 @@ fn percent_of(args: &[Value]) -> Result<Value, FormulaError> {
         }
         _ => Err(FormulaError::new(
             ErrorKind::TypeError,
-            "E006",
+            "E401",
             "percent_of expects two numbers",
             None,
         )),

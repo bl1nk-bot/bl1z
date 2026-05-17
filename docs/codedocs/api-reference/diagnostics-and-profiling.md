@@ -42,7 +42,7 @@ pub fn new(kind: ErrorKind, code: &str, message: &str, span: Option<Span>) -> Se
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `kind` | `ErrorKind` | — | Error category |
-| `code` | `&str` | — | Stable code such as `E001` or `E006` |
+| `code` | `&str` | — | Stable code such as `E101` or `E401` |
 | `message` | `&str` | — | Human-readable message |
 | `span` | `Option<Span>` | — | Source location when available |
 

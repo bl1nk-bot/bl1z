@@ -23,7 +23,7 @@ Separating the stages solves three practical problems:
 
 `src/parser.rs` consumes the token stream with a recursive-descent parser. The precedence ladder is encoded in `parse_logical_or`, `parse_logical_and`, `parse_equality`, `parse_comparison`, `parse_term`, `parse_factor`, and `parse_unary`. The helper `parse_left_associative_binary` is the reason the implementation stays compact while still honoring precedence correctly. `parse_primary` handles arrays, maps, grouped expressions, literals, variables, and function calls.
 
-`src/eval.rs` recursively evaluates the AST. Variables are read from `Context`, functions are found through `FunctionRegistry`, arrays and maps are evaluated into `Value::Array` and `Value::Map`, and binary or unary operators perform strict type checks. Evaluation errors return `FormulaError` with codes like `E005` for missing variables or `E006` for type issues.
+`src/eval.rs` recursively evaluates the AST. Variables are read from `Context`, functions are found through `FunctionRegistry`, arrays and maps are evaluated into `Value::Array` and `Value::Map`, and binary or unary operators perform strict type checks. Evaluation errors return `FormulaError` with codes like `E601` for missing variables or `E401` for type issues.
 
 ```mermaid
 flowchart TD

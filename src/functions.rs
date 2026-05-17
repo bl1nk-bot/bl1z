@@ -24,7 +24,7 @@ use std::collections::HashMap;
 ///         (Some(Value::Number(a)), Some(Value::Number(b))) => Ok(Value::Number(a + b)),
 ///         _ => Err(FormulaError::new(
 ///             bl1z::error::ErrorKind::TypeError,
-///             "E006",
+///             "E401",
 ///             "Expected two numbers",
 ///             None
 ///         ))
@@ -84,7 +84,7 @@ pub struct BuiltinFunction {
 ///         Some(Value::String(name)) => Ok(Value::String(format!("Hello, {}!", name))),
 ///         _ => Err(FormulaError::new(
 ///             bl1z::error::ErrorKind::TypeError,
-///             "E006",
+///             "E401",
 ///             "Expected string argument",
 ///             None
 ///         ))
@@ -155,7 +155,7 @@ impl FunctionRegistry {
     ///         Some(Value::Number(n)) => Ok(Value::Number(n * 2.0)),
     ///         _ => Err(FormulaError::new(
     ///             bl1z::error::ErrorKind::TypeError,
-    ///             "E006",
+    ///             "E401",
     ///             "Expected number",
     ///             None
     ///         ))

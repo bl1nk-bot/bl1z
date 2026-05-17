@@ -19,7 +19,7 @@ pub fn evaluate(
             if parts.is_empty() {
                 return Err(FormulaError::new(
                     ErrorKind::ContextError,
-                    "E005",
+                    "E601",
                     &format!("ไม่พบตัวแปร '{}'", name),
                     Some(span),
                 ));
@@ -30,7 +30,7 @@ pub fn evaluate(
             if current.is_none() {
                 return Err(FormulaError::new(
                     ErrorKind::ContextError,
-                    "E005",
+                    "E601",
                     &format!("ไม่พบตัวแปร '{}'", parts[0]),
                     Some(span),
                 ));
@@ -45,7 +45,7 @@ pub fn evaluate(
                         if current.is_none() {
                             return Err(FormulaError::new(
                                 ErrorKind::ContextError,
-                                "E005",
+                                "E601",
                                 &format!("ไม่พบตัวแปร '{}'", part),
                                 Some(span),
                             ));
@@ -54,7 +54,7 @@ pub fn evaluate(
                     Some(Value::Array(_)) => {
                         return Err(FormulaError::new(
                             ErrorKind::TypeError,
-                            "E006",
+                            "E401",
                             &format!("คาดหวังแผนที่ แต่ได้อาร์เรย์ที่ '{}'", parts[i - 1]),
                             Some(span),
                         ));
@@ -62,7 +62,7 @@ pub fn evaluate(
                     Some(_) => {
                         return Err(FormulaError::new(
                             ErrorKind::TypeError,
-                            "E006",
+                            "E401",
                             &format!("คาดหวังแผนที่ แต่ได้ค่าที่ไม่ใช่แผนที่ที่ '{}'", parts[i - 1]),
                             Some(span),
                         ));
@@ -70,7 +70,7 @@ pub fn evaluate(
                     None => {
                         return Err(FormulaError::new(
                             ErrorKind::ContextError,
-                            "E005",
+                            "E601",
                             &format!("ไม่พบตัวแปร '{}'", part),
                             Some(span),
                         ));
@@ -81,7 +81,7 @@ pub fn evaluate(
             current.ok_or_else(|| {
                 FormulaError::new(
                     ErrorKind::ContextError,
-                    "E005",
+                    "E601",
                     &format!("ไม่พบตัวแปร '{}'", name),
                     Some(span),
                 )
@@ -97,7 +97,7 @@ pub fn evaluate(
                     } else {
                         Err(FormulaError::new(
                             ErrorKind::TypeError,
-                            "E006",
+                            "E401",
                             "ตัวดำเนินการลบใช้ได้กับตัวเลขเท่านั้น",
                             Some(span),
                         ))
@@ -109,7 +109,7 @@ pub fn evaluate(
                     } else {
                         Err(FormulaError::new(
                             ErrorKind::TypeError,
-                            "E006",
+                            "E401",
                             "ตัวดำเนินการ NOT ใช้ได้กับ boolean เท่านั้น",
                             Some(span),
                         ))
@@ -154,7 +154,7 @@ pub fn evaluate(
             let func = registry.find(name).ok_or_else(|| {
                 FormulaError::new(
                     ErrorKind::FunctionError,
-                    "E007",
+                    "E502",
                     &format!("ไม่พบฟังก์ชัน '{}'", name),
                     Some(span),
                 )
@@ -162,7 +162,7 @@ pub fn evaluate(
             if func.arity != args.len() {
                 return Err(FormulaError::new(
                     ErrorKind::FunctionError,
-                    "E008",
+                    "E503",
                     &format!(
                         "ฟังก์ชัน '{}' ต้องการ {} อาร์กิวเมนต์ แต่ได้ {}",
                         name,
@@ -190,7 +190,7 @@ fn add_values(l: Value, r: Value, span: Span) -> Result<Value, FormulaError> {
         (String(a), String(b)) => Ok(String(format!("{}{}", a, b))),
         _ => Err(FormulaError::new(
             ErrorKind::TypeError,
-            "E006",
+            "E401",
             "การบวกใช้ได้กับ number+number หรือ string+string เท่านั้น",
             Some(span),
         )),
@@ -203,7 +203,7 @@ fn sub_values(l: Value, r: Value, span: Span) -> Result<Value, FormulaError> {
     } else {
         Err(FormulaError::new(
             ErrorKind::TypeError,
-            "E006",
+            "E401",
             "การลบใช้ได้กับตัวเลขเท่านั้น",
             Some(span),
         ))
@@ -216,7 +216,7 @@ fn mul_values(l: Value, r: Value, span: Span) -> Result<Value, FormulaError> {
     } else {
         Err(FormulaError::new(
             ErrorKind::TypeError,
-            "E006",
+            "E401",
             "ใช้กับตัวเลข",
             Some(span),
         ))
@@ -228,7 +228,7 @@ fn div_values(l: Value, r: Value, span: Span) -> Result<Value, FormulaError> {
         if *b == 0.0 {
             Err(FormulaError::new(
                 ErrorKind::EvalError,
-                "E010",
+                "E301",
                 "หารด้วยศูนย์",
                 Some(span),
             ))
@@ -238,7 +238,7 @@ fn div_values(l: Value, r: Value, span: Span) -> Result<Value, FormulaError> {
     } else {
         Err(FormulaError::new(
             ErrorKind::TypeError,
-            "E006",
+            "E401",
             "ใช้กับตัวเลข",
             Some(span),
         ))
@@ -254,7 +254,7 @@ where
     } else {
         Err(FormulaError::new(
             ErrorKind::TypeError,
-            "E006",
+            "E401",
             "การเปรียบเทียบใช้ได้กับตัวเลขเท่านั้น",
             Some(span),
         ))
@@ -267,7 +267,7 @@ fn logic_and(l: Value, r: Value, span: Span) -> Result<Value, FormulaError> {
     } else {
         Err(FormulaError::new(
             ErrorKind::TypeError,
-            "E006",
+            "E401",
             "AND ใช้ได้กับ boolean เท่านั้น",
             Some(span),
         ))
@@ -280,7 +280,7 @@ fn logic_or(l: Value, r: Value, span: Span) -> Result<Value, FormulaError> {
     } else {
         Err(FormulaError::new(
             ErrorKind::TypeError,
-            "E006",
+            "E401",
             "OR ใช้ได้กับ boolean เท่านั้น",
             Some(span),
         ))

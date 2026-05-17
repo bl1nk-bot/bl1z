@@ -82,7 +82,7 @@ use formula_engine::Value;
 fn double(args: &[Value]) -> Result<Value, FormulaError> {
     match args.first() {
         Some(Value::Number(n)) => Ok(Value::Number(n * 2.0)),
-        _ => Err(FormulaError::new(ErrorKind::TypeError, "E006", "Expected number", None)),
+        _ => Err(FormulaError::new(ErrorKind::TypeError, "E401", "Expected number", None)),
     }
 }
 
@@ -174,7 +174,7 @@ use formula_engine::{FunctionRegistry, Value};
 fn is_even(args: &[Value]) -> Result<Value, FormulaError> {
     match args.first() {
         Some(Value::Number(n)) if n.fract() == 0.0 => Ok(Value::Bool((*n as i64) % 2 == 0)),
-        _ => Err(FormulaError::new(ErrorKind::TypeError, "E006", "Expected integer", None)),
+        _ => Err(FormulaError::new(ErrorKind::TypeError, "E401", "Expected integer", None)),
     }
 }
 

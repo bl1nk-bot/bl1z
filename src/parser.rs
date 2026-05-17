@@ -40,7 +40,7 @@ impl<'a> Parser<'a> {
         if self.peek() != expected {
             return Err(FormulaError::new(
                 ErrorKind::ParseError,
-                "E002",
+                "E201",
                 err_msg,
                 Some(token_span(self.tokens, self.pos)),
             ));
@@ -180,7 +180,7 @@ impl<'a> Parser<'a> {
                 let n: f64 = tok.lexeme.parse().map_err(|_| {
                     FormulaError::new(
                         ErrorKind::ParseError,
-                        "E003",
+                        "E202",
                         "ไม่สามารถแปลงตัวเลขได้",
                         Some(span),
                     )
@@ -215,7 +215,7 @@ impl<'a> Parser<'a> {
                     if field_tok.kind != TokenKind::Identifier {
                         return Err(FormulaError::new(
                             ErrorKind::ParseError,
-                            "E002",
+                            "E201",
                             "Expected identifier after dot",
                             Some(field_tok.span),
                         ));
@@ -274,7 +274,7 @@ impl<'a> Parser<'a> {
                         if key_tok.kind != TokenKind::Identifier {
                             return Err(FormulaError::new(
                                 ErrorKind::ParseError,
-                                "E002",
+                                "E201",
                                 "key ใน map ต้องเป็น identifier",
                                 Some(token_span(self.tokens, self.pos - 1)),
                             ));
@@ -295,7 +295,7 @@ impl<'a> Parser<'a> {
             }
             _ => Err(FormulaError::new(
                 ErrorKind::ParseError,
-                "E004",
+                "E203",
                 &format!("ไม่คาดคิด token: {:?}", tok.kind),
                 Some(span),
             )),
@@ -310,7 +310,7 @@ pub fn parse(tokens: &[Token]) -> Result<SpannedExpr, FormulaError> {
         // -1 เพราะมี EOF
         return Err(FormulaError::new(
             ErrorKind::ParseError,
-            "E002",
+            "E201",
             "มี tokens เหลือหลัง parse expression",
             Some(token_span(tokens, parser.pos)),
         ));
@@ -364,7 +364,7 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(err.kind, ErrorKind::ParseError);
-        assert_eq!(err.code, "E002");
+        assert_eq!(err.code, "E201");
     }
 
     #[test]
@@ -383,7 +383,7 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(err.kind, ErrorKind::ParseError);
-        assert_eq!(err.code, "E002"); // มี tokens เหลือหลัง parse expression
+        assert_eq!(err.code, "E201"); // มี tokens เหลือหลัง parse expression
     }
 
     // -- Tests for ArrayLiteral parsing (added in Phase 6.1) --
@@ -463,7 +463,7 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(err.kind, ErrorKind::ParseError);
-        assert_eq!(err.code, "E002");
+        assert_eq!(err.code, "E201");
     }
 
     #[test]
@@ -568,7 +568,7 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(err.kind, ErrorKind::ParseError);
-        assert_eq!(err.code, "E002");
+        assert_eq!(err.code, "E201");
     }
 
     #[test]
@@ -578,7 +578,7 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(err.kind, ErrorKind::ParseError);
-        assert_eq!(err.code, "E002");
+        assert_eq!(err.code, "E201");
     }
 
     #[test]
@@ -588,6 +588,6 @@ mod tests {
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(err.kind, ErrorKind::ParseError);
-        assert_eq!(err.code, "E002");
+        assert_eq!(err.code, "E201");
     }
 }

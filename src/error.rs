@@ -3,19 +3,28 @@ use crate::span::Span;
 /// ประเภทของข้อผิดพลาด
 #[derive(Debug, Clone, PartialEq)]
 pub enum ErrorKind {
+    // E1xx — Lexer errors
     LexError,
+    // E2xx — Parser errors
     ParseError,
+    // E3xx — Evaluation errors
     EvalError,
+    // E4xx — Type errors
     TypeError,
+    // E5xx — Function errors
     FunctionError,
+    // E6xx — Context errors
     ContextError,
+    // Phase 8: Property and index access errors (reserved)
+    PropertyNotFound, // E207
+    IndexOutOfBounds, // E208
 }
 
 /// ข้อผิดพลาดที่เกิดขึ้นใน engine
 #[derive(Debug, Clone)]
 pub struct FormulaError {
     pub kind: ErrorKind,
-    pub code: String,       // เช่น "E001"
+    pub code: String,       // เช่น "E101"
     pub message: String,    // คำอธิบายสั้น ๆ
     pub span: Option<Span>, // ตำแหน่งที่เกิด error
 }

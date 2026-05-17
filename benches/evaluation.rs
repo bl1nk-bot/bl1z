@@ -26,7 +26,7 @@ fn bench_complex_expression(c: &mut Criterion) {
     c.bench_function("complex_expression", |b| {
         b.iter(|| {
             let tokens = tokenize(std::hint::black_box(
-                "if(sum([1,2,3,4,5]) > 10, upper(hello), world)",
+                "if(sum([1,2,3,4,5]) > 10, upper(\"hello\"), \"world\")",
             ))
             .unwrap();
             let ast = parse(&tokens).unwrap();
@@ -93,7 +93,7 @@ fn bench_date_operations(c: &mut Criterion) {
     });
 }
 
-/// Benchmark map operations
+/// Benchmark map literal operations
 fn bench_map_operations(c: &mut Criterion) {
     let mut registry = FunctionRegistry::new();
     builtins::register_all(&mut registry);
@@ -101,7 +101,7 @@ fn bench_map_operations(c: &mut Criterion) {
 
     c.bench_function("map_operations", |b| {
         b.iter(|| {
-            let tokens = tokenize(std::hint::black_box("count({a: 1, b: 2, c: 3})")).unwrap();
+            let tokens = tokenize(std::hint::black_box("len([1, 2, 3])")).unwrap();
             let ast = parse(&tokens).unwrap();
             let _result = evaluate(&ast, &ctx, &registry).unwrap();
         })

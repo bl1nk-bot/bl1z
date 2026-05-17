@@ -2,5 +2,5 @@
 source: tests/error_snapshots.rs
 expression: "format_error(\"[1, 2, 3\", &err)"
 ---
-[E002] ต้องการ ']' ปิดท้าย array
+[E201] ต้องการ ']' ปิดท้าย array
     1 | [1, 2, 3

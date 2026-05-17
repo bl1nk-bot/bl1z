@@ -12,7 +12,7 @@ pub fn len() -> BuiltinFunction {
             Value::Array(arr) => Ok(Value::Number(arr.len() as f64)),
             _ => Err(FormulaError::new(
                 ErrorKind::FunctionError,
-                "E006",
+                "E501",
                 "len ต้องการข้อความหรือ array",
                 None,
             )),
@@ -30,7 +30,7 @@ pub fn upper() -> BuiltinFunction {
             } else {
                 Err(FormulaError::new(
                     ErrorKind::FunctionError,
-                    "E006",
+                    "E501",
                     "upper ต้องการข้อความ",
                     None,
                 ))
@@ -49,7 +49,7 @@ pub fn lower() -> BuiltinFunction {
             } else {
                 Err(FormulaError::new(
                     ErrorKind::FunctionError,
-                    "E006",
+                    "E501",
                     "lower ต้องการข้อความ",
                     None,
                 ))
@@ -68,7 +68,7 @@ pub fn contains() -> BuiltinFunction {
             }
             _ => Err(FormulaError::new(
                 ErrorKind::FunctionError,
-                "E006",
+                "E501",
                 "contains ต้องการข้อความสองตัว",
                 None,
             )),
@@ -86,7 +86,7 @@ pub fn starts_with() -> BuiltinFunction {
             }
             _ => Err(FormulaError::new(
                 ErrorKind::FunctionError,
-                "E006",
+                "E501",
                 "starts_with ต้องการข้อความสองตัว",
                 None,
             )),
@@ -102,7 +102,7 @@ pub fn ends_with() -> BuiltinFunction {
             (Value::String(text), Value::String(suffix)) => Ok(Value::Bool(text.ends_with(suffix))),
             _ => Err(FormulaError::new(
                 ErrorKind::FunctionError,
-                "E006",
+                "E501",
                 "ends_with ต้องการข้อความสองตัว",
                 None,
             )),

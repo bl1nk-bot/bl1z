@@ -8,7 +8,6 @@
 [![Crates.io](https://img.shields.io/crates/v/bl1z.svg)](https://crates.io/crates/bl1z)
 [![Downloads](https://img.shields.io/crates/d/bl1z.svg)](https://crates.io/crates/bl1z)
 [![Code Coverage](https://codecov.io/gh/bl1nk-bot/poe-sdk-rs/branch/main/graph/badge.svg)](https://codecov.io/gh/bl1nk-bot/poe-sdk-rs)
-[![Discord](https://img.shields.io/discord/000000000000000000?color=7289DA&label=Discord)](https://discord.gg/bl1z)
 
 ## 📖 ภาพรวม
 

@@ -186,12 +186,6 @@ fn analyze_ast(
                 "sum" | "avg" | "min" | "max" if args.len() == 1 => {
                     suggestions.push(format!("Consider caching results of {} operations", name));
                 }
-                "fibonacci" => {
-                    *complexity = FormulaComplexity::High;
-                    suggestions.push(
-                        "Fibonacci calculation is exponential. Consider memoization.".to_string(),
-                    );
-                }
                 _ => {}
             }
 
@@ -254,15 +248,5 @@ mod tests {
             .suggestions
             .iter()
             .any(|s| s.contains("external data sources")));
-    }
-
-    #[test]
-    fn test_analyze_fibonacci() {
-        let analysis = analyze_formula("fibonacci(10)").unwrap();
-        assert_eq!(analysis.complexity, FormulaComplexity::High);
-        assert!(analysis
-            .suggestions
-            .iter()
-            .any(|s| s.contains("memoization")));
     }
 }

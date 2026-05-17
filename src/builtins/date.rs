@@ -32,7 +32,7 @@ pub fn date_add() -> BuiltinFunction {
             let date = jiff::civil::Date::from_str(&date_str).map_err(|_| {
                 FormulaError::new(
                     ErrorKind::FunctionError,
-                    "E010",
+                    "E301",
                     "Invalid date format",
                     None,
                 )
@@ -44,7 +44,7 @@ pub fn date_add() -> BuiltinFunction {
             let new_date = date.checked_add(span).map_err(|_| {
                 FormulaError::new(
                     ErrorKind::FunctionError,
-                    "E010",
+                    "E301",
                     "Date calculation error",
                     None,
                 )
@@ -67,7 +67,7 @@ pub fn date() -> BuiltinFunction {
             let day = require_number(&args[2])? as i8;
 
             let d = jiff::civil::Date::new(year, month, day).map_err(|_| {
-                FormulaError::new(ErrorKind::FunctionError, "E010", "Invalid date", None)
+                FormulaError::new(ErrorKind::FunctionError, "E301", "Invalid date", None)
             })?;
             Ok(Value::String(d.to_string()))
         },
@@ -147,7 +147,7 @@ fn require_string(value: &Value) -> Result<String, FormulaError> {
         Value::String(s) => Ok(s.clone()),
         _ => Err(FormulaError::new(
             ErrorKind::FunctionError,
-            "E006",
+            "E501",
             "ต้องการข้อความ",
             None,
         )),
@@ -159,7 +159,7 @@ fn require_number(value: &Value) -> Result<f64, FormulaError> {
         Value::Number(n) => Ok(*n),
         _ => Err(FormulaError::new(
             ErrorKind::FunctionError,
-            "E006",
+            "E501",
             "ต้องการตัวเลข",
             None,
         )),
@@ -175,7 +175,7 @@ fn parse_to_timestamp(s: &str) -> Result<jiff::Timestamp, FormulaError> {
         .map_err(|_| {
             FormulaError::new(
                 ErrorKind::FunctionError,
-                "E010",
+                "E301",
                 "Invalid date/time string",
                 None,
             )

@@ -129,7 +129,7 @@ If you are evaluating the same formula repeatedly, keep the parsed AST and call 
 - Runtime values support `Number`, `String`, `Bool`, `Null`, `Array`, and nested `Map`.
 - Built-ins cover string, logic, collection, and date operations and are registered explicitly with `builtins::register_all`.
 - `Context` resolves variables at runtime, including dot-separated access into nested `Value::Map` structures.
-- Errors carry an `ErrorKind`, a stable code like `E006`, and optional `Span` information for formatted diagnostics.
+- Errors carry an `ErrorKind`, a stable code like `E401`, and optional `Span` information for formatted diagnostics.
 - The crate includes lightweight profiling utilities for measuring and analyzing formula cost.
 
 ## Supported Environments

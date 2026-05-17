@@ -14,7 +14,7 @@ pub fn if_fn() -> BuiltinFunction {
                 _ => {
                     return Err(FormulaError::new(
                         ErrorKind::FunctionError,
-                        "E006",
+                        "E501",
                         "if เงื่อนไขต้องเป็น boolean",
                         None,
                     ))
