@@ -1,8 +1,8 @@
-# Architecture Rust สำหรับ Formula Engine (Session 2)
+# Architecture Rust สำหรับ Formula Engine
 
 โครงแบบสำหรับสร้าง **formula/calculation library** ด้วย Rust ให้เติบโตแบบค่อยเป็นค่อยไป เหมาะกับแนว Notion-like formula engine และ POE SDK
 
-สถานะปัจจุบัน: **V1 เสร็จสมบูรณ์** → **Session 2 พร้อมเริ่มดำเนินการ**
+สถานะปัจจุบัน: **V2 พร้อมเริ่มดำเนินการ**
 
 ---
 
@@ -28,7 +28,7 @@
 - Built-in collection functions (sum, avg, min, max, count, join)
 - Basic date functions (now, year, month, day, date_add, date_diff) ใช้ `jiff` ภายใน
 
-### 🚧 Session 2 (กำลังพัฒนา)
+### 🚧 v2 (กำลังพัฒนา)
 - **Access chaining** (`obj.prop`, `arr[0]`)
 - **Lambda expression** `(x) => x * 2`
 - **Higher-order functions**: `map`, `filter`, `reduce`
@@ -38,7 +38,7 @@
 - **Serialization & caching**
 - **Plugin SDK foundation** (Trait + Manager)
 
-### ❌ Out of scope (Session 2)
+### ❌ Out of scope
 - WASM sandboxing สำหรับ plugin
 - JIT compilation
 - Asynchronous evaluation
