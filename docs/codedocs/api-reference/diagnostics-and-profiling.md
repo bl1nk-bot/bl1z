@@ -103,7 +103,7 @@ pub fn profile_formula(
 | `formula` | `&str` | — | Formula to measure |
 | `ctx` | `&Context` | — | Runtime context |
 | `registry` | `&FunctionRegistry` | — | Function registry |
-| `iterations` | `usize` | — | Number of measurement loops |
+| `iterations` | `usize` | — | Number of measurement loops. **Must be > 0.** Passing `0` will cause a runtime panic (divide-by-zero). |
 
 ### `OptimizationSuggestions`
 
@@ -142,7 +142,7 @@ Implementation notes from `src/profiling.rs`:
 - Large arrays over `20` elements raise complexity toward `Complex`.
 - Arrays over `100` elements are labeled `High`.
 - `sum`, `avg`, `min`, and `max` trigger caching suggestions when called with a single array argument.
-- A function named `fibonacci` is treated as high complexity, which aligns with the recursive example in `examples/advanced.rs`.
+- A function named `fibonacci` is treated as high complexity in the analyzer, which aligns with the recursive example in `examples/advanced.rs` (though this function is not a registered built-in).
 
 ## Example
 

@@ -45,7 +45,7 @@ String("pass")
 
 ## Installation
 
-" "workspace"]}>
+<Tabs values={["crates.io", "git", "path", "workspace"]}>
 <Tab value="crates.io">
 
 ```toml

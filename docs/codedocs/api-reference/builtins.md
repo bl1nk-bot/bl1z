@@ -33,7 +33,7 @@ Example:
 
 ```rust
 let result = formula_engine::evaluate(
-    &formula_engine::parse(&formula_engine::tokenize("upper("hello")").unwrap()).unwrap(),
+    &formula_engine::parse(&formula_engine::tokenize("upper(\"hello\")").unwrap()).unwrap(),
     &formula_engine::Context::new(),
     &{
         let mut registry = formula_engine::FunctionRegistry::new();
@@ -42,7 +42,7 @@ let result = formula_engine::evaluate(
     },
 )
 .unwrap();
-assert_eq!(format!("{result:?}"), "String("HELLO")");
+assert_eq!(format!("{result:?}"), "String(\"HELLO\")");
 ```
 
 ## Math Built-Ins
@@ -102,7 +102,7 @@ Notes:
 Example:
 
 ```rust
-let source = "join(["north", "south"], "/")";
+let source = "join([\"north\", \"south\"], \"/\")";
 let mut registry = formula_engine::FunctionRegistry::new();
 formula_engine::builtins::register_all(&mut registry);
 let result = formula_engine::evaluate(
@@ -111,7 +111,7 @@ let result = formula_engine::evaluate(
     &registry,
 )
 .unwrap();
-assert_eq!(format!("{result:?}"), "String("north/south")");
+assert_eq!(format!("{result:?}"), "String(\"north/south\")");
 ```
 
 ## Date Built-Ins
@@ -153,7 +153,7 @@ use formula_engine::{Context, FunctionRegistry, evaluate, parse, tokenize};
 let mut registry = FunctionRegistry::new();
 builtins::register_all(&mut registry);
 
-let source = "if(count([1,2,3]) == 3, month(date_add("2023-01-01", 31)), 0)";
+let source = "if(count([1,2,3]) == 3, month(date_add(\"2023-01-01\", 31)), 0)";
 let result = evaluate(&parse(&tokenize(source).unwrap()).unwrap(), &Context::new(), &registry).unwrap();
 assert_eq!(format!("{result:?}"), "Number(2.0)");
 ```

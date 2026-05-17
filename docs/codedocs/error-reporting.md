@@ -48,7 +48,7 @@ use formula_engine::diagnostics::format_error;
 use formula_engine::tokenize;
 
 fn main() {
-    let source = ""unterminated";
+    let source = r#""unterminated"#;
     let err = tokenize(source).unwrap_err();
     let rendered = format_error(source, &err);
 

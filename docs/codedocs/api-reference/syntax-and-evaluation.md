@@ -287,9 +287,9 @@ builtins::register_all(&mut registry);
 let mut ctx = Context::new();
 ctx.set("score", Value::Number(95.0));
 
-let ast = parse(&tokenize("if(score > 90, "gold", "silver")").unwrap()).unwrap();
+let ast = parse(&tokenize("if(score > 90, \"gold\", \"silver\")").unwrap()).unwrap();
 let result = evaluate(&ast, &ctx, &registry).unwrap();
-assert_eq!(format!("{result:?}"), "String("gold")");
+assert_eq!(format!("{result:?}"), "String(\"gold\")");
 ```
 
 ## Related Pages

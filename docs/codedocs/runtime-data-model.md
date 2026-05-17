@@ -97,10 +97,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut ctx = Context::new();
     ctx.set("user", Value::Map(user));
 
-    let ast = parse(&tokenize("if(user.profile.score > 90, upper(user.profile.name), "review")")?)?;
+    let ast = parse(&tokenize("if(user.profile.score > 90, upper(user.profile.name), \"review\")")?)?;
     let result = evaluate(&ast, &ctx, &registry)?;
 
-    assert_eq!(format!("{result:?}"), "String("ALICE")");
+    assert_eq!(format!("{result:?}"), "String(\"ALICE\")");
     Ok(())
 }
 ```

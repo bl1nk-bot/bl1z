@@ -55,10 +55,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut registry = FunctionRegistry::new();
     builtins::register_all(&mut registry);
 
-    let ast = parse(&tokenize("join(["a", "b", "c"], "-")")?)?;
+    let ast = parse(&tokenize("join([\"a\", \"b\", \"c\"], \"-\")")?)?;
     let result = evaluate(&ast, &Context::new(), &registry)?;
 
-    assert_eq!(format!("{result:?}"), "String("a-b-c")");
+    assert_eq!(format!("{result:?}"), "String(\"a-b-c\")");
     Ok(())
 }
 ```

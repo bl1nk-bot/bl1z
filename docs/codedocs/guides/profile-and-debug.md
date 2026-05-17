@@ -68,7 +68,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     builtins::register_all(&mut registry);
     let ctx = Context::new();
 
-    let bad_source = "1 + "oops"";
+    let bad_source = "1 + \"oops\"";
     let err = (|| {
         let tokens = tokenize(bad_source)?;
         let ast = formula_engine::parse(&tokens)?;
