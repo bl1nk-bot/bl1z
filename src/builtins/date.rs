@@ -130,17 +130,11 @@ pub fn date_diff() -> BuiltinFunction {
             let date_str2 = require_string(&args[1])?;
             // Ignore unit for now
 
-            let t1 = parse_to_timestamp(&date_str1)?;
-            let t2 = parse_to_timestamp(&date_str2)?;
-            let span = t2 - t1; // jiff::Span
-            let days = span.total(jiff::Unit::Day).map_err(|_| {
-                FormulaError::new(
-                    ErrorKind::FunctionError,
-                    "E010",
-                    "Failed to calculate date difference",
-                    None,
-                )
-            })?;
+            let ts1 = parse_to_timestamp(&date_str1)?;
+            let ts2 = parse_to_timestamp(&date_str2)?;
+            let duration = ts2 - ts1; // jiff::Span between timestamps
+            let seconds = duration.get_seconds() as f64;
+            let days = seconds / 86400.0;
             Ok(Value::Number(days))
         },
     }
@@ -202,7 +196,7 @@ mod tests {
         match result {
             Value::String(s) => {
                 // Basic check that it returns a string and looks like a timestamp
-                assert!(s.len() > 0);
+                assert!(!s.is_empty());
                 assert!(s.contains('T'));
             }
             _ => panic!("expected string"),

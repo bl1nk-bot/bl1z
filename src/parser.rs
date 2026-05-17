@@ -207,7 +207,21 @@ impl<'a> Parser<'a> {
                 span,
             )),
             TokenKind::Identifier => {
-                let name = tok.lexeme.clone();
+                let mut name = tok.lexeme.clone();
+                // Handle dot notation for property access (e.g., user.score)
+                while self.peek() == TokenKind::Dot {
+                    self.advance(); // consume the dot
+                    let field_tok = self.advance();
+                    if field_tok.kind != TokenKind::Identifier {
+                        return Err(FormulaError::new(
+                            ErrorKind::ParseError,
+                            "E002",
+                            "Expected identifier after dot",
+                            Some(field_tok.span),
+                        ));
+                    }
+                    name = format!("{}.{}", name, field_tok.lexeme);
+                }
                 // ถ้าเจอ '(' ข้างหน้า คือ function call
                 if self.peek() == TokenKind::LParen {
                     self.advance(); // กิน '('
@@ -225,7 +239,7 @@ impl<'a> Parser<'a> {
                     self.expect(TokenKind::RParen, "ต้องการ ')'")?;
                     Ok(SpannedExpr::new(Expr::FunctionCall { name, args }, span))
                 } else {
-                    // ตัวแปร
+                    // ตัวแปร (อาจเป็น dot notation แล้ว)
                     Ok(SpannedExpr::new(Expr::Variable(name), span))
                 }
             }
