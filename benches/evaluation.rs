@@ -26,7 +26,7 @@ fn bench_complex_expression(c: &mut Criterion) {
     c.bench_function("complex_expression", |b| {
         b.iter(|| {
             let tokens = tokenize(std::hint::black_box(
-                "if(sum([1,2,3,4,5]) > 10, upper('hello'), 'world')",
+                "if(sum([1,2,3,4,5]) > 10, upper(hello), world)",
             ))
             .unwrap();
             let ast = parse(&tokens).unwrap();
