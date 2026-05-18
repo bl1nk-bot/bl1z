@@ -14,8 +14,6 @@ readme = "README.md"
 exclude = [
     ".github/",
     "docs/",
-    "benches/",
-    "tests/",
     "*.md",
     "!README.md",
 ]
