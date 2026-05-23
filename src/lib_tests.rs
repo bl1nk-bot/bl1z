@@ -663,3 +663,213 @@ fn evaluate_property_access_last_element_out_of_chain_returns_error() {
     assert_eq!(err.kind, ErrorKind::PropertyNotFound);
     assert_eq!(err.code, "E207");
 }
+
+// -- Phase 9: Lambda & Higher-Order Functions Tests --
+
+#[test]
+fn evaluate_single_identifier_lambda() {
+    let result = eval_formula("map([1, 2, 3], x => x + 1)").unwrap();
+    assert_eq!(
+        result,
+        Value::Array(vec![
+            Value::Number(2.0),
+            Value::Number(3.0),
+            Value::Number(4.0)
+        ])
+    );
+}
+
+#[test]
+fn evaluate_parenthesized_lambda() {
+    let result = eval_formula("map([1, 2, 3], (x) => x * 2)").unwrap();
+    assert_eq!(
+        result,
+        Value::Array(vec![
+            Value::Number(2.0),
+            Value::Number(4.0),
+            Value::Number(6.0)
+        ])
+    );
+}
+
+#[test]
+fn evaluate_lambda_duplicate_params_fails() {
+    let result = eval_formula("(x, x) => x");
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert_eq!(err.kind, ErrorKind::ParseError);
+    assert_eq!(err.code, "E209");
+}
+
+#[test]
+fn evaluate_lambda_display_and_debug() {
+    // Generate a Lambda value
+    let tokens = tokenize("x => x + 1").unwrap();
+    let ast = parse(&tokens).unwrap();
+    let val = evaluate(&ast, &Context::new(), &prepared_registry()).unwrap();
+
+    assert_eq!(format!("{}", val), "(x) => ...");
+    assert_eq!(format!("{:?}", val), "Lambda((x) => ...)");
+}
+
+#[test]
+fn evaluate_string_and_bool_comparison() {
+    assert_eq!(
+        eval_formula("\"apple\" < \"banana\""),
+        Ok(Value::Bool(true))
+    );
+    assert_eq!(
+        eval_formula("\"apple\" > \"banana\""),
+        Ok(Value::Bool(false))
+    );
+    assert_eq!(
+        eval_formula("\"apple\" <= \"apple\""),
+        Ok(Value::Bool(true))
+    );
+    assert_eq!(eval_formula("false < true"), Ok(Value::Bool(true)));
+    assert_eq!(eval_formula("true >= false"), Ok(Value::Bool(true)));
+}
+
+#[test]
+fn evaluate_comparison_type_mismatch_error() {
+    let result = eval_formula("1 < \"apple\"");
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert_eq!(err.kind, ErrorKind::TypeError);
+    assert_eq!(err.code, "E401");
+}
+
+#[test]
+fn evaluate_recursion_limit_exceeded() {
+    // A self-calling lambda to exceed 100 limit
+    // Define a recursive lambda: f => f(f)
+    // We bind a lambda under a variable name and call it
+    let mut ctx = Context::new();
+    let tokens = tokenize("f => f(f)").unwrap();
+    let ast = parse(&tokens).unwrap();
+    let f_val = evaluate(&ast, &ctx, &prepared_registry()).unwrap();
+    ctx.set("f", f_val.clone());
+
+    let call_tokens = tokenize("f(f)").unwrap();
+    let call_ast = parse(&call_tokens).unwrap();
+    let result = evaluate(&call_ast, &ctx, &prepared_registry());
+
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert_eq!(err.kind, ErrorKind::EvalError);
+    assert_eq!(err.code, "E302"); // Recursion limit exceeded
+}
+
+#[test]
+fn evaluate_filter_function() {
+    let result = eval_formula("filter([1, 2, 3, 4], x => x > 2)").unwrap();
+    assert_eq!(
+        result,
+        Value::Array(vec![Value::Number(3.0), Value::Number(4.0)])
+    );
+}
+
+#[test]
+fn evaluate_reduce_function() {
+    let result = eval_formula("reduce([1, 2, 3], (acc, x) => acc + x, 10)").unwrap();
+    assert_eq!(result, Value::Number(16.0));
+}
+
+#[test]
+fn evaluate_sort_with_function() {
+    let result = eval_formula("sort_with([3, 1, 2], (a, b) => b - a)").unwrap();
+    assert_eq!(
+        result,
+        Value::Array(vec![
+            Value::Number(3.0),
+            Value::Number(2.0),
+            Value::Number(1.0)
+        ])
+    );
+}
+
+#[test]
+fn evaluate_sort_with_error_propagation() {
+    // When the comparator lambda raises an error, it should be propagated
+    let result = eval_formula("sort_with([1, 2], (a, b) => a + \"error\")");
+    assert!(result.is_err());
+    let err = result.unwrap_err();
+    assert_eq!(err.kind, ErrorKind::TypeError);
+}
+
+#[test]
+fn evaluate_unique_function_various_types() {
+    let result = eval_formula("unique([1, 2, 2, 1, 3])").unwrap();
+    assert_eq!(
+        result,
+        Value::Array(vec![
+            Value::Number(1.0),
+            Value::Number(2.0),
+            Value::Number(3.0)
+        ])
+    );
+}
+
+#[test]
+fn evaluate_group_by_function() {
+    let result = eval_formula("group_by([1, 2, 3, 4], x => if(x > 2, \"high\", \"low\"))").unwrap();
+    match result {
+        Value::Map(map) => {
+            assert_eq!(map.len(), 2);
+            assert_eq!(
+                map.get("low").unwrap(),
+                &Value::Array(vec![Value::Number(1.0), Value::Number(2.0)])
+            );
+            assert_eq!(
+                map.get("high").unwrap(),
+                &Value::Array(vec![Value::Number(3.0), Value::Number(4.0)])
+            );
+        }
+        _ => panic!("Expected Map"),
+    }
+}
+
+#[test]
+fn evaluate_sort_with_key_lambda() {
+    // sort based on age field in maps
+    let result = eval_formula("sort([{age: 30, name: \"A\"}, {age: 20, name: \"B\"}], x => x.age)").unwrap();
+    match result {
+        Value::Array(arr) => {
+            assert_eq!(arr.len(), 2);
+            // First item should be the one with age 20 (B)
+            match &arr[0] {
+                Value::Map(map) => {
+                    assert_eq!(map.get("name").unwrap(), &Value::String("B".to_string()));
+                }
+                _ => panic!("Expected Map"),
+            }
+        }
+        _ => panic!("Expected Array"),
+    }
+}
+
+#[test]
+fn evaluate_unique_with_key_lambda() {
+    // unique based on id field in maps
+    let result = eval_formula("unique([{id: 1, name: \"A\"}, {id: 2, name: \"B\"}, {id: 1, name: \"C\"}], x => x.id)").unwrap();
+    match result {
+        Value::Array(arr) => {
+            assert_eq!(arr.len(), 2);
+            // The items kept should be first occurrences (id 1 (A) and id 2 (B))
+            match &arr[0] {
+                Value::Map(map) => {
+                    assert_eq!(map.get("name").unwrap(), &Value::String("A".to_string()));
+                }
+                _ => panic!("Expected Map"),
+            }
+            match &arr[1] {
+                Value::Map(map) => {
+                    assert_eq!(map.get("name").unwrap(), &Value::String("B".to_string()));
+                }
+                _ => panic!("Expected Map"),
+            }
+        }
+        _ => panic!("Expected Array"),
+    }
+}
+

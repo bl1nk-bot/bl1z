@@ -4,6 +4,7 @@ use crate::error::{ErrorKind, FormulaError};
 use crate::functions::FunctionRegistry;
 use crate::span::Span;
 use crate::value::Value;
+use std::rc::Rc;
 
 /// ประเมินผล SpannedExpr แล้วคืน Value
 pub fn evaluate(
@@ -11,6 +12,23 @@ pub fn evaluate(
     ctx: &Context,
     registry: &FunctionRegistry,
 ) -> Result<Value, FormulaError> {
+    evaluate_impl(expr, ctx, registry, 0)
+}
+
+fn evaluate_impl(
+    expr: &SpannedExpr,
+    ctx: &Context,
+    registry: &FunctionRegistry,
+    depth: usize,
+) -> Result<Value, FormulaError> {
+    if depth > 100 {
+        return Err(FormulaError::new(
+            ErrorKind::EvalError,
+            "E302",
+            "การประมวลผลซ้อนลึกเกินกำหนด (Recursion limit exceeded)",
+            Some(expr.meta.span),
+        ));
+    }
     let span = expr.meta.span;
     match &expr.expr {
         Expr::Literal(val) => Ok(val.clone()),
@@ -23,7 +41,7 @@ pub fn evaluate(
             )
         }),
         Expr::PropertyAccess { object, field } => {
-            let obj = evaluate(object, ctx, registry)?;
+            let obj = evaluate_impl(object, ctx, registry, depth + 1)?;
             match obj {
                 Value::Map(map) => map.get(field).cloned().ok_or_else(|| {
                     FormulaError::new(
@@ -42,8 +60,8 @@ pub fn evaluate(
             }
         }
         Expr::IndexAccess { object, index } => {
-            let obj = evaluate(object, ctx, registry)?;
-            let idx = evaluate(index, ctx, registry)?;
+            let obj = evaluate_impl(object, ctx, registry, depth + 1)?;
+            let idx = evaluate_impl(index, ctx, registry, depth + 1)?;
             match (obj, idx) {
                 (Value::Array(arr), Value::Number(n)) => {
                     let i = n as usize;
@@ -72,9 +90,9 @@ pub fn evaluate(
                 )),
             }
         }
-        Expr::Grouping(inner) => evaluate(inner, ctx, registry),
+        Expr::Grouping(inner) => evaluate_impl(inner, ctx, registry, depth + 1),
         Expr::UnaryExpr { op, expr } => {
-            let val = evaluate(expr, ctx, registry)?;
+            let val = evaluate_impl(expr, ctx, registry, depth + 1)?;
             match op {
                 UnaryOp::Neg => {
                     if let Value::Number(n) = val {
@@ -103,8 +121,8 @@ pub fn evaluate(
             }
         }
         Expr::BinaryExpr { left, op, right } => {
-            let l = evaluate(left, ctx, registry)?;
-            let r = evaluate(right, ctx, registry)?;
+            let l = evaluate_impl(left, ctx, registry, depth + 1)?;
+            let r = evaluate_impl(right, ctx, registry, depth + 1)?;
             match op {
                 BinaryOp::Add => add_values(l, r, span),
                 BinaryOp::Sub => sub_values(l, r, span),
@@ -112,10 +130,10 @@ pub fn evaluate(
                 BinaryOp::Div => div_values(l, r, span),
                 BinaryOp::Eq => Ok(Value::Bool(l == r)),
                 BinaryOp::NotEq => Ok(Value::Bool(l != r)),
-                BinaryOp::Lt => compare_values(l, r, span, |a, b| a < b),
-                BinaryOp::Gt => compare_values(l, r, span, |a, b| a > b),
-                BinaryOp::LtEq => compare_values(l, r, span, |a, b| a <= b),
-                BinaryOp::GtEq => compare_values(l, r, span, |a, b| a >= b),
+                BinaryOp::Lt => compare_values(l, r, span, BinaryOp::Lt),
+                BinaryOp::Gt => compare_values(l, r, span, BinaryOp::Gt),
+                BinaryOp::LtEq => compare_values(l, r, span, BinaryOp::LtEq),
+                BinaryOp::GtEq => compare_values(l, r, span, BinaryOp::GtEq),
                 BinaryOp::And => logic_and(l, r, span),
                 BinaryOp::Or => logic_or(l, r, span),
             }
@@ -123,20 +141,43 @@ pub fn evaluate(
         Expr::ArrayLiteral(elements) => {
             let values: Result<Vec<Value>, _> = elements
                 .iter()
-                .map(|e| evaluate(e, ctx, registry))
+                .map(|e| evaluate_impl(e, ctx, registry, depth + 1))
                 .collect();
             Ok(Value::Array(values?))
         }
         Expr::MapLiteral(pairs) => {
             let mut map = std::collections::HashMap::new();
             for (key, expr) in pairs {
-                let value = evaluate(expr, ctx, registry)?;
+                let value = evaluate_impl(expr, ctx, registry, depth + 1)?;
                 map.insert(key.clone(), value);
             }
             Ok(Value::Map(map))
         }
+        Expr::Lambda { params, body } => {
+            // Capture current scope for closure
+            let captured: std::collections::BTreeMap<String, Value> = ctx
+                .get_all()
+                .into_iter()
+                .map(|(k, v)| (k, (*v).clone()))
+                .collect();
+            Ok(Value::Lambda(
+                Rc::new((**body).clone()),
+                params.clone(),
+                captured,
+            ))
+        }
         Expr::FunctionCall { name, args } => {
-            let func = registry.find(name).ok_or_else(|| {
+            // First, check if function name exists as a variable (might be a lambda)
+            if let Some(Value::Lambda(_, _, _)) = ctx.get(name.as_str()) {
+                let func_val = ctx.get(name.as_str()).unwrap().clone();
+                let evaluated_args: Vec<Value> = args
+                    .iter()
+                    .map(|a| evaluate_impl(a, ctx, registry, depth + 1))
+                    .collect::<Result<_, _>>()?;
+                return apply_lambda_impl(&func_val, &evaluated_args, registry, depth + 1);
+            }
+
+            let func_info = registry.find_info(name).ok_or_else(|| {
                 FormulaError::new(
                     ErrorKind::FunctionError,
                     "E502",
@@ -144,14 +185,15 @@ pub fn evaluate(
                     Some(span),
                 )
             })?;
-            if func.arity != args.len() {
+            let is_variadic = func_info.arity == 999;
+            if !is_variadic && func_info.arity != args.len() {
                 return Err(FormulaError::new(
                     ErrorKind::FunctionError,
                     "E503",
                     &format!(
                         "ฟังก์ชัน '{}' ต้องการ {} อาร์กิวเมนต์ แต่ได้ {}",
                         name,
-                        func.arity,
+                        func_info.arity,
                         args.len()
                     ),
                     Some(span),
@@ -159,11 +201,65 @@ pub fn evaluate(
             }
             let evaluated_args: Vec<Value> = args
                 .iter()
-                .map(|a| evaluate(a, ctx, registry))
+                .map(|a| evaluate_impl(a, ctx, registry, depth + 1))
                 .collect::<Result<_, _>>()?;
             // เรียกฟังก์ชันที่ implement ด้วย FormulaError โดยตรง
-            (func.call)(&evaluated_args)
+            (func_info.call)(&evaluated_args)
         }
+    }
+}
+
+/// Apply a lambda value to arguments.
+/// Phase 9: Lambda & Higher-Order Functions
+pub fn apply_lambda(
+    lambda: &Value,
+    args: &[Value],
+    registry: &FunctionRegistry,
+) -> Result<Value, FormulaError> {
+    apply_lambda_impl(lambda, args, registry, 0)
+}
+
+fn apply_lambda_impl(
+    lambda: &Value,
+    args: &[Value],
+    registry: &FunctionRegistry,
+    depth: usize,
+) -> Result<Value, FormulaError> {
+    match lambda {
+        Value::Lambda(body_expr, params, captured_scope) => {
+            if params.len() != args.len() {
+                return Err(FormulaError::new(
+                    ErrorKind::FunctionError,
+                    "E503",
+                    &format!(
+                        "lambda ต้องการ {} อาร์กิวเมนต์ แต่ได้ {}",
+                        params.len(),
+                        args.len()
+                    ),
+                    None,
+                ));
+            }
+
+            // Build context from captured scope
+            let mut lambda_ctx = Context::new();
+            for (k, v) in captured_scope.iter() {
+                lambda_ctx.set(k, v.clone());
+            }
+
+            // Bind parameters
+            for (i, param) in params.iter().enumerate() {
+                lambda_ctx.set(param, args[i].clone());
+            }
+
+            // Evaluate body with the lambda context
+            evaluate_impl(body_expr, &lambda_ctx, registry, depth + 1)
+        }
+        _ => Err(FormulaError::new(
+            ErrorKind::TypeError,
+            "E401",
+            "ค่านี้ไม่ใช่ lambda ไม่สามารถเรียกได้",
+            None,
+        )),
     }
 }
 
@@ -230,19 +326,38 @@ fn div_values(l: Value, r: Value, span: Span) -> Result<Value, FormulaError> {
     }
 }
 
-fn compare_values<F>(l: Value, r: Value, span: Span, f: F) -> Result<Value, FormulaError>
-where
-    F: Fn(f64, f64) -> bool,
-{
-    if let (Value::Number(a), Value::Number(b)) = (&l, &r) {
-        Ok(Value::Bool(f(*a, *b)))
-    } else {
-        Err(FormulaError::new(
-            ErrorKind::TypeError,
-            "E401",
-            "การเปรียบเทียบใช้ได้กับตัวเลขเท่านั้น",
-            Some(span),
-        ))
+fn compare_values(l: Value, r: Value, span: Span, op: BinaryOp) -> Result<Value, FormulaError> {
+    use std::cmp::Ordering;
+    let ord = match (&l, &r) {
+        (Value::Number(a), Value::Number(b)) => a.partial_cmp(b),
+        (Value::String(a), Value::String(b)) => Some(a.cmp(b)),
+        (Value::Bool(a), Value::Bool(b)) => Some(a.cmp(b)),
+        (Value::Null, Value::Null) => Some(Ordering::Equal),
+        _ => {
+            return Err(FormulaError::new(
+                ErrorKind::TypeError,
+                "E401",
+                &format!(
+                    "การเปรียบเทียบใช้ได้กับประเภทเดียวกันเท่านั้น (ได้รับ {:?} และ {:?})",
+                    l, r
+                ),
+                Some(span),
+            ));
+        }
+    };
+
+    match ord {
+        Some(ordering) => {
+            let res = match op {
+                BinaryOp::Lt => ordering == Ordering::Less,
+                BinaryOp::Gt => ordering == Ordering::Greater,
+                BinaryOp::LtEq => ordering != Ordering::Greater,
+                BinaryOp::GtEq => ordering != Ordering::Less,
+                _ => false,
+            };
+            Ok(Value::Bool(res))
+        }
+        None => Ok(Value::Bool(false)),
     }
 }
 
