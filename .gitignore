@@ -39,3 +39,14 @@ criterion-*
 
 # Backup files
 *~
+
+# Agent tools config / states (Ignore other agents, keep only .antigravitycli)
+.gemini/
+.mavis/
+.opencode/
+
+# Generated / SBOM / Temporary files
+*.cdx.json
+sbom.json
+nul
+context*.json

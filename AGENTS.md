@@ -1,96 +1,269 @@
-# AGENTS.md — bl1z
+# บริบทของเอเจนต์ — bl1z
 
-## Project
+<!--
+  ไฟล์นี้คืออะไร?
 
-- **Crate name**: `bl1z` — a Notion-like formula evaluation engine in Rust
-- **Single crate** (no workspace). Entry: `src/lib.rs`
-- **Edition**: 2021 | **MSRV**: 1.90.0 (enforced in CI)
-- **Dependencies**: `jiff` (date/time). Dev-deps: `criterion`, `insta`
-- **No `unsafe` code** anywhere
+  นี่คือไฟล์บริบทของเอเจนต์ ซึ่งให้ข้อมูลที่จำเป็นแก่เอเจนต์ AI (GitHub Copilot,
+  Claude, Cursor หรือเครื่องมือพัฒนาที่ใช้ LLM อื่นๆ) เพื่อให้ทำงานได้อย่างมีประสิทธิภาพใน Repository ของคุณ
 
-## Architecture
+  ทำไมถึงสำคัญ?
 
-Pipeline: **Lexer** (`src/lexer.rs`) → **Parser** (`src/parser.rs`) → **Evaluator** (`src/eval.rs`)
+  หากไม่มีไฟล์บริบทของเอเจนต์ ทุกเซสชันของเอเจนต์จะเริ่มต้นจากศูนย์ เอเจนต์
+  จะต้องอนุมานข้อตกลงของคุณ, เดาสถาปัตยกรรมของคุณ, และหวังว่าข้อสันนิษฐานของมัน
+  จะตรงกับของคุณ ด้วยไฟล์บริบทที่ดูแลรักษาอย่างดี เอเจนต์จะสร้างผลลัพธ์ที่
+  เข้ากับโปรเจกต์ของคุณตั้งแต่การโต้ตอบครั้งแรก
 
-Core modules:
-- `src/ast.rs` — AST nodes including `PropertyAccess` and `IndexAccess` (Phase 8)
-- `src/value.rs` — `Value` enum (Number, String, Bool, Null, Array, Map)
-- `src/context.rs` — variable storage with parent chain scoping (`Rc<Context>`)
-- `src/functions.rs` — `FunctionRegistry`
-- `src/error.rs` — `FormulaError` with error codes (E1xx–E6xx) and Thai messages
-- `src/builtins/` — built-in functions: string, math, logic, date, collection
-- `src/diagnostics.rs` — error formatting with span info
-- `src/profiling.rs` — performance profiling
+  วิธีใช้งาน:
 
-Public re-exports in `lib.rs`: `tokenize`, `parse`, `evaluate`, `Context`, `FunctionRegistry`, `Value`, `Expr`, `FormulaError`
+  1. อัปเดตและรักษาความถูกต้องของข้อมูลโปรเจกต์ในไฟล์นี้เสมอ
+  2. อัปเดตอยู่เสมอ ไฟล์บริบทที่ล้าสมัยแย่กว่าไม่มี เพราะเอเจนต์จะทำตามคำแนะนำที่ล้าสมัยอย่างมั่นใจ
+  3. จัดเก็บเป็น Markdown และอัปเดตเมื่อมีการเปลี่ยนแปลงโครงสร้างหรือข้อตกลงในการพัฒนา
+-->
 
-## Developer Commands
+---
 
-```bash
-cargo check                          # type-check only
-cargo fmt --all -- --check           # format check (CI gate)
-cargo clippy --all-targets --all-features -- -D warnings  # lint (CI gate, zero warnings allowed)
-cargo test --verbose                 # all unit + integration + doc tests
-cargo test --doc                     # doc tests only
-cargo test --test error_snapshots    # insta snapshot tests only
-cargo bench                          # benchmarks (criterion, harness = false)
-cargo doc --no-deps --document-private-items  # generate docs
-cargo run --example basic            # run basic example
-cargo run --example advanced         # run advanced example
+## วัตถุประสงค์ของโปรเจกต์ (Project Purpose)
+
+เครื่องมือสำหรับประเมินผลสูตรคำนวณ (Formula Evaluation Engine) ที่มีรูปแบบคล้ายกับระบบสูตรของ Notion ทำงานในลักษณะ Single Crate ไม่มีระบบ Workspace โดยเน้นความถูกต้อง ปลอดภัย ประสิทธิภาพสูง และปราศจากโค้ดที่ไม่ปลอดภัย (`unsafe`) โดยสมบูรณ์
+
+**ภาษาหลัก:** Rust (Edition 2021 | Minimum Supported Rust Version (MSRV): 1.90.0)
+**Dependencies หลัก:** `jiff` (ระบบจัดการวันที่และเวลา)
+**Dev-Dependencies หลัก:** `criterion` (เครื่องมือทดสอบประสิทธิภาพ), `insta` (เครื่องมือทดสอบ Snapshot)
+**ข้อจำกัดการพัฒนา:** ห้ามใช้โค้ด `unsafe` ทุกกรณี (Zero unsafe code)
+
+---
+
+## สถาปัตยกรรม (Architecture)
+
+โปรเจกต์นี้มีท่อส่งประมวลผล (Pipeline) หลักดังนี้:
+```
+อินพุต (สูตร) → Lexer (src/lexer.rs) → Parser (src/parser.rs) → Evaluator (src/eval.rs) → เอาต์พุต (Value)
 ```
 
-**CI order**: fmt → clippy → test → doc-test → bench → doc
+- **Lexer** ([src/lexer.rs](file:///D:/dev/10/poe-sdk-rs-fix-pr10/src/lexer.rs)): ทำหน้าที่แปลงข้อความสูตรคำนวณให้อยู่ในรูปของ Tokens
+- **Parser** ([src/parser.rs](file:///D:/dev/10/poe-sdk-rs-fix-pr10/src/parser.rs)): แปลง Tokens ให้อยู่ในรูปของ AST (Abstract Syntax Tree)
+- **Evaluator** ([src/eval.rs](file:///D:/dev/10/poe-sdk-rs-fix-pr10/src/eval.rs)): ประมวลผลจาก AST ร่วมกับ Context เพื่อให้ได้ผลลัพธ์สุดท้าย
 
-## Testing
+---
 
-- **Unit tests**: `src/lib_tests.rs` (extracted from inline module) + per-module `#[cfg(test)]` blocks
-- **Integration tests**: `tests/error_snapshots.rs` uses `insta` for snapshot testing
-- **Snapshot updates**: `INSTA_UPDATE=1 cargo test --test error_snapshots` (CI runs this on `main` branch only)
-- Snapshots live in `tests/snapshots/` — 11 error snapshot files
-- When changing error messages or format, run with `INSTA_UPDATE=1` and review diffs
-- **Test naming**: `{subject}_{scenario}_{expected_outcome}` (e.g., `evaluate_sum_empty_array_returns_zero`)
-- **Assertions**: `pretty_assertions::assert_eq` for diff output on failures
-- **Helper functions**: `eval_formula(formula)` and `eval_with_ctx(formula, ctx)` reduce boilerplate
+## โครงสร้าง Repository (Repository Structure)
 
-## Release Profile
+```
+poe-sdk-rs-fix-pr10/
+├── src/                    # ซอร์สโค้ดหลักของ Crate
+│   ├── builtins/           # ฟังก์ชันมาตรฐาน (string, math, logic, date, collection)
+│   ├── ast.rs              # โครงสร้างโหนด AST
+│   ├── context.rs          # ระบบจัดเก็บตัวแปรและลำดับชั้น Context Scoping
+│   ├── diagnostics.rs      # การจัดการรูปแบบข้อผิดพลาดและข้อมูล Span
+│   ├── error.rs            # โครงสร้างข้อผิดพลาด FormulaError
+│   ├── eval.rs             # ตัวประเมินผลค่าสูตรคำนวณ (Evaluator)
+│   ├── functions.rs        # ระบบขึ้นทะเบียนและจับคู่ฟังก์ชัน (Function Registry)
+│   ├── lexer.rs            # ระบบวิเคราะห์คำศัพท์ (Lexer)
+│   ├── lib.rs              # จุดเริ่มต้นหลักของโมดูลและการดึงสัญลักษณ์ออกสู่ภายนอก
+│   ├── lib_tests.rs        # ชุดการทดสอบระดับ Unit tests
+│   ├── parser.rs           # ระบบวิเคราะห์ไวยากรณ์ (Parser)
+│   ├── profiling.rs        # ระบบวิเคราะห์ประสิทธิภาพการทำงาน
+│   └── value.rs            # โครงสร้างข้อมูล Enum สำหรับผลลัพธ์สูตร (Value)
+├── tests/                  # การทดสอบระดับภายนอก (Integration Tests)
+│   ├── snapshots/          # ไฟล์ภาพรวมข้อมูลการเกิดข้อผิดพลาดที่เกิดขึ้นจริง
+│   └── error_snapshots.rs  # การทดสอบการจับภาพ Snapshot ข้อผิดพลาดผ่านระบบ `insta`
+├── benches/                # โค้ดสำหรับทำ Benchmarks
+├── examples/               # โค้ดตัวอย่างการนำไปใช้งาน
+├── docs/                   # เอกสารประกอบโครงการ
+├── Cargo.toml              # ไฟล์กำหนดค่าโปรเจกต์และ Dependency ของ Rust
+├── PLAN.md                 # แผนโรดแมปการพัฒนา V2
+├── SPEC.md                 # ข้อมูลจำเพาะและสถาปัตยกรรม (Specifications)
+├── STYLE_GUIDE.md          # คู่มือสไตล์การเขียนโค้ดและเอกสารประกอบ
+└── README.md               # ภาพรวมของโปรเจกต์และวิธีการติดตั้งใช้งานเบื้องต้น
+```
 
-`[profile.release]` in `Cargo.toml`: `opt-level = 3`, `lto = true`, `codegen-units = 1`, `panic = "abort"`, `strip = true`
+---
 
-## Conventions
+## กระบวนการพัฒนา (Development Process)
 
-- **Commit messages**: conventional commits (`type(scope): description`)
-- **Error codes**: E1xx=Lex, E2xx=Parse, E3xx=Eval, E4xx=Type, E5xx=Function, E6xx=Context
-- **Error messages**: written in Thai
-- **Doc comments**: required on all public APIs with `# Arguments`, `# Returns`, `# Examples`
+### เวิร์กโฟลว์ (Workflow)
 
-## V2 Roadmap
+```
+วางแผน → สร้าง Issue → พัฒนา → รีวิว → รวมโค้ด → เอกสาร
+```
 
-- **Phase 8 ✅**: Access chaining (`obj.prop`, `arr[0]`) — DONE
-- **Phase 8.5 ✅**: Context scoping (parent chain for lambda closures) — DONE
-- **Phase 9**: Lambdas, higher-order functions (`map`, `filter`, `reduce`)
-- **Phase 9.5**: `Function` trait refactor (stateful functions)
-- **Phase 10**: User-defined functions (`def name(params) = expr`)
-- **Phase 10.5**: Missing math/string builtins
-- **Phase 11**: Native `DateTime`/`Duration` via `jiff`
-- **Phase 12**: Serialization & caching
-- **Phase 13**: Plugin SDK
-- **Phase 14**: Performance optimization
-- **Phase 15**: Error recovery + security limits
+| ขั้นตอน | คำอธิบาย |
+|-------|-------------|
+| **วางแผน** | กำหนดขอบเขตของฟีเจอร์หรือบั๊กที่ต้องการแก้ไขโดยยึดตาม [PLAN.md](file:///D:/dev/10/poe-sdk-rs-fix-pr10/PLAN.md) และ [SPEC.md](file:///D:/dev/10/poe-sdk-rs-fix-pr10/SPEC.md) |
+| **สร้าง Issue** | สร้าง Issue บน GitHub พร้อมรายละเอียดและข้อจำกัดสำหรับการพัฒนา |
+| **พัฒนา** | สร้าง Feature Branch แยกออกไปพัฒนาโค้ด เขียนเทส และตรวจสอบคุณภาพโค้ด |
+| **รีวิว** | ส่ง Pull Request ตรวจสอบโค้ด, Test Coverage และตรวจสอบคำเตือน Clippy ทั้งหมด |
+| **รวมโค้ด** | ดำเนินการผสานโค้ดเข้าสู่สายหลักเมื่อผ่านกระบวนการตรวจสอบเรียบร้อย |
+| **เอกสาร** | ปรับปรุงข้อมูลในไฟล์แผนและเอกสารที่เกี่ยวข้องให้เป็นปัจจุบัน |
 
-Do not implement future phases unless explicitly asked.
+### กลยุทธ์ Branch (Branch Strategy)
 
-## Out of Scope (per SPEC.md)
+- **`main`** — โค้ดส่วนที่เสถียรและพร้อมใช้งานจริง
+- **Feature branches** — แตกสาขาแยกออกมาเป็นหนึ่งงานต่อหนึ่งสาขา
+  - โครงสร้างการตั้งชื่อ: `[ประเภท]/[คำอธิบายย่อ]` (เช่น `feat/access-chaining`, `fix/lexer-panic`)
+- **Flow การรวมโค้ด:** พัฒนาบน Feature branch → เปิด Pull Request → ทำการรีวิวและทดสอบ → Merge กลับเข้าสู่ `main`
 
-WASM sandboxing, JIT compilation, async evaluation, complex static type system, null-safe navigation (`?.`)
+### มาตรฐานการรีวิว (Review Standards)
 
-## Key Files
+- โค้ดใหม่ทั้งหมดต้องไม่ส่งผลกระทบต่อประสิทธิภาพ และต้องรันการทดสอบและ Clippy ผ่าน 100% โดยไม่มี warning
+- บังคับการตรวจทานความถูกต้อง ความปลอดภัยของหน่วยความจำ และโครงสร้างการเขียนให้ตรงตามสไตล์ไกด์
+- เอเจนต์ AI สามารถนำมาช่วยในการพัฒนาโค้ดและทดสอบได้ แต่การรีวิวและอนุมัติขั้นสุดท้ายต้องผ่านมนุษย์เสมอ
 
-| File | Purpose |
-|------|---------|
-| `Cargo.toml` | single-crate config, deps, profiles |
-| `src/lib.rs` | re-exports (tests in `src/lib_tests.rs`) |
-| `src/lib_tests.rs` | integration tests (extracted, 80+ tests) |
-| `.github/workflows/ci.yml` | CI: stable/beta/1.90.0 matrix |
-| `PLAN.md` | V2 phase-by-phase roadmap |
-| `SPEC.md` | architecture spec and scope |
-| `tests/error_snapshots.rs` | insta snapshot tests |
+### กฎ Issues-First (Issues-First Rule)
+
+- **ทุกคำของานต้องถูกบันทึกเป็น GitHub Issue ก่อนที่จะเริ่มการพัฒนา** ห้ามเริ่มเขียนโค้ดโดยไม่มี Issue ติดตาม สิ่งนี้ช่วยให้สามารถตรวจสอบย้อนกลับได้ตั้งแต่คำขอจนถึงการส่งมอบ
+- **Prompt ต้นฉบับของมนุษย์ต้องถูกเก็บไว้ใน Issue** — ไม่ว่าจะอยู่ในส่วน "Originating Prompt" ของคำอธิบาย Issue หรือเป็นคอมเมนต์ เพื่อประเมินประสิทธิภาพในภายหลัง
+- หาก Prompt ของมนุษย์มีรายการงานหลายรายการ ให้สร้าง Issue แยกต่างหากสำหรับแต่ละรายการ
+
+---
+
+## ข้อตกลงการเขียนโค้ด (Coding Conventions)
+
+โปรเจกต์นี้มีข้อตกลงในการพัฒนาที่อ้างอิงตาม [STYLE_GUIDE.md](file:///D:/dev/10/poe-sdk-rs-fix-pr10/STYLE_GUIDE.md):
+
+### กฎทั่วไป (General Rules)
+
+- **ห้ามมีโค้ด Unsafe**: ห้ามมิให้มีการใช้คีย์เวิร์ด `unsafe` หรือสร้างบล็อกคำสั่งที่ไม่ปลอดภัยในซอร์สโค้ดโดยเด็ดขาด
+- **ต้องเขียน Doc Comments**: สำหรับโมดูลและฟังก์ชันระดับสาธารณะ (Public API) ทั้งหมด ต้องมีเอกสารกำกับโดยใช้รูปแบบ `///` พร้อมบอกพารามิเตอร์ ผลลัพธ์ และตัวอย่างการนำไปใช้ (`# Arguments`, `# Returns`, `# Examples`)
+- ห้ามปิด, พัฒนา, หรือแก้ไข Issue ที่มีป้ายกำกับ `sample` สิ่งเหล่านี้คือข้อมูลอ้างอิงสำหรับการเริ่มต้น ไม่ใช่รายการงานจริง
+- หลีกเลี่ยงการกระทำที่ก่อให้เกิด dynamic allocation โดยไม่มีความจำเป็น เพื่อเพิ่มประสิทธิภาพความเร็วในการทำงานของโปรแกรม
+
+### การจัดการข้อผิดพลาด (Error Handling)
+
+- ใช้โครงสร้างข้อผิดพลาดเฉพาะ `FormulaError` (อยู่ใน [src/error.rs](file:///D:/dev/10/poe-sdk-rs-fix-pr10/src/error.rs))
+- กำหนดรหัสข้อผิดพลาดให้เป็นไปตามกลุ่มที่กำหนด:
+  - `E1xx`: ข้อผิดพลาดในขั้นตอนวิเคราะห์คำศัพท์ (Lex)
+  - `E2xx`: ข้อผิดพลาดในขั้นตอนวิเคราะห์ไวยากรณ์ (Parse)
+  - `E3xx`: ข้อผิดพลาดในขั้นตอนประเมินผลค่าสูตร (Eval)
+  - `E4xx`: ข้อผิดพลาดด้านความเข้ากันได้ของชนิดข้อมูล (Type)
+  - `E5xx`: ข้อผิดพลาดเกี่ยวกับการเรียกใช้ฟังก์ชัน (Function)
+  - `E6xx`: ข้อผิดพลาดเกี่ยวกับบริบทการดึงข้อมูลตัวแปร (Context)
+- **ข้อความแสดงข้อผิดพลาดทั้งหมดต้องเขียนเป็นภาษาไทย**
+
+### การวินิจฉัย (Diagnostics)
+
+- โครงสร้างและข้อมูลข้อผิดพลาดจะต้องมาพร้อมกับตำแหน่ง `Span` เพื่อแสดงจุดเกิดปัญหาในสูตรได้อย่างชัดเจน
+
+### ความปลอดภัย (Security)
+
+- ห้าม Commit Secrets, Credentials หรือ API keys ใด ๆ ลงในระบบ
+- จัดการและคัดกรองข้อมูลอินพุตของสูตรคำนวณ ป้องกัน stack overflow และการเรียกใช้ทรัพยากรระบบมากเกินไป
+
+---
+
+## กลยุทธ์การทดสอบ (Testing Strategy)
+
+### เฟรมเวิร์กและเครื่องมือ (Framework and Tools)
+
+- **Test Framework:** ตัวทดสอบมาตรฐานที่มาพร้อมกับ Rust (`cargo test`)
+- **Assertion Library:** มาตรฐานในตัวของ Rust พร้อมกับไลบรารีภายนอก `pretty_assertions` เพื่อการแสดงผลส่วนต่างที่แตกต่างอย่างละเอียด
+- **Snapshot Testing:** ไลบรารี `insta` สำหรับตรวจสอบ snapshot ความถูกต้องของชุดข้อมูลข้อผิดพลาด
+- **Performance Benchmarking:** ไลบรารี `criterion` สำหรับตรวจสอบประสิทธิภาพความเร็ว
+
+### การจัดระเบียบการทดสอบ (Test Organization)
+
+- **Unit Tests:** จัดทำไว้ในไฟล์แยกเฉพาะ [src/lib_tests.rs](file:///D:/dev/10/poe-sdk-rs-fix-pr10/src/lib_tests.rs) และเขียนไว้ภายใต้บล็อก `#[cfg(test)]` ของโมดูลย่อยต่าง ๆ
+- **Integration Tests:** การทดสอบ snapshot ข้อผิดพลาดรวมอยู่ในไฟล์ [tests/error_snapshots.rs](file:///D:/dev/10/poe-sdk-rs-fix-pr10/tests/error_snapshots.rs)
+- **Doc Tests:** ตัวอย่างโค้ดที่ระบุไว้ในส่วนเอกสารระดับฟังก์ชันสาธารณะเพื่อยืนยันการทำงานจริง
+
+### การตั้งชื่อการทดสอบ (Test Naming)
+
+ใช้รูปแบบ: `{subject}_{scenario}_{expected_outcome}`
+- ตัวอย่างเช่น: `evaluate_sum_empty_array_returns_zero`
+
+### การรันการทดสอบ (Running Tests)
+
+ดูคำสั่งในการทดสอบทั้งหมดได้ที่หัวข้อ [Build และ Run](#build-และ-run-build-and-run) ด้านล่าง
+
+---
+
+## การบำรุงรักษาเอกสาร (Documentation Maintenance)
+
+| เอกสาร | อัปเดตเมื่อ |
+|----------|-------------|
+| [README.md](file:///D:/dev/10/poe-sdk-rs-fix-pr10/README.md) | มีการเปลี่ยนขอบเขตโครงการ ขั้นตอนการติดตั้ง หรือวิธีการรันตัวอย่างคำสั่ง |
+| [AGENTS.md](file:///D:/dev/10/poe-sdk-rs-fix-pr10/AGENTS.md) | มีการปรับโครงสร้างโมดูลหลัก, เวิร์กโฟลว์ หรือคำสั่งในการพัฒนา |
+| [STYLE_GUIDE.md](file:///D:/dev/10/poe-sdk-rs-fix-pr10/STYLE_GUIDE.md) | ข้อกำหนดด้านความกว้างบรรทัด การจัดฟอร์แมต หรือสไตล์โค้ดมีการแก้ไข |
+| [PLAN.md](file:///D:/dev/10/poe-sdk-rs-fix-pr10/PLAN.md) | มีความคืบหน้าของฟีเจอร์ใน V2 Roadmap |
+| [SPEC.md](file:///D:/dev/10/poe-sdk-rs-fix-pr10/SPEC.md) | มีการเปลี่ยนแปลงการออกแบบสถาปัตยกรรมทางเทคนิคหรือข้อมูลจำเพาะระบบสูตรคำนวณ |
+
+---
+
+## กฎการทำงานแบบขนาน (Parallelization Rules)
+
+### ความเป็นเจ้าของไฟล์ (File Ownership)
+
+แต่ละงานหรือหน่วยการพัฒนา (Story) จะต้องระบุอย่างชัดเจนว่าเข้าไปปรับปรุงในไฟล์ส่วนใด ไม่มีสองงานใน Wave เดียวกันที่แก้ไขทับซ้อนในไฟล์เดียวกันเพื่อลดปัญหา Conflict
+
+### โครงสร้าง Wave (Wave Structure)
+
+การดำเนินงานจัดกลุ่มเป็นรอบ (Wave) ที่ทำงานคู่ขนานกันได้โดยไม่มีการทับซ้อนและไม่มีความเกี่ยวโยงของ Dependency ระหว่างงานในรอบเดียวกัน
+
+```
+Wave 1: [ฟีเจอร์ Lexer] [ฟีเจอร์ AST โครงสร้างใหม่]
+         ↓ ตรวจสอบความถูกต้องและผสานโค้ด ↓
+Wave 2: [ฟีเจอร์ Parser ผูกกับ AST ใหม่] [ฟีเจอร์ Built-in ด้านวันที่]
+         ↓ ตรวจสอบความถูกต้องและผสานโค้ด ↓
+Wave 3: [ปรับปรุงความถูกต้องของเอกสารและการวิเคราะห์ประสิทธิภาพ]
+```
+
+### เกณฑ์ Dependencies (Dependency Gates)
+
+- งานย่อยจะไม่เริ่มต้นขึ้นจนกว่างานที่เป็นรากฐานหลักจะได้รับการทดสอบ ผ่านกระบวนการรีวิว และถูกผสานเข้ากับสายหลักเรียบร้อยแล้ว
+- ทุก Wave จะต้องผ่านกระบวนการลินต์และเทสก่อนเริ่มต้นดำเนินการ Wave ถัดไป
+
+---
+
+## เกณฑ์การตรวจสอบ (Validation Gates)
+
+ก่อนที่สาขาพัฒนา (Pull Request) จะได้รับการพิจารณาผสานโค้ดเข้าสู่สายหลัก:
+
+- [ ] **การทดสอบผ่านทั้งหมด** — การทดสอบที่มีอยู่เดิมและการทดสอบใหม่ทั้งหมดผ่านเรียบร้อย (`cargo test --verbose`)
+- [ ] **การวิเคราะห์ไวยากรณ์และความสะอาดของลินเตอร์** — การฟอร์แมตและตรวจสอบโค้ดด้วย Clippy ต้องเสร็จสมบูรณ์และไร้ข้อผิดพลาดหรือคำเตือนใด ๆ (`cargo fmt` และ `cargo clippy` ผ่าน 100%)
+- [ ] **การตรวจสอบเอกสารและเทสเอกสาร** — การเขียน doc comments ถูกต้องและรัน doc tests ผ่านเรียบร้อย (`cargo test --doc`)
+- [ ] **อัปเดตและเก็บข้อมูล Snapshot** — ตรวจสอบให้แน่ใจว่าได้ทำการอัปเดต snapshot หากมีการแก้ไขโครงสร้างผลลัพธ์ข้อผิดพลาด (`INSTA_UPDATE=1 cargo test --test error_snapshots`)
+- [ ] **ไม่มีการเปลี่ยนแปลงที่ไม่เกี่ยวข้อง** — ไม่ปรับเปลี่ยนซอร์สโค้ดส่วนอื่น ๆ นอกเหนือจากที่ระบุไว้ใน Issue
+- [ ] **เกณฑ์การยอมรับ (Acceptance Criteria) ได้รับการตอบสนอง** — ฟังก์ชันและลอจิกทำงานถูกต้องสมบูรณ์
+- [ ] **การรีวิวเสร็จสิ้น** — ได้รับการยอมรับการรีวิวตรวจสอบจากมนุษย์
+
+---
+
+## Build และ Run (Build and Run)
+
+```bash
+# ตรวจสอบชนิดข้อมูลและการคอมไพล์เบื้องต้น
+cargo check
+
+# ตรวจสอบการจัดรูปแบบโครงสร้างสไตล์โค้ด (CI Gate)
+cargo fmt --all -- --check
+
+# จัดฟอร์แมตโค้ดอัตโนมัติ
+cargo fmt --all
+
+# ตรวจสอบและค้นหาข้อผิดพลาดเชิงลินต์ (Clippy - CI Gate ปฏิเสธ Warning)
+cargo clippy --all-targets --all-features -- -D warnings
+
+# รันการทดสอบทั้งหมด (Unit + Integration + Doc Tests)
+cargo test --verbose
+
+# รันเฉพาะการทดสอบ Doc Tests
+cargo test --doc
+
+# รันเฉพาะการทดสอบ Snapshot (Insta Snapshot)
+cargo test --test error_snapshots
+
+# รันเพื่อปรับปรุงและอัปเดตไฟล์ Snapshot ของข้อผิดพลาดใหม่
+INSTA_UPDATE=1 cargo test --test error_snapshots
+
+# รันเพื่อทดสอบประสิทธิภาพและการประมวลผล (Criterion)
+cargo bench
+
+# สร้างและตรวจสอบเอกสารในรูปแบบ HTML
+cargo doc --no-deps --document-private-items
+
+# รันโปรแกรมสาธิตพื้นฐาน (Example)
+cargo run --example basic
+
+# รันโปรแกรมสาธิตการทำงานขั้นสูง (Advanced Example)
+cargo run --example advanced
+```
