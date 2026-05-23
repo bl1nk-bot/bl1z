@@ -35,7 +35,7 @@
 
 ```toml
 [dependencies]
-bl1z = "0.1.0"
+bl1z = "0.2.0"
 ```
 
 หรือหากต้องการใช้จาก source code ในเครื่อง:

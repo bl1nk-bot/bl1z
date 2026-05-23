@@ -71,7 +71,7 @@
 
 โปรเจกต์นี้ใช้ข้อกำหนด [Conventional Commits](https://www.conventionalcommits.org/):
 
-```
+```text
 <type>(<scope>): <สรุปสั้นๆ>
 
 <เนื้อหาเพิ่มเติม: อธิบายว่าทำอะไรและทำไม ไม่ใช่ทำอย่างไร>

@@ -183,7 +183,7 @@ impl<'a> Parser<'a> {
                         return Err(FormulaError::new(
                             ErrorKind::ParseError,
                             "E201",
-                            "ต้องการ identifier หลังจุด",
+                            "ต้องการชื่อคุณสมบัติ (identifier) หลังเครื่องหมายจุด",
                             Some(field_tok.span),
                         ));
                     }
@@ -194,7 +194,7 @@ impl<'a> Parser<'a> {
                     expr = SpannedExpr::new(
                         Expr::PropertyAccess {
                             object: Box::new(expr),
-                            field: field_tok.lexeme.clone(),
+                            property: field_tok.lexeme.clone(),
                         },
                         span,
                     );

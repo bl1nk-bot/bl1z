@@ -36,7 +36,7 @@
 ## สถาปัตยกรรม (Architecture)
 
 โปรเจกต์นี้มีท่อส่งประมวลผล (Pipeline) หลักดังนี้:
-```
+```text
 อินพุต (สูตร) → Lexer (src/lexer.rs) → Parser (src/parser.rs) → Evaluator (src/eval.rs) → เอาต์พุต (Value)
 ```
 
@@ -48,7 +48,7 @@
 
 ## โครงสร้าง Repository (Repository Structure)
 
-```
+```text
 poe-sdk-rs-fix-pr10/
 ├── src/                    # ซอร์สโค้ดหลักของ Crate
 │   ├── builtins/           # ฟังก์ชันมาตรฐาน (string, math, logic, date, collection)
@@ -83,7 +83,7 @@ poe-sdk-rs-fix-pr10/
 
 ### เวิร์กโฟลว์ (Workflow)
 
-```
+```text
 วางแผน → สร้าง Issue → พัฒนา → รีวิว → รวมโค้ด → เอกสาร
 ```
 
@@ -199,7 +199,7 @@ poe-sdk-rs-fix-pr10/
 
 การดำเนินงานจัดกลุ่มเป็นรอบ (Wave) ที่ทำงานคู่ขนานกันได้โดยไม่มีการทับซ้อนและไม่มีความเกี่ยวโยงของ Dependency ระหว่างงานในรอบเดียวกัน
 
-```
+```text
 Wave 1: [ฟีเจอร์ Lexer] [ฟีเจอร์ AST โครงสร้างใหม่]
          ↓ ตรวจสอบความถูกต้องและผสานโค้ด ↓
 Wave 2: [ฟีเจอร์ Parser ผูกกับ AST ใหม่] [ฟีเจอร์ Built-in ด้านวันที่]

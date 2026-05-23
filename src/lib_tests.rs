@@ -488,8 +488,7 @@ fn evaluate_map_literal_with_single_pair() {
     expected.insert("name".to_string(), Value::String("Alice".to_string()));
     match result {
         Value::Map(map) => {
-            assert_eq!(map.len(), 1);
-            assert_eq!(map.get("name"), Some(&Value::String("Alice".to_string())));
+            assert_eq!(map, expected);
         }
         _ => panic!("expected Map"),
     }

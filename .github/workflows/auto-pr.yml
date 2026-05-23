@@ -19,15 +19,15 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
           components: rustfmt, clippy
 
       - name: Cache dependencies
@@ -49,18 +49,22 @@ jobs:
         id: check_pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REF_NAME: ${{ github.ref_name }}
+          REPO_OWNER: ${{ github.repository_owner }}
         run: |
           # ตรวจสอบว่ามี PR จาก branch นี้ไปยัง upstream แล้วหรือยังเพื่อป้องกันการเปิด PR ซ้ำ
-          PR_EXISTS=$(gh pr list --repo bl1nk-bot/bl1z --head "${{ github.repository_owner }}:${{ github.ref_name }}" --json number --jq 'length')
+          PR_EXISTS=$(gh pr list --repo bl1nk-bot/bl1z --head "$REPO_OWNER:$REF_NAME" --json number --jq 'length')
           echo "exists=$PR_EXISTS" >> $GITHUB_OUTPUT
 
       - name: Create Pull Request to Upstream
         if: steps.check_pr.outputs.exists == '0'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REF_NAME: ${{ github.ref_name }}
+          REPO_OWNER: ${{ github.repository_owner }}
         run: |
           # ตั้งค่าพื้นฐานเบื้องต้น
-          BRANCH_NAME="${{ github.ref_name }}"
+          BRANCH_NAME="$REF_NAME"
           PR_TITLE="${BRANCH_NAME}: Auto PR from Fork"
           PR_BODY="This PR was automatically created by GitHub Actions after passing formatting, cargo clippy, unit/integration tests, and security audits."
           LABELS="auto-pr"
@@ -105,7 +109,7 @@ jobs:
           # ส่ง PR ไปยัง upstream repository
           gh pr create \
             --repo bl1nk-bot/bl1z \
-            --head "${{ github.repository_owner }}:${{ github.ref_name }}" \
+            --head "$REPO_OWNER:$REF_NAME" \
             --base main \
             --title "$PR_TITLE" \
             --body -e "$PR_BODY" \
@@ -116,16 +120,14 @@ jobs:
         env:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
           TARGET_URL="${WEBHOOK_URL:-$DISCORD_WEBHOOK}"
           if [ -n "$TARGET_URL" ]; then
-            MESSAGE="📢 **Auto PR Created Successfully!**\nBranch: \`${{ github.ref_name }}\`\n📝 โปรดตรวจสอบคอมม้นใน Pull Request เพื่อดำเนินการรีวิวต่อไป"
+            MESSAGE="📢 **Auto PR Created Successfully!**\nBranch: \`$REF_NAME\`\n📝 โปรดตรวจสอบคอมม้นใน Pull Request เพื่อดำเนินการรีวิวต่อไป"
             curl -X POST -H "Content-Type: application/json" \
               -d "{\"content\": \"$MESSAGE\"}" \
               "$TARGET_URL"
           else
             echo "No Webhook secret found, skipping notification."
           fi
-
-
-

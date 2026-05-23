@@ -68,7 +68,7 @@ pub enum Expr {
     MapLiteral(Vec<(String, SpannedExpr)>),
     PropertyAccess {
         object: Box<SpannedExpr>,
-        field: String,
+        property: String,
     },
     IndexAccess {
         object: Box<SpannedExpr>,

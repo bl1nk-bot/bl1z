@@ -40,14 +40,14 @@ fn evaluate_impl(
                 Some(span),
             )
         }),
-        Expr::PropertyAccess { object, field } => {
+        Expr::PropertyAccess { object, property } => {
             let obj = evaluate_impl(object, ctx, registry, depth + 1)?;
             match obj {
-                Value::Map(map) => map.get(field).cloned().ok_or_else(|| {
+                Value::Map(map) => map.get(property).cloned().ok_or_else(|| {
                     FormulaError::new(
                         ErrorKind::PropertyNotFound,
                         "E207",
-                        &format!("ไม่พบ property '{}'", field),
+                        &format!("ไม่พบ property '{}'", property),
                         Some(span),
                     )
                 }),
@@ -64,6 +64,14 @@ fn evaluate_impl(
             let idx = evaluate_impl(index, ctx, registry, depth + 1)?;
             match (obj, idx) {
                 (Value::Array(arr), Value::Number(n)) => {
+                    if !n.is_finite() || n.fract() != 0.0 {
+                        return Err(FormulaError::new(
+                            ErrorKind::TypeError,
+                            "E401",
+                            &format!("index ของ array ต้องเป็นจำนวนเต็ม แต่ได้ {}", n),
+                            Some(span),
+                        ));
+                    }
                     let i = n as usize;
                     if n < 0.0 || i >= arr.len() {
                         Err(FormulaError::new(
