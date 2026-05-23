@@ -272,7 +272,7 @@ pub fn sort_fn() -> BuiltinFunction {
             let mut items = arr.clone();
 
             if args.len() == 1 {
-                items.sort_by(|a, b| compare_values(a, b));
+                items.sort_by(compare_values);
                 Ok(Value::Array(items))
             } else {
                 let lambda = &args[1];
