@@ -68,7 +68,7 @@ fn bench_nested_functions(c: &mut Criterion) {
     c.bench_function("nested_functions", |b| {
         b.iter(|| {
             let tokens = tokenize(std::hint::black_box(
-                "upper(contains('HELLO WORLD', lower('world')))",
+                "upper(contains(\"HELLO WORLD\", lower(\"world\")))",
             ))
             .unwrap();
             let ast = parse(&tokens).unwrap();
@@ -86,7 +86,7 @@ fn bench_date_operations(c: &mut Criterion) {
     c.bench_function("date_operations", |b| {
         b.iter(|| {
             let tokens =
-                tokenize(std::hint::black_box("year(date_add('2023-01-01', 365))")).unwrap();
+                tokenize(std::hint::black_box("year(date_add(\"2023-01-01\", 365))")).unwrap();
             let ast = parse(&tokens).unwrap();
             let _result = evaluate(&ast, &ctx, &registry).unwrap();
         })
