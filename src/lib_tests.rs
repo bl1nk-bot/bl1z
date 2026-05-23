@@ -831,7 +831,8 @@ fn evaluate_group_by_function() {
 #[test]
 fn evaluate_sort_with_key_lambda() {
     // sort based on age field in maps
-    let result = eval_formula("sort([{age: 30, name: \"A\"}, {age: 20, name: \"B\"}], x => x.age)").unwrap();
+    let result =
+        eval_formula("sort([{age: 30, name: \"A\"}, {age: 20, name: \"B\"}], x => x.age)").unwrap();
     match result {
         Value::Array(arr) => {
             assert_eq!(arr.len(), 2);
@@ -850,7 +851,10 @@ fn evaluate_sort_with_key_lambda() {
 #[test]
 fn evaluate_unique_with_key_lambda() {
     // unique based on id field in maps
-    let result = eval_formula("unique([{id: 1, name: \"A\"}, {id: 2, name: \"B\"}, {id: 1, name: \"C\"}], x => x.id)").unwrap();
+    let result = eval_formula(
+        "unique([{id: 1, name: \"A\"}, {id: 2, name: \"B\"}, {id: 1, name: \"C\"}], x => x.id)",
+    )
+    .unwrap();
     match result {
         Value::Array(arr) => {
             assert_eq!(arr.len(), 2);
@@ -871,4 +875,3 @@ fn evaluate_unique_with_key_lambda() {
         _ => panic!("Expected Array"),
     }
 }
-

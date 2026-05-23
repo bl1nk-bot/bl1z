@@ -222,9 +222,7 @@ pub fn reduce_fn() -> BuiltinFunction {
 pub fn compare_values(a: &Value, b: &Value) -> std::cmp::Ordering {
     use Value::*;
     match (a, b) {
-        (Number(na), Number(nb)) => {
-            na.partial_cmp(nb).unwrap_or(std::cmp::Ordering::Equal)
-        }
+        (Number(na), Number(nb)) => na.partial_cmp(nb).unwrap_or(std::cmp::Ordering::Equal),
         (String(sa), String(sb)) => sa.cmp(sb),
         (Bool(ba), Bool(bb)) => ba.cmp(bb),
         (Null, Null) => std::cmp::Ordering::Equal,
@@ -293,7 +291,7 @@ pub fn sort_fn() -> BuiltinFunction {
 
                         let mut eval_error = None;
                         let mut items_with_keys = Vec::new();
-                        
+
                         for item in items {
                             let mut item_ctx = crate::context::Context::new();
                             for (k, v) in captured_scope.iter() {
@@ -316,8 +314,9 @@ pub fn sort_fn() -> BuiltinFunction {
                         }
 
                         items_with_keys.sort_by(|(_, ka), (_, kb)| compare_values(ka, kb));
-                        
-                        let sorted_items = items_with_keys.into_iter().map(|(item, _)| item).collect();
+
+                        let sorted_items =
+                            items_with_keys.into_iter().map(|(item, _)| item).collect();
                         Ok(Value::Array(sorted_items))
                     }
                     _ => Err(FormulaError::new(
@@ -433,12 +432,15 @@ pub fn unique_fn() -> BuiltinFunction {
                 return Err(FormulaError::new(
                     ErrorKind::FunctionError,
                     "E503",
-                    &format!("ฟังก์ชัน 'unique' ต้องการ 1 หรือ 2 อาร์กิวเมนต์ แต่ได้ {}", args.len()),
+                    &format!(
+                        "ฟังก์ชัน 'unique' ต้องการ 1 หรือ 2 อาร์กิวเมนต์ แต่ได้ {}",
+                        args.len()
+                    ),
                     None,
                 ));
             }
             let arr = require_array(&args[0])?;
-            
+
             if args.len() == 1 {
                 let mut result = Vec::new();
                 for v in arr {
@@ -482,7 +484,7 @@ pub fn unique_fn() -> BuiltinFunction {
                                         e.span,
                                     )
                                 })?;
-                            
+
                             if !seen_keys.contains(&key) {
                                 seen_keys.push(key);
                                 result.push(item.clone());
