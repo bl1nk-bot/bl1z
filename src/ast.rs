@@ -64,6 +64,15 @@ pub enum Expr {
         args: Vec<SpannedExpr>,
     },
     Grouping(Box<SpannedExpr>),
-    ArrayLiteral(Vec<SpannedExpr>), // เพิ่ม: array literal elements
-    MapLiteral(Vec<(String, SpannedExpr)>), // เพิ่ม: map literal key-value pairs
+    ArrayLiteral(Vec<SpannedExpr>),
+    MapLiteral(Vec<(String, SpannedExpr)>),
+    // Phase 8: Access Chaining
+    PropertyAccess {
+        object: Box<SpannedExpr>,
+        field: String,
+    },
+    IndexAccess {
+        object: Box<SpannedExpr>,
+        index: Box<SpannedExpr>,
+    },
 }
