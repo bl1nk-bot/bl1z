@@ -50,3 +50,7 @@ criterion-*
 sbom.json
 nul
 context*.json
+
+# Snapshot files (insta)
+*.snap
+tests/snapshots/
