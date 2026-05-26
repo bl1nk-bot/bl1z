@@ -5,34 +5,12 @@ use crate::functions::BuiltinFunction;
 use crate::value::Value;
 
 /// Apply a lambda to arguments.
-pub fn apply_lambda(lambda: &Value, args: &[Value]) -> Result<Value, FormulaError> {
-    match lambda {
-        Value::Lambda(_body_expr, params, _captured_scope) => {
-            if params.len() != args.len() {
-                return Err(FormulaError::new(
-                    ErrorKind::FunctionError,
-                    "E503",
-                    &format!(
-                        "lambda ต้องการ {} อาร์กิวเมนต์ แต่ได้ {}",
-                        params.len(),
-                        args.len()
-                    ),
-                    None,
-                ));
-            }
-
-            // For simplicity, evaluate directly here using eval
-            // This requires access to context which we don't have easily...
-            // Let's store lambdas in the registry instead
-            Ok(Value::Null)
-        }
-        _ => Err(FormulaError::new(
-            ErrorKind::TypeError,
-            "E401",
-            "ค่านี้ไม่ใช่ lambda",
-            None,
-        )),
-    }
+pub fn apply_lambda(
+    lambda: &Value,
+    args: &[Value],
+    registry: &crate::functions::FunctionRegistry,
+) -> Result<Value, FormulaError> {
+    crate::eval::apply_lambda(lambda, args, registry)
 }
 
 /// map(array, lambda) -> Array

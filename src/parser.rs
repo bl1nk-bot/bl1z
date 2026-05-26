@@ -230,7 +230,7 @@ impl<'a> Parser<'a> {
             };
             let op_span = token_span(self.tokens, self.pos);
             self.advance();
-            let expr = self.parse_primary()?;
+            let expr = self.parse_unary()?;
             let span = Span {
                 start: op_span.start,
                 end: expr.meta.span.end,
