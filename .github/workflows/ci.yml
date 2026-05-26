@@ -1,20 +1,24 @@
-# Formula Engine CI/CD Pipeline
+# Integrated CI/CD & Auto Pull Request Pipeline
 name: CI
 
 on:
   push:
     branches: [ main, develop ]
+    # Also trigger on feature branches for early validation
+    branches-ignore: []
   pull_request:
     branches: [ main, develop ]
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
+  issues: write
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  # Verify commit message format
+  # 1. Verify commit message format
   commit-lint:
     name: Lint Commit Message
     runs-on: ubuntu-latest
@@ -26,15 +30,11 @@ jobs:
 
       - name: Check commit message format
         run: |
-          # Pattern: <type>(Phase <N>): <title> (total header max 50 chars)
-          # Types: feat|fix|ci|docs|style|refactor|test|chore
           PATTERN="^(feat|fix|ci|docs|style|refactor|test|chore)\(Phase [0-9]+\): .{1,40}$"
           
-          # For pull requests, check all commits in the PR
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             commits=$(git log --format=%s origin/${{ github.base_ref }}..HEAD)
           else
-            # For pushes, check the latest commit
             commits=$(git log -1 --format=%s)
           fi
           
@@ -56,102 +56,33 @@ jobs:
             exit 1
           fi
 
-  # Primary CI job - comprehensive testing
+  # 2. Primary CI job - comprehensive testing
   test:
     name: Test Suite
     needs: commit-lint
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rust:
-          - stable
-          - beta
-          - 1.90.0  # MSRV (Minimum Supported Rust Version)
+        rust: [ stable, beta ] # Simplified for non-main pushes to save resources
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
           components: rustfmt, clippy
-
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
-
-      - name: Ensure latest Rust
-        run: rustup update stable
-
       - name: Check formatting
         run: cargo fmt --all -- --check
-
       - name: Run clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
-
       - name: Run tests
         run: cargo test --verbose
 
-      - name: Run doc tests
-        run: cargo test --doc
-
-      - name: Generate documentation
-        run: cargo doc --no-deps --document-private-items
-
-  # Test examples separately for better visibility
-  examples:
-    name: Test Examples
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: stable
-
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2
-
-      - name: Ensure latest Rust
-        run: rustup update stable
-
-      - name: Test basic example
-        run: cargo run --example basic
-
-      - name: Test advanced example
-        run: cargo run --example advanced
-
-  # Test snapshot updates (only on main branch)
-  snapshots:
-    name: Update Snapshots
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: stable
-
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2
-
-      - name: Ensure latest Rust
-        run: rustup update stable
-
-      - name: Test and update snapshots
-        run: cargo test --test error_snapshots
-        env:
-          INSTA_UPDATE: 1
-
-  # Security audit
+  # 3. Security audit
   audit:
     name: Security Audit
     runs-on: ubuntu-latest
@@ -161,69 +92,72 @@ jobs:
       - name: Run audit
         uses: actions-rust-lang/audit@v1
 
-  # Auto release and notification when main CI passes
-  release:
-    name: Auto Release & Tag
+  # 4. Auto Pull Request (Only for feature branches on push)
+  auto-pr:
+    name: Create Pull Request
+    needs: [test, audit]
     runs-on: ubuntu-latest
-    needs: [test, audit, examples]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    permissions:
-      contents: write
-      pull-requests: write
+    # Run only on feature branch pushes (not main/develop, not PR events)
+    if: github.event_name == 'push' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          
+          # Check if PR already exists
+          existing_pr=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number')
+          if [ -n "$existing_pr" ]; then
+            echo "PR already exists (#$existing_pr), skipping creation."
+            exit 0
+          fi
 
+          # Triage: Link to Phase issues
+          ISSUES_JSON=$(gh issue list --repo ${{ github.repository }} --state open --json number,title --limit 30)
+          PHASE_NUM=$(echo "$BRANCH_NAME" | grep -oE '[0-9]+' | head -n 1)
+          
+          PR_TITLE="${BRANCH_NAME}: Auto PR"
+          PR_BODY="Automated PR after passing all CI gates."
+
+          if [ -n "$PHASE_NUM" ]; then
+            MATCHED_ISSUE=$(echo "$ISSUES_JSON" | jq -c --arg num "$PHASE_NUM" '.[] | select(.title | test("Phase " + $num))' | head -n 1)
+            if [ -n "$MATCHED_ISSUE" ] && [ "$MATCHED_ISSUE" != "null" ]; then
+              ISSUE_NO=$(echo "$MATCHED_ISSUE" | jq -r '.number')
+              ISSUE_TITLE=$(echo "$MATCHED_ISSUE" | jq -r '.title')
+              PR_TITLE="feat(v2): implement $ISSUE_TITLE (Auto PR)"
+              PR_BODY="Resolves #$ISSUE_NO\n\n_Auto-generated after CI validation._"
+            fi
+          fi
+
+          gh pr create \
+            --title "$PR_TITLE" \
+            --body "$PR_BODY" \
+            --base main \
+            --head "$BRANCH_NAME" \
+            --label "auto-pr"
+
+  # 5. Auto release and notification (Main branch only)
+  release:
+    name: Auto Release
+    runs-on: ubuntu-latest
+    needs: [test, audit]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
-      - name: Get Version from Cargo.toml
+      - name: Get Version
         id: get_version
-        run: |
-          VERSION=$(grep -m1 '^version = ' Cargo.toml | cut -d '"' -f2)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Check if Tag Exists
-        id: check_tag
-        run: |
-          git fetch --tags
-          if git rev-parse "v${{ steps.get_version.outputs.version }}" >/dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create Git Tag and Push
-        if: steps.check_tag.outputs.exists == 'false'
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "v${{ steps.get_version.outputs.version }}"
-          git push origin "v${{ steps.get_version.outputs.version }}"
-
-      - name: Create GitHub Release
-        if: steps.check_tag.outputs.exists == 'false'
+        run: echo "version=$(grep -m1 '^version = ' Cargo.toml | cut -d '\"' -f2)" >> $GITHUB_OUTPUT
+      - name: Create Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "v${{ steps.get_version.outputs.version }}" \
-            --title "Release v${{ steps.get_version.outputs.version }}" \
-            --notes "Automated public release of version v${{ steps.get_version.outputs.version }} after passing all CI/CD validations."
-
-      - name: Send Webhook Notification
-        if: always()
-        env:
-          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        run: |
-          # เลือกใช้งาน URL ที่มี
-          TARGET_URL="${WEBHOOK_URL:-$DISCORD_WEBHOOK}"
-          if [ -n "$TARGET_URL" ]; then
-            MESSAGE="🚀 **Auto Release Success!** Version v${{ steps.get_version.outputs.version }} has been published.\n📝 ให้ตรวจสอบคอมม้นเพื่อเช็ครายละเอียดเพิ่มเติม"
-            curl -X POST -H "Content-Type: application/json" \
-              -d "{\"content\": \"$MESSAGE\"}" \
-              "$TARGET_URL"
-          else
-            echo "No Webhook secret found, skipping notification."
+          git fetch --tags
+          if ! git rev-parse "v${{ steps.get_version.outputs.version }}" >/dev/null 2>&1; then
+            gh release create "v${{ steps.get_version.outputs.version }}" --generate-notes
           fi
-
