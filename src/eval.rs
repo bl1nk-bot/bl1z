@@ -222,11 +222,7 @@ fn evaluate_impl(
                     return Err(FormulaError::new(
                         ErrorKind::FunctionError,
                         "E503",
-                        &format!(
-                            "ฟังก์ชัน '{}' ต้องการ 3 อาร์กิวเมนต์ แต่ได้ {}",
-                            name,
-                            args.len()
-                        ),
+                        &format!("ฟังก์ชัน '{}' ต้องการ 3 อาร์กิวเมนต์ แต่ได้ {}", name, args.len()),
                         Some(span),
                     ));
                 }

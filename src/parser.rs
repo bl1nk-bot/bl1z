@@ -222,7 +222,10 @@ impl<'a> Parser<'a> {
 
     /// unary = ('-' | '+' | '!')? primary
     fn parse_unary(&mut self) -> Result<SpannedExpr, FormulaError> {
-        if self.peek() == TokenKind::Minus || self.peek() == TokenKind::Plus || self.peek() == TokenKind::Bang {
+        if self.peek() == TokenKind::Minus
+            || self.peek() == TokenKind::Plus
+            || self.peek() == TokenKind::Bang
+        {
             let op = match self.peek() {
                 TokenKind::Minus => UnaryOp::Neg,
                 TokenKind::Plus => UnaryOp::Pos,
@@ -520,7 +523,7 @@ pub fn parse(tokens: &[Token]) -> Result<SpannedExpr, FormulaError> {
         let mut exprs = vec![first_expr];
         while parser.peek() == TokenKind::Semicolon {
             parser.advance(); // consume ';'
-            // Allow trailing semicolons
+                              // Allow trailing semicolons
             if parser.peek() == TokenKind::Eof {
                 break;
             }

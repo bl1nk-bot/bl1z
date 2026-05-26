@@ -269,7 +269,8 @@ fn evaluate_index_access() {
 
 #[test]
 fn evaluate_nested_access() {
-    let result = eval_formula("{users: [{name: \"Alice\"}, {name: \"Bob\"}]}.users[1].name").unwrap();
+    let result =
+        eval_formula("{users: [{name: \"Alice\"}, {name: \"Bob\"}]}.users[1].name").unwrap();
     assert_eq!(result, Value::String("Bob".to_string()));
 }
 

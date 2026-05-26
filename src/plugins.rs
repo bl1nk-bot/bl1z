@@ -128,10 +128,7 @@ impl PluginManager {
     /// # Returns
     /// * `Ok(())` - รวมฟังก์ชันสำเร็จ
     /// * `Err(FormulaError)` - พบชื่อฟังก์ชันซ้ำกัน
-    pub fn merge_functions(
-        &self,
-        registry: &mut FunctionRegistry,
-    ) -> Result<(), FormulaError> {
+    pub fn merge_functions(&self, registry: &mut FunctionRegistry) -> Result<(), FormulaError> {
         let mut to_register = Vec::new();
         for plugin in &self.plugins {
             for func in plugin.functions() {
@@ -228,8 +225,7 @@ mod tests {
         assert_eq!(func.arity, 1);
 
         // Test calling the plugin function
-        let result =
-            (func.call)(&[Value::Number(5.0)]).unwrap();
+        let result = (func.call)(&[Value::Number(5.0)]).unwrap();
         assert_eq!(result, Value::Number(25.0));
     }
 

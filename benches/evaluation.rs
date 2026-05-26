@@ -141,8 +141,9 @@ fn bench_phase9_higher_order(c: &mut Criterion) {
         b.iter(|| {
             // Complex chain: filter values > 5, then double them
             let tokens = tokenize(std::hint::black_box(
-                "map(filter([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], x => x > 5), x => x * 2)"
-            )).unwrap();
+                "map(filter([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], x => x > 5), x => x * 2)",
+            ))
+            .unwrap();
             let ast = parse(&tokens).unwrap();
             let _result = evaluate(&ast, &ctx, &registry).unwrap();
         })
