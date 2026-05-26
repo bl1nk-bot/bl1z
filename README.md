@@ -1,10 +1,11 @@
 # bl1z
 
-[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
+| Build | Quality | Security | License |
+|:---:|:---:|:---:|:---:|
+| [![CI](https://github.com/bl1nk-bot/bl1z/actions/workflows/ci.yml/badge.svg)](https://github.com/bl1nk-bot/bl1z/actions/workflows/ci.yml) | [![CodeQL](https://github.com/bl1nk-bot/bl1z/actions/workflows/codeql.yml/badge.svg)](https://github.com/bl1nk-bot/bl1z/actions/workflows/codeql.yml) | [![CI Failure Handler](https://github.com/bl1nk-bot/bl1z/actions/workflows/ci-fail.yml/badge.svg)](https://github.com/bl1nk-bot/bl1z/actions/workflows/ci-fail.yml) | [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE) |
+
 [![Rust](https://img.shields.io/badge/rust-1.95%2B-orange.svg)](https://www.rust-lang.org)
 [![Version](https://img.shields.io/badge/version-0.2.0-green.svg)](https://crates.io/crates/bl1z)
-[![CI](https://github.com/bl1nk-bot/bl1z/actions/workflows/ci.yml/badge.svg)](https://github.com/bl1nk-bot/bl1z/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/bl1nk-bot/bl1z/actions/workflows/codeql.yml/badge.svg)](https://github.com/bl1nk-bot/bl1z/actions/workflows/codeql.yml)
 [![Documentation](https://docs.rs/bl1z/badge.svg)](https://docs.rs/bl1z)
 
 ## 📖 ภาพรวม

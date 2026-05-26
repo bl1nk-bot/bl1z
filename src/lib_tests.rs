@@ -597,8 +597,8 @@ fn evaluate_user_defined_function_two_params() {
 #[test]
 fn evaluate_user_defined_function_zero_params() {
     assert_eq!(
-        eval_formula_mut("fn pi_val() = 3.141; pi_val()"),
-        Ok(Value::Number(3.141))
+        eval_formula_mut("fn val() = 1.2345; val()"),
+        Ok(Value::Number(1.2345))
     );
 }
 
