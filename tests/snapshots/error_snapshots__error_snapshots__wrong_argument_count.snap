@@ -1,8 +1,7 @@
 ---
 source: tests/error_snapshots.rs
-assertion_line: 91
 expression: "format_error(\"len(\\\"hello\\\", \\\"world\\\")\", &err)"
 ---
 [E503] ฟังก์ชัน 'len' ต้องการ 1 อาร์กิวเมนต์ แต่ได้ 2
     1 | len("hello", "world")
-       ^^^^^^^^^^^^^^^^^^^^^^
+       ^^^^

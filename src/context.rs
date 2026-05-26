@@ -7,7 +7,7 @@ use std::rc::Rc;
 ///
 /// Stores the function name, parameter list, and body expression.
 /// Functions are stored in the Context and can be called like built-in functions.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct UserFunction {
     /// ชื่อฟังก์ชัน
     pub name: String,
@@ -300,6 +300,22 @@ impl Context {
             return parent.get_function(name);
         }
         None
+    }
+
+    /// Returns all user-defined functions visible in this context.
+    pub fn get_functions(&self) -> BTreeMap<String, UserFunction> {
+        let mut result = BTreeMap::new();
+        self.collect_functions(&mut result);
+        result
+    }
+
+    fn collect_functions(&self, result: &mut BTreeMap<String, UserFunction>) {
+        if let Some(parent) = &self.parent {
+            parent.collect_functions(result);
+        }
+        for (k, v) in &self.functions {
+            result.insert(k.clone(), v.clone());
+        }
     }
 }
 

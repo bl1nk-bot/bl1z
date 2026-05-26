@@ -220,11 +220,12 @@ impl<'a> Parser<'a> {
         )
     }
 
-    /// unary = ('-' | '!')? primary
+    /// unary = ('-' | '+' | '!')? primary
     fn parse_unary(&mut self) -> Result<SpannedExpr, FormulaError> {
-        if self.peek() == TokenKind::Minus || self.peek() == TokenKind::Bang {
+        if self.peek() == TokenKind::Minus || self.peek() == TokenKind::Plus || self.peek() == TokenKind::Bang {
             let op = match self.peek() {
                 TokenKind::Minus => UnaryOp::Neg,
+                TokenKind::Plus => UnaryOp::Pos,
                 TokenKind::Bang => UnaryOp::Not,
                 _ => unreachable!(),
             };

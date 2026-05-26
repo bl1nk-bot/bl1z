@@ -44,7 +44,7 @@ fn evaluate_impl(
         Expr::Literal(val) => Ok(val.clone()),
         Expr::Variable(name) => ctx.get(name).cloned().ok_or_else(|| {
             FormulaError::new(
-                ErrorKind::ContextError,
+                ErrorKind::VariableNotFound,
                 "E601",
                 &format!("ไม่พบตัวแปร '{}'", name),
                 Some(span),
@@ -124,6 +124,18 @@ fn evaluate_impl(
                         ))
                     }
                 }
+                UnaryOp::Pos => {
+                    if let Value::Number(_) = val {
+                        Ok(val)
+                    } else {
+                        Err(FormulaError::new(
+                            ErrorKind::TypeError,
+                            "E401",
+                            "ตัวดำเนินการบวกใช้ได้กับตัวเลขเท่านั้น",
+                            Some(span),
+                        ))
+                    }
+                }
                 UnaryOp::Not => {
                     if let Value::Bool(b) = val {
                         Ok(Value::Bool(!b))
@@ -182,6 +194,7 @@ fn evaluate_impl(
                 Rc::new((**body).clone()),
                 params.clone(),
                 captured,
+                ctx.get_functions(),
             ))
         }
         Expr::FunctionDef { name, params, body } => {
@@ -266,7 +279,7 @@ fn evaluate_impl(
             }
 
             // Check if function name exists as a variable (might be a lambda)
-            if let Some(Value::Lambda(_, _, _)) = ctx.get(name.as_str()) {
+            if let Some(Value::Lambda(_, _, _, _)) = ctx.get(name.as_str()) {
                 let func_val = ctx.get(name.as_str()).unwrap().clone();
                 let evaluated_args: Vec<Value> = args
                     .iter()

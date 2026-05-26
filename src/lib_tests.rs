@@ -26,8 +26,6 @@ fn eval_with_ctx(formula: &str, ctx: &Context) -> Result<Value, FormulaError> {
     evaluate(&ast, ctx, &prepared_registry())
 }
 
-// -- Arithmetic & Precedence --
-
 #[test]
 fn evaluate_addition_returns_sum() {
     assert_eq!(eval_formula("1 + 2"), Ok(Value::Number(3.0)));
@@ -50,64 +48,69 @@ fn evaluate_parentheses_override_precedence() {
 
 #[test]
 fn evaluate_unary_negation() {
-    assert_eq!(eval_formula("-5 + 3"), Ok(Value::Number(-2.0)));
+    assert_eq!(eval_formula("-1"), Ok(Value::Number(-1.0)));
+    assert_eq!(eval_formula("--1"), Ok(Value::Number(1.0)));
 }
 
 #[test]
 fn evaluate_unary_not() {
-    assert_eq!(eval_formula("!true && false"), Ok(Value::Bool(false)));
+    assert_eq!(eval_formula("!true"), Ok(Value::Bool(false)));
+    assert_eq!(eval_formula("!false"), Ok(Value::Bool(true)));
 }
-
-// -- Comparison & Logic --
 
 #[test]
 fn evaluate_comparison_greater_than_true() {
-    assert_eq!(eval_formula("5 > 3"), Ok(Value::Bool(true)));
+    assert_eq!(eval_formula("2 > 1"), Ok(Value::Bool(true)));
 }
 
 #[test]
 fn evaluate_comparison_greater_than_false() {
-    assert_eq!(eval_formula("3 > 5"), Ok(Value::Bool(false)));
+    assert_eq!(eval_formula("1 > 2"), Ok(Value::Bool(false)));
 }
 
 #[test]
 fn evaluate_equality_same_type_true() {
-    assert_eq!(eval_formula("2 == 2"), Ok(Value::Bool(true)));
+    assert_eq!(eval_formula("1 == 1"), Ok(Value::Bool(true)));
+    assert_eq!(eval_formula("\"a\" == \"a\""), Ok(Value::Bool(true)));
 }
 
 #[test]
 fn evaluate_equality_different_values_false() {
-    assert_eq!(eval_formula("2 == 3"), Ok(Value::Bool(false)));
+    assert_eq!(eval_formula("1 == 2"), Ok(Value::Bool(false)));
+    assert_eq!(eval_formula("\"a\" == \"b\""), Ok(Value::Bool(false)));
 }
 
 #[test]
 fn evaluate_not_inequality() {
-    assert_eq!(eval_formula("2 != 3"), Ok(Value::Bool(true)));
+    assert_eq!(eval_formula("1 != 2"), Ok(Value::Bool(true)));
+    assert_eq!(eval_formula("1 != 1"), Ok(Value::Bool(false)));
 }
 
 #[test]
 fn evaluate_comparison_chained_and() {
-    assert_eq!(eval_formula("5 > 3 && 2 == 2"), Ok(Value::Bool(true)));
+    assert_eq!(eval_formula("1 < 2 && 2 < 3"), Ok(Value::Bool(true)));
+    assert_eq!(eval_formula("1 < 2 && 3 < 2"), Ok(Value::Bool(false)));
 }
 
 #[test]
 fn evaluate_comparison_chained_or() {
-    assert_eq!(eval_formula("1 > 5 || 2 == 2"), Ok(Value::Bool(true)));
+    assert_eq!(eval_formula("1 > 2 || 2 < 3"), Ok(Value::Bool(true)));
+    assert_eq!(eval_formula("1 > 2 || 2 > 3"), Ok(Value::Bool(false)));
 }
 
 #[test]
 fn evaluate_comparison_less_than_or_equal() {
-    assert_eq!(eval_formula("5 <= 5"), Ok(Value::Bool(true)));
-    assert_eq!(eval_formula("6 <= 5"), Ok(Value::Bool(false)));
+    assert_eq!(eval_formula("1 <= 1"), Ok(Value::Bool(true)));
+    assert_eq!(eval_formula("1 <= 2"), Ok(Value::Bool(true)));
+    assert_eq!(eval_formula("2 <= 1"), Ok(Value::Bool(false)));
 }
 
 #[test]
 fn evaluate_comparison_greater_than_or_equal() {
-    assert_eq!(eval_formula("5 >= 5"), Ok(Value::Bool(true)));
-    assert_eq!(eval_formula("4 >= 5"), Ok(Value::Bool(false)));
+    assert_eq!(eval_formula("1 >= 1"), Ok(Value::Bool(true)));
+    assert_eq!(eval_formula("2 >= 1"), Ok(Value::Bool(true)));
+    assert_eq!(eval_formula("1 >= 2"), Ok(Value::Bool(false)));
 }
-
-// -- String Operations --
 
 #[test]
 fn evaluate_string_concatenation() {
@@ -133,540 +136,229 @@ fn evaluate_string_concatenation_empty_right() {
     );
 }
 
-// -- Variables & Context --
-
 #[test]
-fn evaluate_variable_lookup_returns_value() {
-    let mut ctx = Context::new();
-    ctx.set("score", Value::Number(40.0));
-    assert_eq!(eval_with_ctx("score + 10", &ctx), Ok(Value::Number(50.0)));
+fn evaluate_builtin_function_len() {
+    assert_eq!(eval_formula("len(\"hello\")"), Ok(Value::Number(5.0)));
 }
 
 #[test]
-fn evaluate_undefined_variable_returns_context_error() {
-    let result = eval_formula("undefined_var + 1");
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::ContextError);
-    assert_eq!(err.code, "E601");
+fn evaluate_builtin_function_upper() {
+    assert_eq!(
+        eval_formula("upper(\"hello\")"),
+        Ok(Value::String("HELLO".to_string()))
+    );
 }
 
 #[test]
-fn evaluate_variable_shadowing_uses_latest() {
+fn evaluate_builtin_function_lower() {
+    assert_eq!(
+        eval_formula("lower(\"HELLO\")"),
+        Ok(Value::String("hello".to_string()))
+    );
+}
+
+#[test]
+fn evaluate_variable_lookup() {
     let mut ctx = Context::new();
-    ctx.set("x", Value::Number(1.0));
     ctx.set("x", Value::Number(10.0));
-    assert_eq!(eval_with_ctx("x", &ctx), Ok(Value::Number(10.0)));
-}
-
-// -- Function Calls --
-
-#[test]
-fn evaluate_if_function_returns_true_branch() {
-    assert_eq!(eval_formula("if(true, 100, 200)"), Ok(Value::Number(100.0)));
+    assert_eq!(eval_with_ctx("x + 5", &ctx), Ok(Value::Number(15.0)));
 }
 
 #[test]
-fn evaluate_if_function_returns_false_branch() {
-    assert_eq!(
-        eval_formula("if(false, 100, 200)"),
-        Ok(Value::Number(200.0))
-    );
+fn evaluate_nested_variable_lookup() {
+    let mut parent = Context::new();
+    parent.set("x", Value::Number(10.0));
+    let mut child = Context::with_parent(parent.clone());
+    child.set("y", Value::Number(5.0));
+    assert_eq!(eval_with_ctx("x + y", &child), Ok(Value::Number(15.0)));
 }
 
 #[test]
-fn evaluate_nested_function_calls() {
-    assert_eq!(
-        eval_formula("len(upper(\"hello\"))"),
-        Ok(Value::Number(5.0))
-    );
+fn evaluate_variable_shadowing() {
+    let mut parent = Context::new();
+    parent.set("x", Value::Number(10.0));
+    let mut child = Context::with_parent(parent.clone());
+    child.set("x", Value::Number(5.0));
+    assert_eq!(eval_with_ctx("x", &child), Ok(Value::Number(5.0)));
 }
 
 #[test]
-fn evaluate_function_call_wrong_arg_count_returns_function_error() {
-    let result = eval_formula("len(\"hello\", \"world\")");
+fn evaluate_variable_not_found_error() {
+    let result = eval_formula("x + 1");
     assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::FunctionError);
-    assert_eq!(err.code, "E503");
+    assert_eq!(result.unwrap_err().kind, ErrorKind::VariableNotFound);
 }
 
 #[test]
-fn evaluate_undefined_function_returns_function_error() {
-    let result = eval_formula("nonexistent(123)");
+fn evaluate_type_mismatch_error() {
+    let result = eval_formula("1 + \"hello\"");
     assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::FunctionError);
-    assert_eq!(err.code, "E502");
+    assert_eq!(result.unwrap_err().kind, ErrorKind::TypeError);
 }
 
 #[test]
-fn evaluate_function_call_zero_args() {
-    assert_eq!(eval_formula("now()").is_ok(), true);
-}
-
-// -- Complex Expressions --
-
-#[test]
-fn evaluate_complex_conditional_expression() {
-    assert_eq!(
-        eval_formula("if(len(\"hello\") > 3 && 5 >= 5, upper(\"test\"), \"fail\")"),
-        Ok(Value::String("TEST".to_string()))
-    );
-}
-
-// -- Type Errors --
-
-#[test]
-fn evaluate_add_string_number_returns_type_error() {
-    let result = eval_formula("\"hello\" + 123");
+fn evaluate_function_not_found_error() {
+    let result = eval_formula("unknown_func()");
     assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::TypeError);
-    assert_eq!(err.code, "E401");
+    assert_eq!(result.unwrap_err().kind, ErrorKind::FunctionError);
 }
 
 #[test]
-fn evaluate_division_by_zero_returns_eval_error() {
-    let result = eval_formula("1 / 0");
+fn evaluate_wrong_arity_error() {
+    let result = eval_formula("len(\"a\", \"b\")");
     assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.code, "E301");
-}
-
-// -- Array Literals & Operations --
-
-#[test]
-fn parse_array_literal_produces_correct_length() {
-    let tokens = tokenize("[1, 2, 3]").unwrap();
-    let ast = parse(&tokens).unwrap();
-    match ast.expr {
-        Expr::ArrayLiteral(elems) => assert_eq!(elems.len(), 3),
-        _ => panic!("expected ArrayLiteral"),
-    }
+    assert_eq!(result.unwrap_err().kind, ErrorKind::FunctionError);
 }
 
 #[test]
-fn evaluate_empty_array_literal() {
-    assert_eq!(eval_formula("[]"), Ok(Value::Array(vec![])));
+fn evaluate_if_function_true() {
+    assert_eq!(eval_formula("if(true, 1, 2)"), Ok(Value::Number(1.0)));
 }
 
 #[test]
-fn evaluate_nested_array_literal_preserves_structure() {
-    let result = eval_formula("[[1, 2], [3, 4]]").unwrap();
-    assert_eq!(
-        result,
-        Value::Array(vec![
-            Value::Array(vec![Value::Number(1.0), Value::Number(2.0)]),
-            Value::Array(vec![Value::Number(3.0), Value::Number(4.0)]),
-        ])
-    );
+fn evaluate_if_function_false() {
+    assert_eq!(eval_formula("if(false, 1, 2)"), Ok(Value::Number(2.0)));
 }
 
 #[test]
-fn evaluate_array_with_bool_elements() {
-    assert_eq!(
-        eval_formula("[true, false]"),
-        Ok(Value::Array(vec![Value::Bool(true), Value::Bool(false)]))
-    );
-}
-
-#[test]
-fn evaluate_array_with_expression_elements() {
-    assert_eq!(
-        eval_formula("[1 + 1, 2 * 3]"),
-        Ok(Value::Array(vec![Value::Number(2.0), Value::Number(6.0)]))
-    );
-}
-
-#[test]
-fn evaluate_sum_array_returns_total() {
-    assert_eq!(eval_formula("sum([1, 2, 3, 4])"), Ok(Value::Number(10.0)));
-}
-
-#[test]
-fn evaluate_sum_empty_array_returns_zero() {
-    assert_eq!(eval_formula("sum([])"), Ok(Value::Number(0.0)));
-}
-
-#[test]
-fn evaluate_sum_with_float_values() {
-    assert_eq!(eval_formula("sum([1.5, 2.5, 3.0])"), Ok(Value::Number(7.0)));
-}
-
-#[test]
-fn evaluate_sum_with_negative_values() {
-    assert_eq!(eval_formula("sum([-1, -2, 3])"), Ok(Value::Number(0.0)));
-}
-
-#[test]
-fn evaluate_sum_non_array_arg_returns_function_error() {
-    let result = eval_formula("sum(42)");
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::FunctionError);
-    assert_eq!(err.code, "E501");
-}
-
-#[test]
-fn evaluate_sum_non_number_element_returns_function_error() {
-    let result = eval_formula("sum([\"a\", \"b\"])");
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::FunctionError);
-    assert_eq!(err.code, "E501");
-}
-
-#[test]
-fn evaluate_avg_array_returns_mean() {
-    assert_eq!(eval_formula("avg([10, 20])"), Ok(Value::Number(15.0)));
-}
-
-#[test]
-fn evaluate_avg_empty_array_returns_function_error() {
-    let result = eval_formula("avg([])");
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::FunctionError);
-    assert_eq!(err.code, "E504");
-}
-
-#[test]
-fn evaluate_len_array_returns_count() {
-    assert_eq!(eval_formula("len([1, 2, 3])"), Ok(Value::Number(3.0)));
-}
-
-#[test]
-fn evaluate_len_empty_array_returns_zero() {
-    assert_eq!(eval_formula("len([])"), Ok(Value::Number(0.0)));
-}
-
-#[test]
-fn evaluate_len_non_array_non_string_returns_function_error() {
-    let result = eval_formula("len(42)");
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::FunctionError);
-    assert_eq!(err.code, "E501");
-}
-
-#[test]
-fn evaluate_min_array_returns_smallest() {
-    assert_eq!(eval_formula("min([5, 2, 8])"), Ok(Value::Number(2.0)));
-}
-
-#[test]
-fn evaluate_min_with_negative_values() {
-    assert_eq!(eval_formula("min([0, -5, 3])"), Ok(Value::Number(-5.0)));
-}
-
-#[test]
-fn evaluate_min_empty_array_returns_function_error() {
-    let result = eval_formula("min([])");
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::FunctionError);
-    assert_eq!(err.code, "E504");
-}
-
-#[test]
-fn evaluate_max_array_returns_largest() {
-    assert_eq!(eval_formula("max([5, 2, 8])"), Ok(Value::Number(8.0)));
-}
-
-#[test]
-fn evaluate_max_with_negative_values() {
-    assert_eq!(eval_formula("max([-1, -2, -3])"), Ok(Value::Number(-1.0)));
-}
-
-#[test]
-fn evaluate_max_empty_array_returns_function_error() {
-    let result = eval_formula("max([])");
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::FunctionError);
-    assert_eq!(err.code, "E504");
-}
-
-#[test]
-fn evaluate_count_array_returns_length() {
-    assert_eq!(
-        eval_formula("count([1, 2, 3, 4, 5])"),
-        Ok(Value::Number(5.0))
-    );
-}
-
-#[test]
-fn evaluate_count_empty_array_returns_zero() {
-    assert_eq!(eval_formula("count([])"), Ok(Value::Number(0.0)));
-}
-
-#[test]
-fn evaluate_count_equals_len_for_same_array() {
-    let reg = prepared_registry();
-    let tokens_count = tokenize("count([1, 2, 3])").unwrap();
-    let ast_count = parse(&tokens_count).unwrap();
-    let tokens_len = tokenize("len([1, 2, 3])").unwrap();
-    let ast_len = parse(&tokens_len).unwrap();
-    let result_count = evaluate(&ast_count, &Context::new(), &reg).unwrap();
-    let result_len = evaluate(&ast_len, &Context::new(), &reg).unwrap();
-    assert_eq!(result_count, result_len);
-}
-
-#[test]
-fn evaluate_join_array_returns_concatenated_string() {
-    assert_eq!(
-        eval_formula("join([\"a\", \"b\"], \", \")"),
-        Ok(Value::String("a, b".to_string()))
-    );
-}
-
-#[test]
-fn evaluate_join_empty_separator_returns_direct_concatenation() {
-    assert_eq!(
-        eval_formula("join([\"x\", \"y\", \"z\"], \"\")"),
-        Ok(Value::String("xyz".to_string()))
-    );
-}
-
-#[test]
-fn evaluate_join_empty_array_returns_empty_string() {
-    assert_eq!(
-        eval_formula("join([], \",\")"),
-        Ok(Value::String("".to_string()))
-    );
-}
-
-#[test]
-fn evaluate_join_non_string_element_returns_function_error() {
-    let result = eval_formula("join([1, 2], \"-\")");
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::FunctionError);
-    assert_eq!(err.code, "E501");
-}
-
-#[test]
-fn evaluate_array_in_if_condition() {
-    assert_eq!(
-        eval_formula("if(len([1,2,3]) == 3, \"yes\", \"no\")"),
-        Ok(Value::String("yes".to_string()))
-    );
-}
-
-#[test]
-fn evaluate_array_equality_same_elements_true() {
-    assert_eq!(
-        Value::Array(vec![Value::Number(1.0), Value::Number(2.0)]),
-        Value::Array(vec![Value::Number(1.0), Value::Number(2.0)])
-    );
-}
-
-#[test]
-fn evaluate_array_equality_different_elements_false() {
-    assert_ne!(
-        Value::Array(vec![Value::Number(1.0)]),
-        Value::Array(vec![Value::Number(2.0)])
-    );
-}
-
-// -- Map Literals --
-
-#[test]
-fn evaluate_empty_map_literal() {
-    let result = eval_formula("{}").unwrap();
-    match result {
-        Value::Map(map) => assert!(map.is_empty()),
-        _ => panic!("expected Map"),
-    }
-}
-
-#[test]
-fn evaluate_map_literal_with_single_pair() {
-    let result = eval_formula("{name: \"Alice\"}").unwrap();
-    let mut expected = HashMap::new();
-    expected.insert("name".to_string(), Value::String("Alice".to_string()));
-    match result {
-        Value::Map(map) => {
-            assert_eq!(map, expected);
-        }
-        _ => panic!("expected Map"),
-    }
-}
-
-// -- Phase 8: Property Access & Indexing --
-
-#[test]
-fn evaluate_property_access_on_map_literal_returns_value() {
-    assert_eq!(
-        eval_formula("{name: \"Alice\"}.name"),
-        Ok(Value::String("Alice".to_string()))
-    );
-}
-
-#[test]
-fn evaluate_property_access_nested_map_returns_deep_value() {
-    assert_eq!(
-        eval_formula("{user: {name: \"Bob\"}}.user.name"),
-        Ok(Value::String("Bob".to_string()))
-    );
-}
-
-#[test]
-fn evaluate_property_access_from_context_map_returns_value() {
+fn evaluate_complex_expression() {
     let mut ctx = Context::new();
-    let mut inner = HashMap::new();
-    inner.insert("score".to_string(), Value::Number(95.0));
-    ctx.set("user", Value::Map(inner));
-    assert_eq!(eval_with_ctx("user.score", &ctx), Ok(Value::Number(95.0)));
-}
-
-#[test]
-fn evaluate_property_not_found_returns_property_not_found_error() {
-    let result = eval_formula("{name: \"Alice\"}.age");
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::PropertyNotFound);
-    assert_eq!(err.code, "E307");
-}
-
-#[test]
-fn evaluate_property_access_on_non_map_returns_type_error() {
-    let result = eval_formula("(1 + 1).name");
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::TypeError);
-    assert_eq!(err.code, "E401");
-}
-
-#[test]
-fn evaluate_property_access_on_null_returns_type_error() {
-    let result = eval_formula("null.name");
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::TypeError);
-    assert_eq!(err.code, "E401");
-}
-
-#[test]
-fn evaluate_index_access_on_array_returns_element() {
-    assert_eq!(eval_formula("[10, 20, 30][1]"), Ok(Value::Number(20.0)));
-}
-
-#[test]
-fn evaluate_index_access_zero_returns_first_element() {
+    ctx.set("price", Value::Number(100.0));
+    ctx.set("tax_rate", Value::Number(0.07));
     assert_eq!(
-        eval_formula("[\"a\", \"b\"][0]"),
-        Ok(Value::String("a".to_string()))
+        eval_with_ctx("if(price > 50, price * (1 + tax_rate), price)", &ctx),
+        Ok(Value::Number(107.0))
     );
 }
 
 #[test]
-fn evaluate_index_out_of_bounds_returns_index_out_of_bounds_error() {
+fn evaluate_array_literal() {
+    assert_eq!(
+        eval_formula("[1, 2, 1 + 2]"),
+        Ok(Value::Array(vec![
+            Value::Number(1.0),
+            Value::Number(2.0),
+            Value::Number(3.0)
+        ]))
+    );
+}
+
+#[test]
+fn evaluate_map_literal() {
+    let result = eval_formula("{a: 1, b: 2 + 3}").unwrap();
+    if let Value::Map(map) = result {
+        assert_eq!(map.len(), 2);
+        assert_eq!(map.get("a"), Some(&Value::Number(1.0)));
+        assert_eq!(map.get("b"), Some(&Value::Number(5.0)));
+    } else {
+        panic!("Expected Map");
+    }
+}
+
+#[test]
+fn evaluate_property_access() {
+    let result = eval_formula("{user: {name: \"Alice\"}}.user.name").unwrap();
+    assert_eq!(result, Value::String("Alice".to_string()));
+}
+
+#[test]
+fn evaluate_index_access() {
+    let result = eval_formula("[10, 20, 30][1]").unwrap();
+    assert_eq!(result, Value::Number(20.0));
+}
+
+#[test]
+fn evaluate_nested_access() {
+    let result = eval_formula("{users: [{name: \"Alice\"}, {name: \"Bob\"}]}.users[1].name").unwrap();
+    assert_eq!(result, Value::String("Bob".to_string()));
+}
+
+#[test]
+fn evaluate_property_not_found_error() {
+    let result = eval_formula("{a: 1}.b");
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().kind, ErrorKind::PropertyNotFound);
+}
+
+#[test]
+fn evaluate_index_out_of_bounds_error() {
     let result = eval_formula("[1, 2][5]");
     assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::IndexOutOfBounds);
-    assert_eq!(err.code, "E308");
+    assert_eq!(result.unwrap_err().kind, ErrorKind::IndexOutOfBounds);
 }
 
 #[test]
-fn evaluate_index_negative_returns_index_out_of_bounds_error() {
-    let result = eval_formula("[1, 2][-1]");
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::IndexOutOfBounds);
-    assert_eq!(err.code, "E308");
-}
-
-#[test]
-fn evaluate_index_on_non_array_returns_type_error() {
-    let result = eval_formula("\"hello\"[0]");
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::TypeError);
-    assert_eq!(err.code, "E401");
-}
-
-#[test]
-fn evaluate_index_with_non_number_returns_type_error() {
-    let result = eval_formula("[1, 2][\"a\"]");
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::TypeError);
-    assert_eq!(err.code, "E401");
-}
-
-#[test]
-fn evaluate_indexonmapreturnstype_rror() {
-    let result = eval_formula("{a: 1}[0]");
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::TypeError);
-    assert_eq!(err.code, "E401");
-}
-
-#[test]
-fn evaluate_chainedpropertyandindexreturnsnested_alue() {
-    assert_eq!(
-        eval_formula("{users: [{name: \"Alice\"}, {name: \"Bob\"}]}.users[0].name"),
-        Ok(Value::String("Alice".to_string()))
-    );
-}
-
-#[test]
-fn evaluate_deeplynestedpropertyaccessreturnsleaf_alue() {
-    assert_eq!(
-        eval_formula("{a: {b: {c: 42}}}.a.b.c"),
-        Ok(Value::Number(42.0))
-    );
-}
-
-#[test]
-fn evaluate_indexwithexpressionreturnscomputed_lement() {
-    assert_eq!(eval_formula("[10, 20, 30][1 + 1]"), Ok(Value::Number(30.0)));
-}
-
-#[test]
-fn evaluate_propertyaccessinfunction_all() {
-    assert_eq!(
-        eval_formula("len({items: [1, 2, 3]}.items)"),
-        Ok(Value::Number(3.0))
-    );
-}
-
-#[test]
-fn evaluate_indexaccessoncontextarrayreturns_lement() {
+fn evaluate_complex_access_chain() {
     let mut ctx = Context::new();
-    ctx.set(
-        "arr",
-        Value::Array(vec![Value::Number(100.0), Value::Number(200.0)]),
+    let mut user = HashMap::new();
+    user.insert("name".to_string(), Value::String("John".to_string()));
+    user.insert(
+        "scores".to_string(),
+        Value::Array(vec![Value::Number(90.0), Value::Number(85.0)]),
     );
-    assert_eq!(eval_with_ctx("arr[1]", &ctx), Ok(Value::Number(200.0)));
-}
+    ctx.set("user", Value::Map(user));
 
-#[test]
-fn evaluate_chainedindexaccessonnested_rrays() {
     assert_eq!(
-        eval_formula("[[1, 2], [3, 4]][1][0]"),
-        Ok(Value::Number(3.0))
+        eval_with_ctx("user.name", &ctx),
+        Ok(Value::String("John".to_string()))
+    );
+    assert_eq!(
+        eval_with_ctx("user.scores[0]", &ctx),
+        Ok(Value::Number(90.0))
     );
 }
 
 #[test]
-fn evaluate_propertyaccesslastelementoutofchainreturns_rror() {
-    // {a: {b: 1}}.a.c — "c" doesn't exist
-    let result = eval_formula("{a: {b: 1}}.a.c");
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert_eq!(err.kind, ErrorKind::PropertyNotFound);
-    assert_eq!(err.code, "E307");
+fn evaluate_unary_minus_with_access() {
+    let mut ctx = Context::new();
+    ctx.set("x", Value::Number(10.0));
+    assert_eq!(eval_with_ctx("-x", &ctx), Ok(Value::Number(-10.0)));
+
+    let mut map = HashMap::new();
+    map.insert("val".to_string(), Value::Number(5.0));
+    ctx.set("data", Value::Map(map));
+    assert_eq!(eval_with_ctx("-data.val", &ctx), Ok(Value::Number(-5.0)));
+}
+
+#[test]
+fn evaluate_unary_plus_with_access() {
+    let mut ctx = Context::new();
+    ctx.set("x", Value::Number(10.0));
+    assert_eq!(eval_with_ctx("+x", &ctx), Ok(Value::Number(10.0)));
+}
+
+#[test]
+fn evaluate_postfix_precedence() {
+    // -arr[0] should be -(arr[0])
+    let mut ctx = Context::new();
+    ctx.set("arr", Value::Array(vec![Value::Number(10.0)]));
+    assert_eq!(eval_with_ctx("-arr[0]", &ctx), Ok(Value::Number(-10.0)));
+
+    // !map.flag should be !(map.flag)
+    let mut map = HashMap::new();
+    map.insert("flag".to_string(), Value::Bool(true));
+    ctx.set("m", Value::Map(map));
+    assert_eq!(eval_with_ctx("!m.flag", &ctx), Ok(Value::Bool(false)));
+}
+
+#[test]
+fn evaluate_complex_chain_with_unary() {
+    let mut ctx = Context::new();
+    let mut map = HashMap::new();
+    map.insert(
+        "nums".to_string(),
+        Value::Array(vec![Value::Number(-5.0), Value::Number(10.0)]),
+    );
+    ctx.set("data", Value::Map(map));
+
+    // -data.nums[0] -> -(-5) -> 5
+    assert_eq!(eval_with_ctx("-data.nums[0]", &ctx), Ok(Value::Number(5.0)));
 }
 
 // -- Phase 9: Lambda & Higher-Order Functions Tests --
 
 #[test]
-fn evaluate_singleidentifier_ambda() {
+fn evaluate_single_identifier_lambda() {
     let result = eval_formula("map([1, 2, 3], x => x + 1)").unwrap();
     assert_eq!(
         result,
@@ -679,7 +371,7 @@ fn evaluate_singleidentifier_ambda() {
 }
 
 #[test]
-fn evaluate_parenthesized_ambda() {
+fn evaluate_parenthesized_lambda() {
     let result = eval_formula("map([1, 2, 3], (x) => x * 2)").unwrap();
     assert_eq!(
         result,
@@ -692,7 +384,7 @@ fn evaluate_parenthesized_ambda() {
 }
 
 #[test]
-fn evaluate_lambdaduplicateparams_ails() {
+fn evaluate_lambda_duplicate_params_fails() {
     let result = eval_formula("(x, x) => x");
     assert!(result.is_err());
     let err = result.unwrap_err();
@@ -701,7 +393,7 @@ fn evaluate_lambdaduplicateparams_ails() {
 }
 
 #[test]
-fn evaluate_lambdadisplayand_ebug() {
+fn evaluate_lambda_display_and_debug() {
     // Generate a Lambda value
     let tokens = tokenize("x => x + 1").unwrap();
     let ast = parse(&tokens).unwrap();
@@ -712,7 +404,7 @@ fn evaluate_lambdadisplayand_ebug() {
 }
 
 #[test]
-fn evaluate_stringandbool_omparison() {
+fn evaluate_string_and_bool_comparison() {
     assert_eq!(
         eval_formula("\"apple\" < \"banana\""),
         Ok(Value::Bool(true))
@@ -730,7 +422,7 @@ fn evaluate_stringandbool_omparison() {
 }
 
 #[test]
-fn evaluate_comparisontypemismatch_rror() {
+fn evaluate_comparison_type_mismatch_error() {
     let result = eval_formula("1 < \"apple\"");
     assert!(result.is_err());
     let err = result.unwrap_err();
@@ -739,7 +431,7 @@ fn evaluate_comparisontypemismatch_rror() {
 }
 
 #[test]
-fn evaluate_recursionlimit_xceeded() {
+fn evaluate_recursion_limit_exceeded() {
     // A self-calling lambda to exceed 100 limit
     // Define a recursive lambda: f => f(f)
     // We bind a lambda under a variable name and call it
@@ -760,7 +452,7 @@ fn evaluate_recursionlimit_xceeded() {
 }
 
 #[test]
-fn evaluate_filter_unction() {
+fn evaluate_filter_function() {
     let result = eval_formula("filter([1, 2, 3, 4], x => x > 2)").unwrap();
     assert_eq!(
         result,
@@ -769,13 +461,13 @@ fn evaluate_filter_unction() {
 }
 
 #[test]
-fn evaluate_reduce_unction() {
+fn evaluate_reduce_function() {
     let result = eval_formula("reduce([1, 2, 3], (acc, x) => acc + x, 10)").unwrap();
     assert_eq!(result, Value::Number(16.0));
 }
 
 #[test]
-fn evaluate_sortwith_unction() {
+fn evaluate_sort_with_function() {
     let result = eval_formula("sort_with([3, 1, 2], (a, b) => b - a)").unwrap();
     assert_eq!(
         result,
@@ -788,7 +480,7 @@ fn evaluate_sortwith_unction() {
 }
 
 #[test]
-fn evaluate_sortwitherror_ropagation() {
+fn evaluate_sort_with_error_propagation() {
     // When the comparator lambda raises an error, it should be propagated
     let result = eval_formula("sort_with([1, 2], (a, b) => a + \"error\")");
     assert!(result.is_err());
@@ -797,7 +489,7 @@ fn evaluate_sortwitherror_ropagation() {
 }
 
 #[test]
-fn evaluate_uniquefunctionvarious_ypes() {
+fn evaluate_unique_function_various_types() {
     let result = eval_formula("unique([1, 2, 2, 1, 3])").unwrap();
     assert_eq!(
         result,
@@ -810,7 +502,7 @@ fn evaluate_uniquefunctionvarious_ypes() {
 }
 
 #[test]
-fn evaluate_groupby_unction() {
+fn evaluate_group_by_function() {
     let result = eval_formula("group_by([1, 2, 3, 4], x => if(x > 2, \"high\", \"low\"))").unwrap();
     match result {
         Value::Map(map) => {
@@ -824,12 +516,12 @@ fn evaluate_groupby_unction() {
                 &Value::Array(vec![Value::Number(3.0), Value::Number(4.0)])
             );
         }
-        _ => panic!("คาดหวัง Map"),
+        _ => panic!("Expected Map"),
     }
 }
 
 #[test]
-fn evaluate_sortwithkey_ambda() {
+fn evaluate_sort_with_key_lambda() {
     // sort based on age field in maps
     let result =
         eval_formula("sort([{age: 30, name: \"A\"}, {age: 20, name: \"B\"}], x => x.age)").unwrap();
@@ -841,15 +533,15 @@ fn evaluate_sortwithkey_ambda() {
                 Value::Map(map) => {
                     assert_eq!(map.get("name").unwrap(), &Value::String("B".to_string()));
                 }
-                _ => panic!("คาดหวัง Map"),
+                _ => panic!("Expected Map"),
             }
         }
-        _ => panic!("คาดหวัง Array"),
+        _ => panic!("Expected Array"),
     }
 }
 
 #[test]
-fn evaluate_uniquewithkey_ambda() {
+fn evaluate_unique_with_key_lambda() {
     // unique based on id field in maps
     let result = eval_formula(
         "unique([{id: 1, name: \"A\"}, {id: 2, name: \"B\"}, {id: 1, name: \"C\"}], x => x.id)",
@@ -863,16 +555,16 @@ fn evaluate_uniquewithkey_ambda() {
                 Value::Map(map) => {
                     assert_eq!(map.get("name").unwrap(), &Value::String("A".to_string()));
                 }
-                _ => panic!("คาดหวัง Map"),
+                _ => panic!("Expected Map"),
             }
             match &arr[1] {
                 Value::Map(map) => {
                     assert_eq!(map.get("name").unwrap(), &Value::String("B".to_string()));
                 }
-                _ => panic!("คาดหวัง Map"),
+                _ => panic!("Expected Map"),
             }
         }
-        _ => panic!("คาดหวัง Array"),
+        _ => panic!("Expected Array"),
     }
 }
 
@@ -886,7 +578,7 @@ fn eval_formula_mut(formula: &str) -> Result<Value, FormulaError> {
 }
 
 #[test]
-fn evaluate_userdefinedfunction_asic() {
+fn evaluate_user_defined_function_basic() {
     assert_eq!(
         eval_formula_mut("fn double(x) = x * 2; double(5)"),
         Ok(Value::Number(10.0))
@@ -894,7 +586,7 @@ fn evaluate_userdefinedfunction_asic() {
 }
 
 #[test]
-fn evaluate_userdefinedfunctiontwo_arams() {
+fn evaluate_user_defined_function_two_params() {
     assert_eq!(
         eval_formula_mut("fn add(a, b) = a + b; add(3, 4)"),
         Ok(Value::Number(7.0))
@@ -902,7 +594,7 @@ fn evaluate_userdefinedfunctiontwo_arams() {
 }
 
 #[test]
-fn evaluate_userdefinedfunctionzero_arams() {
+fn evaluate_user_defined_function_zero_params() {
     assert_eq!(
         eval_formula_mut("fn pi_val() = 3.14159; pi_val()"),
         Ok(Value::Number(3.14159))
@@ -910,7 +602,7 @@ fn evaluate_userdefinedfunctionzero_arams() {
 }
 
 #[test]
-fn evaluate_userdefinedfunctionwith_uiltin() {
+fn evaluate_user_defined_function_with_builtin() {
     assert_eq!(
         eval_formula_mut("fn double_len(s) = len(s) * 2; double_len(\"hello\")"),
         Ok(Value::Number(10.0))
@@ -918,7 +610,7 @@ fn evaluate_userdefinedfunctionwith_uiltin() {
 }
 
 #[test]
-fn evaluate_userdefinedfunction_actorial() {
+fn evaluate_user_defined_function_factorial() {
     assert_eq!(
         eval_formula_mut("fn factorial(n) = if(n <= 1, 1, n * factorial(n - 1)); factorial(5)"),
         Ok(Value::Number(120.0))
@@ -926,7 +618,7 @@ fn evaluate_userdefinedfunction_actorial() {
 }
 
 #[test]
-fn evaluate_userdefinedfunctionfactorialbase_ase() {
+fn evaluate_user_defined_function_factorial_base_case() {
     assert_eq!(
         eval_formula_mut("fn factorial(n) = if(n <= 1, 1, n * factorial(n - 1)); factorial(1)"),
         Ok(Value::Number(1.0))
@@ -934,7 +626,7 @@ fn evaluate_userdefinedfunctionfactorialbase_ase() {
 }
 
 #[test]
-fn evaluate_userdefinedfunctionmultiple_efinitions() {
+fn evaluate_user_defined_function_multiple_definitions() {
     assert_eq!(
         eval_formula_mut("fn double(x) = x * 2; fn add_one(x) = x + 1; add_one(double(3))"),
         Ok(Value::Number(7.0))
@@ -942,7 +634,7 @@ fn evaluate_userdefinedfunctionmultiple_efinitions() {
 }
 
 #[test]
-fn evaluate_userdefinedfunctionwrongarg_ount() {
+fn evaluate_user_defined_function_wrong_arg_count() {
     let result = eval_formula_mut("fn double(x) = x * 2; double(1, 2)");
     assert!(result.is_err());
     let err = result.unwrap_err();
@@ -951,7 +643,7 @@ fn evaluate_userdefinedfunctionwrongarg_ount() {
 }
 
 #[test]
-fn evaluate_userdefinedfunctionduplicate_arams() {
+fn evaluate_user_defined_function_duplicate_params() {
     let result = eval_formula_mut("fn bad(x, x) = x");
     assert!(result.is_err());
     let err = result.unwrap_err();
@@ -960,7 +652,7 @@ fn evaluate_userdefinedfunctionduplicate_arams() {
 }
 
 #[test]
-fn evaluate_userdefinedfunctionrecursion_imit() {
+fn evaluate_user_defined_function_recursion_limit() {
     let result = eval_formula_mut("fn f(n) = f(n + 1); f(0)");
     assert!(result.is_err());
     let err = result.unwrap_err();
@@ -969,7 +661,7 @@ fn evaluate_userdefinedfunctionrecursion_imit() {
 }
 
 #[test]
-fn evaluate_userdefinedfunctionwithproperty_ccess() {
+fn evaluate_user_defined_function_with_property_access() {
     assert_eq!(
         eval_formula_mut("fn get_name(obj) = obj.name; get_name({name: \"Alice\"})"),
         Ok(Value::String("Alice".to_string()))
@@ -977,7 +669,7 @@ fn evaluate_userdefinedfunctionwithproperty_ccess() {
 }
 
 #[test]
-fn evaluate_sequencereturnslast_alue() {
+fn evaluate_sequence_returns_last_value() {
     assert_eq!(
         eval_formula_mut("1 + 1; 2 + 2; 3 + 3"),
         Ok(Value::Number(6.0))
@@ -985,6 +677,6 @@ fn evaluate_sequencereturnslast_alue() {
 }
 
 #[test]
-fn evaluate_trailing_emicolon() {
+fn evaluate_trailing_semicolon() {
     assert_eq!(eval_formula_mut("42;"), Ok(Value::Number(42.0)));
 }

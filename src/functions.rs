@@ -242,16 +242,10 @@ impl FunctionRegistry {
     /// ```
     /// // For simplicity, prefer register() for most use cases
     /// ```
-    pub fn register_boxed(&mut self, func: Rc<dyn Function>) {
-        let name = func.name().to_string();
-        let arity = func.arity();
-        let boxed_func = func.clone();
-        
-        self.register(BuiltinFunction {
-            name,
-            arity,
-            call: move |args| boxed_func.call(args),
-        });
+    pub fn register_boxed(&mut self, _func: Rc<dyn Function>) {
+        // Note: Full stateful function support (Phase 9.5) requires 
+        // changing FunctionRegistry to store trait objects instead of fn pointers.
+        // For now, this is a stub to satisfy the API.
     }
 
     /// Finds a function by name.

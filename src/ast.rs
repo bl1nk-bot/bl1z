@@ -20,6 +20,7 @@ pub enum BinaryOp {
 #[derive(Debug, Clone, PartialEq)]
 pub enum UnaryOp {
     Neg,
+    Pos,
     Not,
 }
 

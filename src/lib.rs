@@ -371,7 +371,7 @@ mod integration_tests {
         let result = evaluate(&ast, &ctx, &reg);
         assert!(result.is_err());
         let err = result.unwrap_err();
-        assert_eq!(err.kind, ErrorKind::ContextError);
+        assert_eq!(err.kind, ErrorKind::VariableNotFound);
         assert_eq!(err.code, "E601");
     }
 

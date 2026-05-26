@@ -15,6 +15,7 @@ pub enum ErrorKind {
     FunctionError,
     // E6xx — Context errors
     ContextError,
+    VariableNotFound,
     // Phase 8: Property and index access errors (reserved)
     PropertyNotFound, // E207
     IndexOutOfBounds, // E208

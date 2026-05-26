@@ -23,7 +23,7 @@ pub fn map_fn() -> BuiltinFunction {
             let arr = require_array(&args[0])?;
             let lambda = &args[1];
             match lambda {
-                Value::Lambda(body_expr, params, captured_scope) => {
+                Value::Lambda(body_expr, params, captured_scope, _) => {
                     if params.len() != 1 {
                         return Err(FormulaError::new(
                             ErrorKind::FunctionError,
@@ -81,7 +81,7 @@ pub fn filter_fn() -> BuiltinFunction {
             let arr = require_array(&args[0])?;
             let lambda = &args[1];
             match lambda {
-                Value::Lambda(body_expr, params, captured_scope) => {
+                Value::Lambda(body_expr, params, captured_scope, _) => {
                     if params.len() != 1 {
                         return Err(FormulaError::new(
                             ErrorKind::FunctionError,
@@ -143,7 +143,7 @@ pub fn reduce_fn() -> BuiltinFunction {
             let lambda = &args[1];
             let initial = &args[2];
             match lambda {
-                Value::Lambda(body_expr, params, captured_scope) => {
+                Value::Lambda(body_expr, params, captured_scope, _) => {
                     if params.len() != 2 {
                         return Err(FormulaError::new(
                             ErrorKind::FunctionError,
@@ -223,7 +223,7 @@ pub fn compare_values(a: &Value, b: &Value) -> std::cmp::Ordering {
                 Bool(_) => 3,
                 Array(_) => 4,
                 Map(_) => 5,
-                Lambda(_, _, _) => 6,
+                Lambda(_, _, _, _) => 6,
                 Null => 7,
             };
             type_val(x).cmp(&type_val(y))
@@ -255,7 +255,7 @@ pub fn sort_fn() -> BuiltinFunction {
             } else {
                 let lambda = &args[1];
                 match lambda {
-                    Value::Lambda(body_expr, params, captured_scope) => {
+                    Value::Lambda(body_expr, params, captured_scope, _) => {
                         if params.len() != 1 {
                             return Err(FormulaError::new(
                                 ErrorKind::FunctionError,
@@ -319,7 +319,7 @@ pub fn sort_with_fn() -> BuiltinFunction {
             let arr = require_array(&args[0])?;
             let lambda = &args[1];
             match lambda {
-                Value::Lambda(body_expr, params, captured_scope) => {
+                Value::Lambda(body_expr, params, captured_scope, _) => {
                     if params.len() != 2 {
                         return Err(FormulaError::new(
                             ErrorKind::FunctionError,
@@ -430,7 +430,7 @@ pub fn unique_fn() -> BuiltinFunction {
             } else {
                 let lambda = &args[1];
                 match lambda {
-                    Value::Lambda(body_expr, params, captured_scope) => {
+                    Value::Lambda(body_expr, params, captured_scope, _) => {
                         if params.len() != 1 {
                             return Err(FormulaError::new(
                                 ErrorKind::FunctionError,
@@ -492,7 +492,7 @@ pub fn group_by_fn() -> BuiltinFunction {
             let arr = require_array(&args[0])?;
             let lambda = &args[1];
             match lambda {
-                Value::Lambda(body_expr, params, captured_scope) => {
+                Value::Lambda(body_expr, params, captured_scope, _) => {
                     if params.len() != 1 {
                         return Err(FormulaError::new(
                             ErrorKind::FunctionError,
