@@ -132,6 +132,7 @@ impl PluginManager {
         &self,
         registry: &mut FunctionRegistry,
     ) -> Result<(), FormulaError> {
+        let mut to_register = Vec::new();
         for plugin in &self.plugins {
             for func in plugin.functions() {
                 // Check for conflicts
@@ -147,8 +148,13 @@ impl PluginManager {
                         None,
                     ));
                 }
-                registry.register(func);
+                to_register.push(func);
             }
+        }
+
+        // Apply all if no errors
+        for func in to_register {
+            registry.register(func);
         }
         Ok(())
     }

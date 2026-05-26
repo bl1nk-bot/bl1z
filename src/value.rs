@@ -130,7 +130,12 @@ pub enum Value {
     /// // Lambda values are created by the evaluator when parsing lambda syntax
     /// // (x) => x + 1
     /// ```
-    Lambda(Rc<SpannedExpr>, Vec<String>, CapturedScope),
+    Lambda(
+        Rc<SpannedExpr>,
+        Vec<String>,
+        CapturedScope,
+        std::collections::BTreeMap<String, crate::context::UserFunction>,
+    ),
 }
 
 impl std::fmt::Display for Value {
@@ -162,7 +167,7 @@ impl std::fmt::Display for Value {
                 }
                 write!(f, "}}")
             }
-            Value::Lambda(_, params, _) => {
+            Value::Lambda(_, params, _, _) => {
                 write!(f, "({}) => ...", params.join(", "))
             }
         }
@@ -198,7 +203,7 @@ impl std::fmt::Debug for Value {
                 }
                 write!(f, "}})")
             }
-            Value::Lambda(_, params, _) => {
+            Value::Lambda(_, params, _, _) => {
                 write!(f, "Lambda(({}) => ...)", params.join(", "))
             }
         }

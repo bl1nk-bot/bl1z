@@ -111,7 +111,7 @@ jobs:
             --head "$REPO_OWNER:$REF_NAME" \
             --base main \
             --title "$PR_TITLE" \
-            --body -e "$PR_BODY" \
+            --body "$PR_BODY" \
             --label "$LABELS"
 
       - name: Send Webhook Notification

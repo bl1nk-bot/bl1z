@@ -243,14 +243,15 @@ impl FunctionRegistry {
     /// // For simplicity, prefer register() for most use cases
     /// ```
     pub fn register_boxed(&mut self, func: Rc<dyn Function>) {
-        // For Phase 9.5, we need a different registry design.
-        // The fn pointer approach doesn't support closures.
-        // For now, document that stateful functions require BuiltinFunction wrapper.
         let name = func.name().to_string();
         let arity = func.arity();
-        let _ = (name, arity);
-        // Note: Full stateful function support requires additional design
-        // to avoid the fn pointer limitation
+        let boxed_func = func.clone();
+        
+        self.register(BuiltinFunction {
+            name,
+            arity,
+            call: move |args| boxed_func.call(args),
+        });
     }
 
     /// Finds a function by name.

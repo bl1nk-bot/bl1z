@@ -56,7 +56,7 @@ fn evaluate_impl(
                 Value::Map(map) => map.get(property).cloned().ok_or_else(|| {
                     FormulaError::new(
                         ErrorKind::PropertyNotFound,
-                        "E207",
+                        "E307",
                         &format!("ไม่พบ property '{}'", property),
                         Some(span),
                     )
@@ -86,7 +86,7 @@ fn evaluate_impl(
                     if n < 0.0 || i >= arr.len() {
                         Err(FormulaError::new(
                             ErrorKind::IndexOutOfBounds,
-                            "E208",
+                            "E308",
                             &format!("index {} นอกขอบเขต (ขนาด {})", n, arr.len()),
                             Some(span),
                         ))
@@ -324,7 +324,7 @@ fn apply_lambda_impl(
     depth: usize,
 ) -> Result<Value, FormulaError> {
     match lambda {
-        Value::Lambda(body_expr, params, captured_scope) => {
+        Value::Lambda(body_expr, params, captured_vars, captured_funcs) => {
             if params.len() != args.len() {
                 return Err(FormulaError::new(
                     ErrorKind::FunctionError,
@@ -340,8 +340,11 @@ fn apply_lambda_impl(
 
             // Build context from captured scope
             let mut lambda_ctx = Context::new();
-            for (k, v) in captured_scope.iter() {
+            for (k, v) in captured_vars.iter() {
                 lambda_ctx.set(k, v.clone());
+            }
+            for func in captured_funcs.values() {
+                lambda_ctx.set_function(func.clone());
             }
 
             // Bind parameters
