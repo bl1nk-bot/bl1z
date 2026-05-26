@@ -49,6 +49,16 @@ impl<'a> Parser<'a> {
         Ok(())
     }
 
+    // Helper to extract function name from expression (for method calls)
+    fn extract_function_name(expr: &Expr) -> Option<String> {
+        match expr {
+            Expr::Variable(name) => Some(name.clone()),
+            Expr::PropertyAccess { field, .. } => Some(field.clone()),
+            Expr::IndexAccess { .. } => None, // method call on index not supported yet
+            _ => None,
+        }
+    }
+
     /// Helper สำหรับ parse binary operators แบบ left associative
     fn parse_left_associative_binary<F>(
         &mut self,
@@ -206,25 +216,62 @@ impl<'a> Parser<'a> {
                 Expr::Literal(crate::value::Value::Null),
                 span,
             )),
-            TokenKind::Identifier => {
-                let mut name = tok.lexeme.clone();
-                // Handle dot notation for property access (e.g., user.score)
-                while self.peek() == TokenKind::Dot {
-                    self.advance(); // consume the dot
-                    let field_tok = self.advance();
-                    if field_tok.kind != TokenKind::Identifier {
-                        return Err(FormulaError::new(
-                            ErrorKind::ParseError,
-                            "E201",
-                            "Expected identifier after dot",
-                            Some(field_tok.span),
-                        ));
+TokenKind::Identifier => {
+                let mut expr = SpannedExpr::new(
+                    Expr::Variable(tok.lexeme.clone()),
+                    span,
+                );
+                // Handle postfix operators: .field and [index]
+                while self.peek() == TokenKind::Dot || self.peek() == TokenKind::LBracket {
+                    match self.peek() {
+                        TokenKind::Dot => {
+                            // Property access: expr.field
+                            self.advance(); // consume dot
+                            let field_tok = self.advance();
+                            if field_tok.kind != TokenKind::Identifier {
+                                return Err(FormulaError::new(
+                                    ErrorKind::ParseError,
+                                    "E201",
+                                    "Expected identifier after dot",
+                                    Some(field_tok.span),
+                                ));
+                            }
+                            let new_span = Span {
+                                start: expr.meta.span.start,
+                                end: field_tok.span.end,
+                            };
+                            expr = SpannedExpr::new(
+                                Expr::PropertyAccess {
+                                    object: Box::new(expr),
+                                    field: field_tok.lexeme.clone(),
+                                },
+                                new_span,
+                            );
+                        }
+                        TokenKind::LBracket => {
+                            // Index access: expr[index]
+                            let bracket_span = token_span(self.tokens, self.pos);
+                            self.advance(); // consume [
+                            let index_expr = self.parse_expression()?;
+                            self.expect(TokenKind::RBracket, "Expected ']' after index")?;
+                            let new_span = Span {
+                                start: expr.meta.span.start,
+                                end: token_span(self.tokens, self.pos).end,
+                            };
+                            expr = SpannedExpr::new(
+                                Expr::IndexAccess {
+                                    object: Box::new(expr),
+                                    index: Box::new(index_expr),
+                                },
+                                new_span,
+                            );
+                        }
+                        _ => break,
                     }
-                    name = format!("{}.{}", name, field_tok.lexeme);
                 }
-                // ถ้าเจอ '(' ข้างหน้า คือ function call
+                // Function call check (after all postfix ops)
                 if self.peek() == TokenKind::LParen {
-                    self.advance(); // กิน '('
+                    self.advance(); // consume '('
                     let mut args = Vec::new();
                     if self.peek() != TokenKind::RParen {
                         loop {
@@ -236,12 +283,21 @@ impl<'a> Parser<'a> {
                             }
                         }
                     }
-                    self.expect(TokenKind::RParen, "ต้องการ ')'")?;
-                    Ok(SpannedExpr::new(Expr::FunctionCall { name, args }, span))
-                } else {
-                    // ตัวแปร (อาจเป็น dot notation แล้ว)
-                    Ok(SpannedExpr::new(Expr::Variable(name), span))
+                    self.expect(TokenKind::RParen, "Expected ')'")?;
+                    let span = Span {
+                        start: expr.meta.span.start,
+                        end: token_span(self.tokens, self.pos).end,
+                    };
+                    let name = Self::extract_function_name(&expr.expr)
+                        .ok_or_else(|| FormulaError::new(
+                            ErrorKind::ParseError,
+                            "E201",
+                            "Cannot derive function name from expression",
+                            Some(span),
+                        ))?;
+                    return Ok(SpannedExpr::new(Expr::FunctionCall { name, args }, span));
                 }
+                Ok(expr)
             }
             TokenKind::LParen => {
                 let inner = self.parse_expression()?;
@@ -589,5 +645,89 @@ mod tests {
         let err = result.unwrap_err();
         assert_eq!(err.kind, ErrorKind::ParseError);
         assert_eq!(err.code, "E201");
+    }
+
+    // -- Phase 8: Access Chaining tests --
+
+    #[test]
+    fn test_property_access() {
+        let tokens = tokenize("user.name").unwrap();
+        let ast = parse(&tokens).unwrap();
+        match ast.expr {
+            Expr::PropertyAccess { object, field } => {
+                assert_eq!(field, "name");
+                match object.expr {
+                    Expr::Variable(name) => assert_eq!(name, "user"),
+                    _ => panic!("expected Variable"),
+                }
+            }
+            _ => panic!("expected PropertyAccess"),
+        }
+    }
+
+    #[test]
+    fn test_chained_property_access() {
+        let tokens = tokenize("user.profile.name").unwrap();
+        let ast = parse(&tokens).unwrap();
+        match ast.expr {
+            Expr::PropertyAccess { object, field } => {
+                assert_eq!(field, "name");
+                match object.expr {
+                    Expr::PropertyAccess { object: inner, field: inner_field } => {
+                        assert_eq!(inner_field, "profile");
+                        match inner.expr {
+                            Expr::Variable(name) => assert_eq!(name, "user"),
+                            _ => panic!("expected Variable"),
+                        }
+                    }
+                    _ => panic!("expected PropertyAccess"),
+                }
+            }
+            _ => panic!("expected PropertyAccess"),
+        }
+    }
+
+    #[test]
+    fn test_index_access() {
+        let tokens = tokenize("arr[0]").unwrap();
+        let ast = parse(&tokens).unwrap();
+        match ast.expr {
+            Expr::IndexAccess { object, index } => {
+                match index.expr {
+                    Expr::Literal(crate::value::Value::Number(n)) => assert_eq!(n, 0.0),
+                    _ => panic!("expected Number literal"),
+                }
+                match object.expr {
+                    Expr::Variable(name) => assert_eq!(name, "arr"),
+                    _ => panic!("expected Variable"),
+                }
+            }
+            _ => panic!("expected IndexAccess"),
+        }
+    }
+
+    #[test]
+    fn test_mixed_access() {
+        let tokens = tokenize("users[0].name").unwrap();
+        let ast = parse(&tokens).unwrap();
+        match ast.expr {
+            Expr::PropertyAccess { object, field } => {
+                assert_eq!(field, "name");
+                match object.expr {
+                    Expr::IndexAccess { object: inner, index } => {
+                        match index.expr {
+                            Expr::Literal(crate::value::Value::Number(n)) => assert_eq!(n, 0.0),
+                            _ => panic!("expected Number"),
+                        }
+                        match inner.expr {
+                            Expr::Variable(name) => assert_eq!(name, "users"),
+                            _ => panic!("expected Variable"),
+                        }
+                    }
+                    _ => panic!("expected IndexAccess"),
+                }
+            }
+            _ => panic!("expected PropertyAccess"),
+        }
     }
 }

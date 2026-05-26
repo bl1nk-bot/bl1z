@@ -150,6 +150,52 @@ pub fn evaluate(
             }
             Ok(Value::Map(map))
         }
+        // Phase 8: Access Chaining
+        Expr::PropertyAccess { object, field } => {
+            let obj = evaluate(object, ctx, registry)?;
+            match obj {
+                Value::Map(map) => map
+                    .get(field)
+                    .cloned()
+                    .ok_or_else(|| FormulaError::new(
+                        ErrorKind::ContextError,
+                        "E207",
+                        &format!("Property '{}' not found", field),
+                        Some(span),
+                    )),
+                _ => Err(FormulaError::new(
+                    ErrorKind::TypeError,
+                    "E401",
+                    &format!("Cannot access property '{}' on non-map value", field),
+                    Some(span),
+                )),
+            }
+        }
+        Expr::IndexAccess { object, index } => {
+            let obj = evaluate(object, ctx, registry)?;
+            let idx = evaluate(index, ctx, registry)?;
+            match (obj, idx) {
+                (Value::Array(arr), Value::Number(n)) => {
+                    let i = n as usize;
+                    if i < arr.len() {
+                        Ok(arr[i].clone())
+                    } else {
+                        Err(FormulaError::new(
+                            ErrorKind::EvalError,
+                            "E208",
+                            &format!("Index {} out of bounds (len {})", i, arr.len()),
+                            Some(span),
+                        ))
+                    }
+                }
+                _ => Err(FormulaError::new(
+                    ErrorKind::TypeError,
+                    "E401",
+                    "Index access requires array and numeric index",
+                    Some(span),
+                )),
+            }
+        }
         Expr::FunctionCall { name, args } => {
             let func = registry.find(name).ok_or_else(|| {
                 FormulaError::new(
