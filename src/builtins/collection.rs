@@ -10,7 +10,7 @@ pub fn sum() -> BuiltinFunction {
     BuiltinFunction {
         name: "sum".to_string(),
         arity: 1,
-        call: |args| {
+        call: |args, _| {
             let arr = require_array(&args[0])?;
             let total: f64 = arr
                 .iter()
@@ -27,7 +27,7 @@ pub fn avg() -> BuiltinFunction {
     BuiltinFunction {
         name: "avg".to_string(),
         arity: 1,
-        call: |args| {
+        call: |args, _| {
             let arr = require_array(&args[0])?;
             if arr.is_empty() {
                 return Err(FormulaError::new(
@@ -52,7 +52,7 @@ pub fn min_arr() -> BuiltinFunction {
     BuiltinFunction {
         name: "min".to_string(),
         arity: 1,
-        call: |args| {
+        call: |args, _| {
             let arr = require_array(&args[0])?;
             if arr.is_empty() {
                 return Err(FormulaError::new(
@@ -87,7 +87,7 @@ pub fn max_arr() -> BuiltinFunction {
     BuiltinFunction {
         name: "max".to_string(),
         arity: 1,
-        call: |args| {
+        call: |args, _| {
             let arr = require_array(&args[0])?;
             if arr.is_empty() {
                 return Err(FormulaError::new(
@@ -122,7 +122,7 @@ pub fn join() -> BuiltinFunction {
     BuiltinFunction {
         name: "join".to_string(),
         arity: 2,
-        call: |args| {
+        call: |args, _| {
             let arr = require_array(&args[0])?;
             let sep = require_string(&args[1])?;
             let parts: Result<Vec<String>, FormulaError> = arr.iter().map(require_string).collect();
@@ -137,7 +137,7 @@ pub fn count() -> BuiltinFunction {
     BuiltinFunction {
         name: "count".to_string(),
         arity: 1,
-        call: |args| {
+        call: |args, _| {
             let arr = require_array(&args[0])?;
             Ok(Value::Number(arr.len() as f64))
         },
@@ -187,7 +187,8 @@ mod tests {
     use super::*;
 
     fn call_fn(f: BuiltinFunction, args: Vec<Value>) -> Result<Value, FormulaError> {
-        (f.call)(&args)
+        let registry = crate::functions::FunctionRegistry::new();
+        (f.call)(&args, &registry)
     }
 
     // -- sum() tests --

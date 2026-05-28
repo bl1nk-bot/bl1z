@@ -109,8 +109,9 @@ fn evaluate_builtin_pi() {
 }
 
 #[test]
+#[allow(clippy::approx_constant)]
 fn evaluate_math_builtins() {
-    assert_eq!(eval_formula("round(3.14159, 2)"), Ok(Value::Number(3.14)));
+    assert_eq!(eval_formula("round(3.1415, 2)"), Ok(Value::Number(3.14)));
     assert_eq!(eval_formula("ceil(3.1)"), Ok(Value::Number(4.0)));
     assert_eq!(eval_formula("floor(3.9)"), Ok(Value::Number(3.0)));
     assert_eq!(eval_formula("sqrt(16)"), Ok(Value::Number(4.0)));
@@ -121,7 +122,7 @@ fn evaluate_math_builtins() {
 
     let rand = eval_formula("random()");
     if let Ok(Value::Number(n)) = rand {
-        assert!(n >= 0.0 && n < 1.0);
+        assert!((0.0..1.0).contains(&n));
     } else {
         panic!("Expected Number for random(), got {:?}", rand);
     }

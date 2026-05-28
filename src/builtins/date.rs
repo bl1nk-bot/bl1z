@@ -11,7 +11,7 @@ pub fn now() -> BuiltinFunction {
     BuiltinFunction {
         name: "now".to_string(),
         arity: 0,
-        call: |_| {
+        call: |_, _| {
             let now = jiff::Timestamp::now();
             Ok(Value::String(now.to_string()))
         },
@@ -24,7 +24,7 @@ pub fn date_add() -> BuiltinFunction {
     BuiltinFunction {
         name: "date_add".to_string(),
         arity: 2,
-        call: |args| {
+        call: |args, _| {
             let date_str = require_string(&args[0])?;
             let days = require_number(&args[1])?;
 
@@ -61,7 +61,7 @@ pub fn date() -> BuiltinFunction {
     BuiltinFunction {
         name: "date".to_string(),
         arity: 3,
-        call: |args| {
+        call: |args, _| {
             let year = require_number(&args[0])? as i16;
             let month = require_number(&args[1])? as i8;
             let day = require_number(&args[2])? as i8;
@@ -80,7 +80,7 @@ pub fn year() -> BuiltinFunction {
     BuiltinFunction {
         name: "year".to_string(),
         arity: 1,
-        call: |args| {
+        call: |args, _| {
             let date_str = require_string(&args[0])?;
             let ts = parse_to_timestamp(&date_str)?;
             let zdt = ts.to_zoned(jiff::tz::TimeZone::UTC);
@@ -95,7 +95,7 @@ pub fn month() -> BuiltinFunction {
     BuiltinFunction {
         name: "month".to_string(),
         arity: 1,
-        call: |args| {
+        call: |args, _| {
             let date_str = require_string(&args[0])?;
             let ts = parse_to_timestamp(&date_str)?;
             let zdt = ts.to_zoned(jiff::tz::TimeZone::UTC);
@@ -110,7 +110,7 @@ pub fn day() -> BuiltinFunction {
     BuiltinFunction {
         name: "day".to_string(),
         arity: 1,
-        call: |args| {
+        call: |args, _| {
             let date_str = require_string(&args[0])?;
             let ts = parse_to_timestamp(&date_str)?;
             let zdt = ts.to_zoned(jiff::tz::TimeZone::UTC);
@@ -125,7 +125,7 @@ pub fn date_diff() -> BuiltinFunction {
     BuiltinFunction {
         name: "date_diff".to_string(),
         arity: 3,
-        call: |args| {
+        call: |args, _| {
             let date_str1 = require_string(&args[0])?;
             let date_str2 = require_string(&args[1])?;
             // Ignore unit for now
@@ -187,7 +187,8 @@ mod tests {
     use super::*;
 
     fn call_fn(f: BuiltinFunction, args: Vec<Value>) -> Result<Value, FormulaError> {
-        (f.call)(&args)
+        let registry = crate::functions::FunctionRegistry::new();
+        (f.call)(&args, &registry)
     }
 
     #[test]

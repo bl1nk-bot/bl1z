@@ -8,7 +8,7 @@ pub fn abs() -> BuiltinFunction {
     BuiltinFunction {
         name: "abs".to_string(),
         arity: 1,
-        call: |args| {
+        call: |args, _| {
             if let Value::Number(n) = args[0] {
                 Ok(Value::Number(n.abs()))
             } else {
@@ -27,7 +27,7 @@ pub fn pi() -> BuiltinFunction {
     BuiltinFunction {
         name: "pi".to_string(),
         arity: 0,
-        call: |_| Ok(Value::Number(std::f64::consts::PI)),
+        call: |_, _| Ok(Value::Number(std::f64::consts::PI)),
     }
 }
 
@@ -35,7 +35,7 @@ pub fn round() -> BuiltinFunction {
     BuiltinFunction {
         name: "round".to_string(),
         arity: 2,
-        call: |args| {
+        call: |args, _| {
             if let (Value::Number(n), Value::Number(d)) = (&args[0], &args[1]) {
                 let factor = 10.0f64.powi(*d as i32);
                 Ok(Value::Number((n * factor).round() / factor))
@@ -55,7 +55,7 @@ pub fn ceil() -> BuiltinFunction {
     BuiltinFunction {
         name: "ceil".to_string(),
         arity: 1,
-        call: |args| {
+        call: |args, _| {
             if let Value::Number(n) = args[0] {
                 Ok(Value::Number(n.ceil()))
             } else {
@@ -74,7 +74,7 @@ pub fn floor() -> BuiltinFunction {
     BuiltinFunction {
         name: "floor".to_string(),
         arity: 1,
-        call: |args| {
+        call: |args, _| {
             if let Value::Number(n) = args[0] {
                 Ok(Value::Number(n.floor()))
             } else {
@@ -93,7 +93,7 @@ pub fn sqrt() -> BuiltinFunction {
     BuiltinFunction {
         name: "sqrt".to_string(),
         arity: 1,
-        call: |args| {
+        call: |args, _| {
             if let Value::Number(n) = args[0] {
                 Ok(Value::Number(n.sqrt()))
             } else {
@@ -112,7 +112,7 @@ pub fn pow() -> BuiltinFunction {
     BuiltinFunction {
         name: "pow".to_string(),
         arity: 2,
-        call: |args| {
+        call: |args, _| {
             if let (Value::Number(base), Value::Number(exp)) = (&args[0], &args[1]) {
                 Ok(Value::Number(base.powf(*exp)))
             } else {
@@ -131,7 +131,7 @@ pub fn sin() -> BuiltinFunction {
     BuiltinFunction {
         name: "sin".to_string(),
         arity: 1,
-        call: |args| {
+        call: |args, _| {
             if let Value::Number(n) = args[0] {
                 Ok(Value::Number(n.sin()))
             } else {
@@ -150,7 +150,7 @@ pub fn cos() -> BuiltinFunction {
     BuiltinFunction {
         name: "cos".to_string(),
         arity: 1,
-        call: |args| {
+        call: |args, _| {
             if let Value::Number(n) = args[0] {
                 Ok(Value::Number(n.cos()))
             } else {
@@ -169,7 +169,7 @@ pub fn tan() -> BuiltinFunction {
     BuiltinFunction {
         name: "tan".to_string(),
         arity: 1,
-        call: |args| {
+        call: |args, _| {
             if let Value::Number(n) = args[0] {
                 Ok(Value::Number(n.tan()))
             } else {
@@ -188,7 +188,7 @@ pub fn random() -> BuiltinFunction {
     BuiltinFunction {
         name: "random".to_string(),
         arity: 0,
-        call: |_| {
+        call: |_, _| {
             use rand::Rng;
             let mut rng = rand::thread_rng();
             Ok(Value::Number(rng.gen()))

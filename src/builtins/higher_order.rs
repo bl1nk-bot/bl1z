@@ -19,7 +19,7 @@ pub fn map_fn() -> BuiltinFunction {
     BuiltinFunction {
         name: "map".to_string(),
         arity: 2,
-        call: |args| {
+        call: |args, registry| {
             let arr = require_array(&args[0])?;
             let lambda = &args[1];
             match lambda {
@@ -32,8 +32,6 @@ pub fn map_fn() -> BuiltinFunction {
                             None,
                         ));
                     }
-                    let mut registry = crate::functions::FunctionRegistry::new();
-                    crate::builtins::register_all(&mut registry);
 
                     let mut result = Vec::new();
                     for item in arr {
@@ -47,7 +45,7 @@ pub fn map_fn() -> BuiltinFunction {
                             item_ctx.set(param, item.clone());
                         }
                         // Evaluate lambda body
-                        let item_result = crate::eval::evaluate(body_expr, &item_ctx, &registry)
+                        let item_result = crate::eval::evaluate(body_expr, &item_ctx, registry)
                             .map_err(|e| {
                                 FormulaError::new(
                                     ErrorKind::EvalError,
@@ -77,7 +75,7 @@ pub fn filter_fn() -> BuiltinFunction {
     BuiltinFunction {
         name: "filter".to_string(),
         arity: 2,
-        call: |args| {
+        call: |args, registry| {
             let arr = require_array(&args[0])?;
             let lambda = &args[1];
             match lambda {
@@ -90,8 +88,6 @@ pub fn filter_fn() -> BuiltinFunction {
                             None,
                         ));
                     }
-                    let mut registry = crate::functions::FunctionRegistry::new();
-                    crate::builtins::register_all(&mut registry);
 
                     let mut result = Vec::new();
                     for item in arr {
@@ -105,7 +101,7 @@ pub fn filter_fn() -> BuiltinFunction {
                             item_ctx.set(param, item.clone());
                         }
                         // Evaluate lambda body
-                        let item_result = crate::eval::evaluate(body_expr, &item_ctx, &registry)
+                        let item_result = crate::eval::evaluate(body_expr, &item_ctx, registry)
                             .map_err(|e| {
                                 FormulaError::new(
                                     ErrorKind::EvalError,
@@ -138,7 +134,7 @@ pub fn reduce_fn() -> BuiltinFunction {
     BuiltinFunction {
         name: "reduce".to_string(),
         arity: 3,
-        call: |args| {
+        call: |args, registry| {
             let arr = require_array(&args[0])?;
             let lambda = &args[1];
             let initial = &args[2];
@@ -155,8 +151,6 @@ pub fn reduce_fn() -> BuiltinFunction {
                             None,
                         ));
                     }
-                    let mut registry = crate::functions::FunctionRegistry::new();
-                    crate::builtins::register_all(&mut registry);
 
                     let mut accumulator = initial.clone();
                     for item in arr {
@@ -173,7 +167,7 @@ pub fn reduce_fn() -> BuiltinFunction {
                             item_ctx.set(param, item.clone());
                         }
                         // Evaluate lambda body
-                        accumulator = crate::eval::evaluate(body_expr, &item_ctx, &registry)
+                        accumulator = crate::eval::evaluate(body_expr, &item_ctx, registry)
                             .map_err(|e| {
                                 FormulaError::new(
                                     ErrorKind::EvalError,
@@ -241,7 +235,7 @@ pub fn sort_fn() -> BuiltinFunction {
     BuiltinFunction {
         name: "sort".to_string(),
         arity: 999, // Variadic (1 or 2 args)
-        call: |args| {
+        call: |args, registry| {
             if args.is_empty() || args.len() > 2 {
                 return Err(FormulaError::new(
                     ErrorKind::FunctionError,
@@ -268,8 +262,6 @@ pub fn sort_fn() -> BuiltinFunction {
                                 None,
                             ));
                         }
-                        let mut registry = crate::functions::FunctionRegistry::new();
-                        crate::builtins::register_all(&mut registry);
 
                         let mut eval_error = None;
                         let mut items_with_keys = Vec::new();
@@ -282,7 +274,7 @@ pub fn sort_fn() -> BuiltinFunction {
                             if let Some(param) = params.first() {
                                 item_ctx.set(param, item.clone());
                             }
-                            match crate::eval::evaluate(body_expr, &item_ctx, &registry) {
+                            match crate::eval::evaluate(body_expr, &item_ctx, registry) {
                                 Ok(key) => items_with_keys.push((item, key)),
                                 Err(e) => {
                                     eval_error = Some(e);
@@ -319,7 +311,7 @@ pub fn sort_with_fn() -> BuiltinFunction {
     BuiltinFunction {
         name: "sort_with".to_string(),
         arity: 2,
-        call: |args| {
+        call: |args, registry| {
             let arr = require_array(&args[0])?;
             let lambda = &args[1];
             match lambda {
@@ -335,8 +327,6 @@ pub fn sort_with_fn() -> BuiltinFunction {
                             None,
                         ));
                     }
-                    let mut registry = crate::functions::FunctionRegistry::new();
-                    crate::builtins::register_all(&mut registry);
 
                     let mut items = arr.clone();
                     let eval_error = std::cell::RefCell::new(None);
@@ -359,7 +349,7 @@ pub fn sort_with_fn() -> BuiltinFunction {
                             cmp_ctx.set(param, b.clone());
                         }
                         // Evaluate comparator - should return negative, 0, or positive
-                        match crate::eval::evaluate(body_expr, &cmp_ctx, &registry) {
+                        match crate::eval::evaluate(body_expr, &cmp_ctx, registry) {
                             Ok(Value::Number(n)) => {
                                 if n < 0.0 {
                                     std::cmp::Ordering::Less
@@ -409,7 +399,7 @@ pub fn unique_fn() -> BuiltinFunction {
     BuiltinFunction {
         name: "unique".to_string(),
         arity: 999, // Variadic (1 or 2 args)
-        call: |args| {
+        call: |args, registry| {
             if args.is_empty() || args.len() > 2 {
                 return Err(FormulaError::new(
                     ErrorKind::FunctionError,
@@ -443,8 +433,6 @@ pub fn unique_fn() -> BuiltinFunction {
                                 None,
                             ));
                         }
-                        let mut registry = crate::functions::FunctionRegistry::new();
-                        crate::builtins::register_all(&mut registry);
 
                         let mut result = Vec::new();
                         let mut seen_keys = Vec::new();
@@ -457,7 +445,7 @@ pub fn unique_fn() -> BuiltinFunction {
                             if let Some(param) = params.first() {
                                 item_ctx.set(param, item.clone());
                             }
-                            let key = crate::eval::evaluate(body_expr, &item_ctx, &registry)
+                            let key = crate::eval::evaluate(body_expr, &item_ctx, registry)
                                 .map_err(|e| {
                                     FormulaError::new(
                                         ErrorKind::EvalError,
@@ -492,7 +480,7 @@ pub fn group_by_fn() -> BuiltinFunction {
     BuiltinFunction {
         name: "group_by".to_string(),
         arity: 2,
-        call: |args| {
+        call: |args, registry| {
             let arr = require_array(&args[0])?;
             let lambda = &args[1];
             match lambda {
@@ -505,8 +493,6 @@ pub fn group_by_fn() -> BuiltinFunction {
                             None,
                         ));
                     }
-                    let mut registry = crate::functions::FunctionRegistry::new();
-                    crate::builtins::register_all(&mut registry);
 
                     let mut groups: std::collections::HashMap<String, Vec<Value>> =
                         std::collections::HashMap::new();
@@ -521,7 +507,7 @@ pub fn group_by_fn() -> BuiltinFunction {
                             item_ctx.set(param, item.clone());
                         }
                         // Evaluate lambda body to get key
-                        let key_result = crate::eval::evaluate(body_expr, &item_ctx, &registry)
+                        let key_result = crate::eval::evaluate(body_expr, &item_ctx, registry)
                             .map_err(|e| {
                                 FormulaError::new(
                                     ErrorKind::EvalError,
@@ -571,12 +557,74 @@ fn require_array(value: &Value) -> Result<&Vec<Value>, FormulaError> {
     }
 }
 
+/// Phase 11.6: set(array) -> Set
+/// Convert array to unique set
+pub fn set_fn() -> BuiltinFunction {
+    BuiltinFunction {
+        name: "set".to_string(),
+        arity: 1,
+        call: |args, _registry| {
+            let arr = require_array(&args[0])?;
+            let set: std::collections::HashSet<Value> = arr.iter().cloned().collect();
+            Ok(Value::Set(set))
+        },
+    }
+}
+
+/// Phase 11.7: range(start, end, step?) -> Range
+/// Create a range iterator
+pub fn range_fn() -> BuiltinFunction {
+    BuiltinFunction {
+        name: "range".to_string(),
+        arity: 999, // 2 or 3 args
+        call: |args, _registry| {
+            if args.len() < 2 {
+                return Err(FormulaError::new(
+                    ErrorKind::FunctionError,
+                    "E503",
+                    "ฟังก์ชัน 'range' ต้องการ 2-3 อาร์กิวเมนต์",
+                    None,
+                ));
+            }
+            let start = require_num(&args[0])? as i64;
+            let end = require_num(&args[1])? as i64;
+            let step = if args.len() > 2 {
+                require_num(&args[2])? as i64
+            } else {
+                1
+            };
+            if step == 0 {
+                return Err(FormulaError::new(
+                    ErrorKind::FunctionError,
+                    "E503",
+                    "step ของ range ต้องไม่เท่ากับ 0",
+                    None,
+                ));
+            }
+            Ok(Value::Range { start, end, step })
+        },
+    }
+}
+
+fn require_num(value: &Value) -> Result<f64, FormulaError> {
+    match value {
+        Value::Number(n) => Ok(*n),
+        _ => Err(FormulaError::new(
+            ErrorKind::TypeError,
+            "E401",
+            "พารามิเตอร์ต้องเป็นตัวเลข",
+            None,
+        )),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn call_fn(f: BuiltinFunction, args: Vec<Value>) -> Result<Value, FormulaError> {
-        (f.call)(&args)
+        let registry = crate::functions::FunctionRegistry::new();
+        (f.call)(&args, &registry)
     }
 
     // -- map() tests --
@@ -710,66 +758,5 @@ mod tests {
             }
             _ => panic!("expected Range"),
         }
-    }
-}
-
-/// Phase 11.6: set(array) -> Set
-/// Convert array to unique set
-pub fn set_fn() -> BuiltinFunction {
-    BuiltinFunction {
-        name: "set".to_string(),
-        arity: 1,
-        call: |args| {
-            let arr = require_array(&args[0])?;
-            let set: std::collections::HashSet<Value> = arr.iter().cloned().collect();
-            Ok(Value::Set(set))
-        },
-    }
-}
-
-/// Phase 11.7: range(start, end, step?) -> Range
-/// Create a range iterator
-pub fn range_fn() -> BuiltinFunction {
-    BuiltinFunction {
-        name: "range".to_string(),
-        arity: 999, // 2 or 3 args
-        call: |args| {
-            if args.len() < 2 {
-                return Err(FormulaError::new(
-                    ErrorKind::FunctionError,
-                    "E503",
-                    "ฟังก์ชัน 'range' ต้องการ 2-3 อาร์กิวเมนต์",
-                    None,
-                ));
-            }
-            let start = require_num(&args[0])? as i64;
-            let end = require_num(&args[1])? as i64;
-            let step = if args.len() > 2 {
-                require_num(&args[2])? as i64
-            } else {
-                1
-            };
-            if step == 0 {
-                return Err(FormulaError::new(
-                    ErrorKind::FunctionError,
-                    "E503",
-                    "step ของ range ต้องไม่เท่ากับ 0",
-                    None,
-                ));
-            }
-            Ok(Value::Range { start, end, step })
-        },
-    }
-}
-
-fn require_num(value: &Value) -> Result<f64, FormulaError> {
-    match value {
-        Value::Number(n) => Ok(*n),
-        _ => Err(FormulaError::new(
-            ErrorKind::TypeError,
-            "E401",
-            "พารามิเตอร์ต้องเป็นตัวเลข",
-            None,
-        )),
     }
 }

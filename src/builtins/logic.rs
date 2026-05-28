@@ -7,7 +7,7 @@ pub fn if_fn() -> BuiltinFunction {
     BuiltinFunction {
         name: "if".to_string(),
         arity: 3,
-        call: |args| {
+        call: |args, _| {
             let cond = &args[0];
             let is_true = match cond {
                 Value::Bool(b) => *b,
