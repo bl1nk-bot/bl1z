@@ -8,14 +8,14 @@
 - [x] `pi()` → 3.14159...
 - [x] `round(n)`, `ceil(n)`, `floor(n)`
 - [x] `sqrt(n)`, `pow(base, exp)`, `abs(n)` ✅ (มีแล้ว)
-- [ ] `sin(n)`, `cos(n)`, `tan(n)` (ใช้ `libm` หรือ pure Rust implementation)
-- [ ] `random()` → random float 0-1
+- [x] `sin(n)`, `cos(n)`, `tan(n)` (ใช้ `libm` หรือ pure Rust implementation)
+- [x] `random()` → random float 0-1
 
 **String:**
 - [x] `trim(s)`, `trim_start(s)`, `trim_end(s)`
 - [x] `split(s, delimiter)` → Array of Strings
-- [ ] `replace(s, from, to)`
-- [ ] `substring(s, start, length)`
+- [x] `replace(s, from, to)`
+- [x] `substring(s, start, length)`
 
 ## 🟢 Phase 11: Advanced Data Types (2 สัปดาห์) ✅ DONE
 

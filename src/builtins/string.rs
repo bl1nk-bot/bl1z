@@ -109,3 +109,121 @@ pub fn ends_with() -> BuiltinFunction {
         },
     }
 }
+
+pub fn trim() -> BuiltinFunction {
+    BuiltinFunction {
+        name: "trim".to_string(),
+        arity: 1,
+        call: |args| {
+            if let Value::String(s) = &args[0] {
+                Ok(Value::String(s.trim().to_string()))
+            } else {
+                Err(FormulaError::new(
+                    ErrorKind::FunctionError,
+                    "E501",
+                    "trim ต้องการข้อความ",
+                    None,
+                ))
+            }
+        },
+    }
+}
+
+pub fn trim_start() -> BuiltinFunction {
+    BuiltinFunction {
+        name: "trim_start".to_string(),
+        arity: 1,
+        call: |args| {
+            if let Value::String(s) = &args[0] {
+                Ok(Value::String(s.trim_start().to_string()))
+            } else {
+                Err(FormulaError::new(
+                    ErrorKind::FunctionError,
+                    "E501",
+                    "trim_start ต้องการข้อความ",
+                    None,
+                ))
+            }
+        },
+    }
+}
+
+pub fn trim_end() -> BuiltinFunction {
+    BuiltinFunction {
+        name: "trim_end".to_string(),
+        arity: 1,
+        call: |args| {
+            if let Value::String(s) = &args[0] {
+                Ok(Value::String(s.trim_end().to_string()))
+            } else {
+                Err(FormulaError::new(
+                    ErrorKind::FunctionError,
+                    "E501",
+                    "trim_end ต้องการข้อความ",
+                    None,
+                ))
+            }
+        },
+    }
+}
+
+pub fn split() -> BuiltinFunction {
+    BuiltinFunction {
+        name: "split".to_string(),
+        arity: 2,
+        call: |args| match (&args[0], &args[1]) {
+            (Value::String(s), Value::String(sep)) => {
+                let parts: Vec<Value> =
+                    s.split(sep).map(|p| Value::String(p.to_string())).collect();
+                Ok(Value::Array(parts))
+            }
+            _ => Err(FormulaError::new(
+                ErrorKind::FunctionError,
+                "E501",
+                "split ต้องการข้อความสองตัว (ข้อความ, ตัวคั่น)",
+                None,
+            )),
+        },
+    }
+}
+
+pub fn replace() -> BuiltinFunction {
+    BuiltinFunction {
+        name: "replace".to_string(),
+        arity: 3,
+        call: |args| match (&args[0], &args[1], &args[2]) {
+            (Value::String(s), Value::String(from), Value::String(to)) => {
+                Ok(Value::String(s.replace(from, to)))
+            }
+            _ => Err(FormulaError::new(
+                ErrorKind::FunctionError,
+                "E501",
+                "replace ต้องการข้อความสามตัว (ข้อความ, จาก, ไปยัง)",
+                None,
+            )),
+        },
+    }
+}
+
+pub fn substring() -> BuiltinFunction {
+    BuiltinFunction {
+        name: "substring".to_string(),
+        arity: 3,
+        call: |args| match (&args[0], &args[1], &args[2]) {
+            (Value::String(s), Value::Number(start), Value::Number(len)) => {
+                let start = *start as usize;
+                let len = *len as usize;
+
+                // Rust substring handling (safe)
+                let sub: String = s.chars().skip(start).take(len).collect();
+                Ok(Value::String(sub))
+            }
+            _ => Err(FormulaError::new(
+                ErrorKind::FunctionError,
+                "E501",
+                "substring ต้องการ (ข้อความ, ตำแหน่งเริ่ม, ความยาว)",
+                None,
+            )),
+        },
+    }
+}

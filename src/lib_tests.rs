@@ -99,6 +99,67 @@ fn evaluate_comparison_chained_or() {
 }
 
 #[test]
+fn evaluate_builtin_pi() {
+    let result = eval_formula("pi()");
+    if let Ok(Value::Number(n)) = result {
+        assert!((n - std::f64::consts::PI).abs() < 1e-10);
+    } else {
+        panic!("Expected Number, got {:?}", result);
+    }
+}
+
+#[test]
+fn evaluate_math_builtins() {
+    assert_eq!(eval_formula("round(3.14159, 2)"), Ok(Value::Number(3.14)));
+    assert_eq!(eval_formula("ceil(3.1)"), Ok(Value::Number(4.0)));
+    assert_eq!(eval_formula("floor(3.9)"), Ok(Value::Number(3.0)));
+    assert_eq!(eval_formula("sqrt(16)"), Ok(Value::Number(4.0)));
+    assert_eq!(eval_formula("pow(2, 3)"), Ok(Value::Number(8.0)));
+    assert_eq!(eval_formula("sin(0)"), Ok(Value::Number(0.0)));
+    assert_eq!(eval_formula("cos(0)"), Ok(Value::Number(1.0)));
+    assert_eq!(eval_formula("tan(0)"), Ok(Value::Number(0.0)));
+
+    let rand = eval_formula("random()");
+    if let Ok(Value::Number(n)) = rand {
+        assert!(n >= 0.0 && n < 1.0);
+    } else {
+        panic!("Expected Number for random(), got {:?}", rand);
+    }
+}
+
+#[test]
+fn evaluate_string_builtins() {
+    assert_eq!(
+        eval_formula("trim(\"  abc  \")"),
+        Ok(Value::String("abc".to_string()))
+    );
+    assert_eq!(
+        eval_formula("trim_start(\"  abc\")"),
+        Ok(Value::String("abc".to_string()))
+    );
+    assert_eq!(
+        eval_formula("trim_end(\"abc  \")"),
+        Ok(Value::String("abc".to_string()))
+    );
+    assert_eq!(
+        eval_formula("split(\"a,b,c\", \",\")"),
+        Ok(Value::Array(vec![
+            Value::String("a".to_string()),
+            Value::String("b".to_string()),
+            Value::String("c".to_string())
+        ]))
+    );
+    assert_eq!(
+        eval_formula("replace(\"hello world\", \"world\", \"bl1z\")"),
+        Ok(Value::String("hello bl1z".to_string()))
+    );
+    assert_eq!(
+        eval_formula("substring(\"hello\", 1, 3)"),
+        Ok(Value::String("ell".to_string()))
+    );
+}
+
+#[test]
 fn evaluate_comparison_less_than_or_equal() {
     assert_eq!(eval_formula("1 <= 1"), Ok(Value::Bool(true)));
     assert_eq!(eval_formula("1 <= 2"), Ok(Value::Bool(true)));
