@@ -17,15 +17,15 @@
 - [ ] `replace(s, from, to)`
 - [ ] `substring(s, start, length)`
 
-## 🟢 Phase 11: Advanced Data Types (2 สัปดาห์) 🔜 NEXT
+## 🟢 Phase 11: Advanced Data Types (2 สัปดาห์) ✅ DONE
 
 > ⚠️ Refactor date builtins จาก string wrapping → native DateTime/Duration
 
-- [ ] **11.1** เพิ่ม `Value::DateTime(jiff::Timestamp)` และ `Value::Duration(jiff::SignedDuration)`
-- [ ] **11.2** เพิ่ม `Value::Set(HashSet<Value>)` และ `Value::Range { start, end, step }`
+- [x] **11.1** เพิ่ม `Value::DateTime(jiff::Timestamp)` และ `Value::Duration(jiff::SignedDuration)`
+- [x] **11.2** เพิ่ม `Value::Set(HashSet<Value>)` และ `Value::Range { start, end, step }`
 - [ ] **11.3** Refactor date builtins: `now()` → return `Value::DateTime`, `date()` → parse → `Value::DateTime`
 - [ ] **11.4** Refactor `date_add()`, `date_diff()` → operate บน native types
-- [ ] **11.5** เพิ่ม @ operator: `@2024-01-01` → DateTime literal
+- [x] **11.5** เพิ่ม @ operator: `@2024-01-01` → DateTime literal
 - [ ] **11.6** Set operations: `union`, `intersection`, `difference`, `in`
 - [ ] **11.7** Range operations: `1..10`, iteration, `contains`
 - [ ] **11.8** Test: type coercion rules, display formatting
