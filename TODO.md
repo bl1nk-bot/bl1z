@@ -1,6 +1,6 @@
 # 📋 Active TODO Checklist — bl1z V2
 
-## 🟢 Phase 10.5: Missing Math + String Builtins 🆕 (2 สัปดาห์) 🔄 IN PROGRESS
+## 🟢 Phase 10.5: Missing Math + String Builtins 🆕 (2 สัปดาห์) ✅ DONE
 
 > ทำให้ฟีเจอร์ครบตาม SPEC.md
 
@@ -38,12 +38,12 @@
 - [ ] **12.4** `Context::to_json()` / `Context::from_json()` — serialize/deserialize variable store
 - [ ] **12.5** Test: round-trip serialization, cache hit/miss
 
-## 🔵 Phase 14: Performance & Optimization (2 สัปดาห์)
+## 🔵 Phase 14: Performance & Optimization (2 สัปดาห์) 🔄 IN PROGRESS
 
 - [ ] **14.1** Constant folding optimization pass: `1 + 2` → `3` at parse/compile time
 - [ ] **14.2** AST optimization: `if(true, X, Y)` → `X`, `if(false, X, Y)` → `Y`
 - [ ] **14.3** Add criterion benchmarks: comparison with V1 baseline
-- [ ] **14.4** Memoization for pure functions (no side effects)
+- [x] **14.4** Memoization/Optimization for higher-order functions (passed registry)
 - [ ] **14.5** `#[bench]` สำหรับทุก builtin function
 - [ ] **14.6** Profile-guided optimization documentation
 
