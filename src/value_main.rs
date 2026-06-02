@@ -1,12 +1,13 @@
 use crate::ast::SpannedExpr;
-use std::collections::{BTreeMap, HashMap, HashSet};
 use std::rc::Rc;
 
-/// แทนค่าขอบเขตที่ถูกจับ (Captured Scope) สำหรับ Closures
-/// เก็บสำเนาของตัวแปรที่มองเห็นได้ ณ เวลาที่สร้าง Lambda
-pub type CapturedScope = BTreeMap<String, Value>;
+/// Represents a captured scope snapshot for closures.
+/// Stores a copy of variables visible at lambda creation time.
+/// Phase 9: Lambda & Higher-Order Functions
+pub type CapturedScope = std::collections::BTreeMap<String, Value>;
 
-/// Wrapper สำหรับ jiff::Span เพื่อให้รองรับ hashing และ equality
+/// Wrapper for jiff::Span to enable hashing/equality.
+/// Phase 11: Advanced Data Types
 #[derive(Clone, Debug)]
 pub struct Duration(pub jiff::Span);
 
@@ -30,43 +31,24 @@ impl std::fmt::Display for Duration {
     }
 }
 
-/// แทนค่าชนิดข้อมูลต่างๆ ในระบบ bl1z
-///
-/// # ตัวอย่างการใช้งาน
-/// ```
-/// use bl1z::Value;
-/// let val = Value::Number(42.0);
-/// assert_eq!(val.to_string(), "42");
-/// ```
+/// Represents a value in the bl1z.
 #[derive(Clone)]
 pub enum Value {
-    /// ตัวเลขทศนิยม 64-bit
     Number(f64),
-    /// ข้อความ UTF-8
     String(String),
-    /// ค่าทางตรรกศาสตร์ (true/false)
     Bool(bool),
-    /// ค่าว่าง
     Null,
-    /// รายการข้อมูล (Array)
     Array(Vec<Value>),
-    /// ข้อมูลแบบ Key-Value (Map)
-    Map(HashMap<String, Value>),
-    /// ฟังก์ชัน Lambda หรือ Closure
-    /// เก็บ (Body, Params, Captured Variables, Context Functions)
+    Map(std::collections::HashMap<String, Value>),
     Lambda(
         Rc<SpannedExpr>,
         Vec<String>,
         CapturedScope,
-        BTreeMap<String, crate::context::UserFunction>,
+        std::collections::BTreeMap<String, crate::context::UserFunction>,
     ),
-    /// วันที่และเวลา (Native Timestamp via jiff)
     DateTime(jiff::Timestamp),
-    /// ช่วงเวลา (Duration via jiff)
     Duration(Duration),
-    /// เซตของข้อมูลที่ไม่มีค่าซ้ำ (Set)
-    Set(HashSet<Value>),
-    /// ช่วงของตัวเลข (Range)
+    Set(std::collections::HashSet<Value>),
     Range {
         start: i64,
         end: i64,
@@ -78,6 +60,7 @@ impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Value::Number(a), Value::Number(b)) => {
+                // Handle NaN correctly (NaN != NaN in standard float)
                 if a.is_nan() && b.is_nan() {
                     true
                 } else {
@@ -89,6 +72,7 @@ impl PartialEq for Value {
             (Value::Null, Value::Null) => true,
             (Value::Array(a), Value::Array(b)) => a == b,
             (Value::Map(a), Value::Map(b)) => {
+                // Map equality by string comparison of each key-value pair
                 if a.len() != b.len() {
                     return false;
                 }
@@ -104,7 +88,7 @@ impl PartialEq for Value {
                 }
                 true
             }
-            (Value::Lambda(_, _, _, _), Value::Lambda(_, _, _, _)) => false,
+            (Value::Lambda(_, _, _, _), Value::Lambda(_, _, _, _)) => false, // Lambdas never equal
             (Value::DateTime(a), Value::DateTime(b)) => a == b,
             (Value::Duration(a), Value::Duration(b)) => a == b,
             (Value::Set(a), Value::Set(b)) => a == b,
