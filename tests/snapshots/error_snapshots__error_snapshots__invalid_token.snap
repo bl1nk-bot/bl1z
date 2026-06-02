@@ -1,7 +1,8 @@
 ---
 source: tests/error_snapshots.rs
-expression: "format_error(\"1 + @\", &err)"
+assertion_line: 31
+expression: "format_error(\"1 + \\\\\", &err)"
 ---
-[E101] อักขระไม่รู้จัก '@'
-    1 | 1 + @
+[E101] อักขระไม่รู้จัก '\'
+    1 | 1 + \
            ^

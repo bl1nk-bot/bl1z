@@ -19,9 +19,25 @@ pub fn register_all(registry: &mut FunctionRegistry) {
     registry.register(string::contains());
     registry.register(string::starts_with());
     registry.register(string::ends_with());
+    registry.register(string::trim());
+    registry.register(string::trim_start());
+    registry.register(string::trim_end());
+    registry.register(string::split());
+    registry.register(string::replace());
+    registry.register(string::substring());
 
     // ฟังก์ชัน math (min/max ถูกย้ายไป collection)
     registry.register(math::abs());
+    registry.register(math::pi());
+    registry.register(math::round());
+    registry.register(math::ceil());
+    registry.register(math::floor());
+    registry.register(math::sqrt());
+    registry.register(math::pow());
+    registry.register(math::sin());
+    registry.register(math::cos());
+    registry.register(math::tan());
+    registry.register(math::random());
 
     // ฟังก์ชัน logic
     registry.register(logic::if_fn());

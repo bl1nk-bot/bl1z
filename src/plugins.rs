@@ -35,7 +35,7 @@ use crate::functions::{BuiltinFunction, FunctionRegistry};
 ///             BuiltinFunction {
 ///                 name: "square".to_string(),
 ///                 arity: 1,
-///                 call: |args| {
+///                 call: |args, _| {
 ///                     match &args[0] {
 ///                         Value::Number(n) => Ok(Value::Number(n * n)),
 ///                         _ => Err(FormulaError::new(
@@ -84,7 +84,7 @@ pub trait Plugin: Send + Sync {
 ///             BuiltinFunction {
 ///                 name: "hello".to_string(),
 ///                 arity: 0,
-///                 call: |_| Ok(Value::String("hello!".to_string())),
+///                 call: |_, _| Ok(Value::String("hello!".to_string())),
 ///             }
 ///         ]
 ///     }
@@ -193,7 +193,7 @@ mod tests {
             vec![BuiltinFunction {
                 name: "test_square".to_string(),
                 arity: 1,
-                call: |args| {
+                call: |args, _| {
                     if let Value::Number(n) = &args[0] {
                         Ok(Value::Number(n * n))
                     } else {
@@ -225,7 +225,7 @@ mod tests {
         assert_eq!(func.arity, 1);
 
         // Test calling the plugin function
-        let result = (func.call)(&[Value::Number(5.0)]).unwrap();
+        let result = (func.call)(&[Value::Number(5.0)], &registry).unwrap();
         assert_eq!(result, Value::Number(25.0));
     }
 
@@ -239,7 +239,7 @@ mod tests {
         registry.register(BuiltinFunction {
             name: "test_square".to_string(),
             arity: 1,
-            call: |_| Ok(Value::Null),
+            call: |_, _| Ok(Value::Null),
         });
 
         let result = manager.merge_functions(&mut registry);

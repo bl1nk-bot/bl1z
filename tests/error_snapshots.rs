@@ -25,10 +25,10 @@ mod error_snapshots {
 
     #[test]
     fn test_syntax_error_invalid_token() {
-        let result = tokenize("1 + @");
+        let result = tokenize("1 + \\");
         assert!(result.is_err());
         let err = result.unwrap_err();
-        assert_snapshot!("invalid_token", format_error("1 + @", &err));
+        assert_snapshot!("invalid_token", format_error("1 + \\", &err));
     }
 
     #[test]

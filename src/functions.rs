@@ -8,8 +8,8 @@ use std::rc::Rc;
 /// This trait allows implementing functions that maintain state,
 /// which is not possible with simple fn pointers.
 pub trait Function: Send + Sync {
-    /// Call the function with arguments.
-    fn call(&self, args: &[Value]) -> Result<Value, FormulaError>;
+    /// Call the function with arguments and the registry.
+    fn call(&self, args: &[Value], registry: &FunctionRegistry) -> Result<Value, FormulaError>;
 
     /// Get the function name.
     fn name(&self) -> &str;
@@ -35,9 +35,9 @@ pub trait Function: Send + Sync {
 ///
 /// ```
 /// use bl1z::functions::BuiltinFunction;
-/// use bl1z::{Value, error::FormulaError};
+/// use bl1z::{Value, error::FormulaError, FunctionRegistry};
 ///
-/// fn my_add(args: &[Value]) -> Result<Value, FormulaError> {
+/// fn my_add(args: &[Value], _registry: &FunctionRegistry) -> Result<Value, FormulaError> {
 ///     match (args.get(0), args.get(1)) {
 ///         (Some(Value::Number(a)), Some(Value::Number(b))) => Ok(Value::Number(a + b)),
 ///         _ => Err(FormulaError::new(
@@ -74,12 +74,12 @@ pub struct BuiltinFunction {
 
     /// Function implementation.
     /// Takes a slice of arguments and returns a result.
-    pub call: fn(&[Value]) -> Result<Value, FormulaError>,
+    pub call: fn(&[Value], &FunctionRegistry) -> Result<Value, FormulaError>,
 }
 
 impl Function for BuiltinFunction {
-    fn call(&self, args: &[Value]) -> Result<Value, FormulaError> {
-        (self.call)(args)
+    fn call(&self, args: &[Value], registry: &FunctionRegistry) -> Result<Value, FormulaError> {
+        (self.call)(args, registry)
     }
 
     fn name(&self) -> &str {
@@ -111,7 +111,7 @@ impl Function for BuiltinFunction {
 /// let mut registry = FunctionRegistry::new();
 ///
 /// // Register a custom function
-/// fn greet(args: &[Value]) -> Result<Value, FormulaError> {
+/// fn greet(args: &[Value], _registry: &FunctionRegistry) -> Result<Value, FormulaError> {
 ///     match args.get(0) {
 ///         Some(Value::String(name)) => Ok(Value::String(format!("Hello, {}!", name))),
 ///         _ => Err(FormulaError::new(
@@ -199,7 +199,7 @@ impl FunctionRegistry {
     /// ```
     /// use bl1z::{FunctionRegistry, functions::BuiltinFunction, Value, error::FormulaError};
     ///
-    /// fn double(args: &[Value]) -> Result<Value, FormulaError> {
+    /// fn double(args: &[Value], _registry: &FunctionRegistry) -> Result<Value, FormulaError> {
     ///     match args.get(0) {
     ///         Some(Value::Number(n)) => Ok(Value::Number(n * 2.0)),
     ///         _ => Err(FormulaError::new(
@@ -298,5 +298,5 @@ pub(crate) struct FunctionInfoRef<'a> {
     #[allow(dead_code)]
     pub name: &'a str,
     pub arity: usize,
-    pub call: fn(&[Value]) -> Result<Value, FormulaError>,
+    pub call: fn(&[Value], &FunctionRegistry) -> Result<Value, FormulaError>,
 }

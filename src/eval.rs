@@ -311,7 +311,7 @@ fn evaluate_impl(
                 .map(|a| evaluate_impl(a, ctx, registry, depth + 1))
                 .collect::<Result<_, _>>()?;
             // เรียกฟังก์ชันที่ implement ด้วย FormulaError โดยตรง
-            (func_info.call)(&evaluated_args)
+            (func_info.call)(&evaluated_args, registry)
         }
     }
 }

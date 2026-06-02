@@ -60,13 +60,11 @@ impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Value::Number(a), Value::Number(b)) => {
-                // Handle NaN and infinity correctly
+                // Handle NaN correctly (NaN != NaN in standard float)
                 if a.is_nan() && b.is_nan() {
                     true
-                } else if a.is_infinite() && b.is_infinite() {
-                    a == b
                 } else {
-                    a.to_bits() == b.to_bits()
+                    a == b
                 }
             }
             (Value::String(a), Value::String(b)) => a == b,
