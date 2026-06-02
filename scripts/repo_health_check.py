@@ -8,7 +8,8 @@ from datetime import datetime
 def run_command(cmd):
     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     if result.returncode != 0:
-        return None
+        print(f"❌ Error running command: {cmd}\n{result.stderr}")
+        sys.exit(result.returncode)
     return result.stdout.strip()
 
 def get_orchestrator(branch_name):
@@ -69,6 +70,7 @@ def main():
     if not output: return
 
     merged_output = run_command("git branch -r --merged origin/main") or ""
+    merged_branches = set(line.strip() for line in merged_output.split('\n'))
     
     now = datetime.now()
     results = []
@@ -82,7 +84,7 @@ def main():
         email = parts[4].strip('<>')
         
         age = (now - iso_date.replace(tzinfo=None)).days
-        is_merged = f"origin/{name}" in merged_output and name != 'main'
+        is_merged = f"origin/{name}" in merged_branches and name != 'main'
         
         results.append(triage_branch({
             "name": name, "age_days": age, "author": author, "email": email

@@ -1,34 +1,34 @@
-# Architecture Rust สำหรับ bl1z
+# Rust Architecture for bl1z
 
-โครงแบบสำหรับสร้าง **formula/calculation library** ด้วย Rust ให้เติบโตแบบค่อยเป็นค่อยไป เหมาะกับแนว Notion-like bl1z และ POE SDK
+Rust implementation for building a **formula/calculation library** that grows incrementally, suitable for Notion-like bl1z and POE SDK.
 
-สถานะปัจจุบัน: **V2 พร้อมเริ่มดำเนินการ**
-
----
-
-## 1) เป้าหมายของระบบ
-
-1. **Parse** ข้อความสูตรเป็นโครงสร้างภายใน ✅
-2. **Evaluate** สูตรให้ได้ค่า ✅
-3. **Extend** เพิ่มฟังก์ชัน/ชนิดข้อมูล/บริบทได้ง่าย ✅
-4. **Navigate** เข้าถึงข้อมูล nested ผ่าน dot/index notation 🚧 (Phase 8)
-5. **Functional** รองรับ lambda, higher-order functions 🚧 (Phase 9)
-6. **User-defined** ให้ผู้ใช้สร้างฟังก์ชันเองได้ 🚧 (Phase 10)
-7. **Rich Types** มี DateTime/Duration แบบ native (ผ่าน `jiff`) 🚧 (Phase 11)
-8. **Plugin SDK** เปิดให้ third-party ขยายความสามารถ 🚧 (Phase 13)
+Current status: **V2 Ready to Start**
 
 ---
 
-## 2) ขอบเขตของระบบ
+## 1) System Goals
 
-### ✅ In scope (V1 – เสร็จแล้ว)
-- นิพจน์คณิตศาสตร์, เปรียบเทียบ, logic
+1. **Parse** formula text into internal structure ✅
+2. **Evaluate** formula to get value ✅
+3. **Extend** easily add functions/data types/context ✅
+4. **Navigate** access nested data via dot/index notation 🚧 (Phase 8)
+5. **Functional** support lambda, higher-order functions 🚧 (Phase 9)
+6. **User-defined** allow users to create functions 🚧 (Phase 10)
+7. **Rich Types** native DateTime/Duration (via `jiff`) 🚧 (Phase 11)
+8. **Plugin SDK** open for third-party expansion 🚧 (Phase 13)
+
+---
+
+## 2) System Scope
+
+### ✅ In scope (V1 – Complete)
+- Math, comparison, and logic expressions
 - String operations, function call, variable/context
-- Error reporting ทุกชั้น, extensible built-in functions
+- Error reporting at every layer, extensible built-in functions
 - Built-in collection functions (sum, avg, min, max, count, join)
-- Basic date functions (now, year, month, day, date_add, date_diff) ใช้ `jiff` ภายใน
+- Basic date functions (now, year, month, day, date_add, date_diff) using internal `jiff`
 
-### 🚧 v2 (กำลังพัฒนา)
+### 🚧 V2 (Under Development)
 - **Access chaining** (`obj.prop`, `arr[0]`)
 - **Lambda expression** `(x) => x * 2`
 - **Higher-order functions**: `map`, `filter`, `reduce`
@@ -39,20 +39,20 @@
 - **Plugin SDK foundation** (Trait + Manager)
 
 ### ❌ Out of scope
-- WASM sandboxing สำหรับ plugin
+- WASM sandboxing for plugins
 - JIT compilation
 - Asynchronous evaluation
-- Static type system ซับซ้อน
+- Complex static type system
 - Null-safe navigation operator (`?.`)
 
 ---
 
-## 3) Architecture ระดับสูง (Extended)
+## 3) High-Level Architecture (Extended)
 
 ### Layer 1: Input Layer ✅
-### Layer 2: Lexing 🚧 (เพิ่ม token Dot)
-### Layer 3: Parsing 🚧 (เพิ่ม postfix chain, lambda)
-### Layer 4: Evaluation 🚧 (เพิ่ม property/index access, lambda call, UDF)
+### Layer 2: Lexing 🚧 (Added Dot token)
+### Layer 3: Parsing 🚧 (Added postfix chain, lambda)
+### Layer 4: Evaluation 🚧 (Added property/index access, lambda call, UDF)
 ### Layer 5: Plugin SDK 🆕 (Phase 13)
 
 ---

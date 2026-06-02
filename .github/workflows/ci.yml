@@ -3,16 +3,13 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
-    # Also trigger on feature branches for early validation
-    branches-ignore: []
+    # Run on all branch pushes; job-level `if` clauses decide behavior
   pull_request:
     branches: [ main, develop ]
 
+# Global permissions - Least Privilege
 permissions:
-  contents: write
-  pull-requests: write
-  issues: write
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always
@@ -30,10 +27,13 @@ jobs:
 
       - name: Check commit message format
         run: |
-          PATTERN="^(feat|fix|ci|docs|style|refactor|test|chore)\(Phase [0-9]+\): .{1,40}$"
+          # Pattern enforcing type(Phase N): Title (Total length ~50 chars)
+          PATTERN="^(feat|fix|ci|docs|style|refactor|test|chore)\(Phase [0-9]+\): .{1,35}$"
           
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             commits=$(git log --format=%s origin/${{ github.base_ref }}..HEAD)
+          elif [ "${{ github.event_name }}" == "push" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            commits=$(git log --format=%s ${{ github.event.before }}..${{ github.sha }})
           else
             commits=$(git log -1 --format=%s)
           fi
@@ -43,9 +43,10 @@ jobs:
           
           error=0
           while IFS= read -r line; do
+            if [ -z "$line" ]; then continue; fi
             if [[ ! $line =~ $PATTERN ]]; then
               echo "❌ Invalid format: $line"
-              echo "   Required format: type(Phase N): title (max 50 chars)"
+              echo "   Required format: type(Phase N): title (max 50 chars total)"
               error=1
             else
               echo "✅ Valid format: $line"
@@ -63,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rust: [ stable, beta ] # Simplified for non-main pushes to save resources
+        rust: [ stable, beta ]
 
     steps:
       - name: Checkout repository
@@ -74,12 +75,16 @@ jobs:
         with:
           toolchain: ${{ matrix.rust }}
           components: rustfmt, clippy
+
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
+
       - name: Check formatting
         run: cargo fmt --all -- --check
+
       - name: Run clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
+
       - name: Run tests
         run: cargo test --verbose
 
@@ -93,25 +98,17 @@ jobs:
   examples:
     name: Test Examples
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6.0.2
-
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
-
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
-
-      - name: Ensure latest Rust
-        run: rustup update stable
-
       - name: Test basic example
         run: cargo run --example basic
-
       - name: Test advanced example
         run: cargo run --example advanced
 
@@ -120,22 +117,15 @@ jobs:
     name: Update Snapshots
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6.0.2
-
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
-
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
-
-      - name: Ensure latest Rust
-        run: rustup update stable
-
       - name: Test and update snapshots
         run: cargo test --test error_snapshots
         env:
@@ -151,16 +141,20 @@ jobs:
       - name: Run audit
         uses: actions-rust-lang/audit@v1
 
-  # 4. Auto Pull Request (Only for feature branches on push)
+  # 3. Auto Pull Request (Only for feature branches on push)
   auto-pr:
     name: Create Pull Request
     needs: [test, audit]
     runs-on: ubuntu-latest
-    # Run only on feature branch pushes (not main/develop, not PR events)
+    # Specific permissions for PR creation
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
     if: github.event_name == 'push' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
       - name: Create Pull Request
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -198,11 +192,13 @@ jobs:
             --head "$BRANCH_NAME" \
             --label "auto-pr"
 
-  # 5. Auto release and notification (Main branch only)
+  # 4. Auto release and notification (Main branch only)
   release:
     name: Auto Release
     runs-on: ubuntu-latest
     needs: [test, audit]
+    permissions:
+      contents: write
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Checkout repository

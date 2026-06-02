@@ -1,135 +1,139 @@
-# เอกสารข้อกำหนดทางเทคนิคของ bl1z (ภาษาไทย)
+# bl1z Technical Requirements Document
 
-## ภาพรวมและเป้าหมาย
+This document describes the technical specifications for the bl1z calculation library.
 
->ระบบ bl1z เป็นไลบรารีการคำนวณที่ใช้ภายใน (คล้าย Notion formula) มีความสามารถหลัก 3 ด้าน
+## Overview and Goals
 
-1. แยกโครงสร้าง (Parse) – แปลงข้อความสูตรให้อยู่ในรูป AST
-2. ประมวลผล (Evaluate) – คำนวณ AST และคืนค่า
-3. ขยายได้ง่าย (Extend) – เพิ่มชนิดข้อมูล ฟังก์ชัน และบริบทใหม่โดยกระทบโค้ดส่วนอื่นน้อยที่สุด
+> The bl1z system is an internal calculation library (similar to Notion formulas) with three main capabilities:
 
-## ขอบเขตของระบบ (Scope)
+1. **Parse** – Convert formula text into AST format.
+2. **Evaluate** – Calculate AST and return the result value.
+3. **Extend** – Easily add new data types, functions, and contexts with minimal impact on other code.
 
-In Scope (ภายในขอบเขต V1)
+## System Scope
 
-· นิพจน์คณิตศาสตร์ (บวก ลบ คูณ หาร)
-· การเปรียบเทียบ (>, <, >=, <=, ==, !=)
-· ตรรกศาสตร์ (AND, OR, NOT)
-· การจัดการข้อความพื้นฐาน (ต่อสตริง)
-· การเรียกฟังก์ชัน (function call)
-· การอ้างอิงตัวแปร/บริบท (variable reference)
-· การรายงานข้อผิดพลาด (lex, parse, eval)
-· ฟังก์ชันในตัว (built-in) ที่ลงทะเบียนเพิ่มได้
+### In Scope (V1)
 
-Out of Scope (นอกขอบเขต V1)
+- Math expressions (add, subtract, multiply, divide)
+- Comparison (>, <, >=, <=, ==, !=)
+- Logic (AND, OR, NOT)
+- Basic string management (concatenation)
+- Function calls
+- Variable/context referencing
+- Error reporting (lex, parse, eval)
+- Registrable built-in functions
 
-· คอมไพเลอร์เต็มรูปแบบ
-· การ optimize ขั้นสูง
-· ระบบ type แบบ static ซับซ้อนเต็มตัว
-· ฟังก์ชันที่ผู้ใช้กำหนดเองได้ (user‑defined functions)
-· การประมวลผลแบบ async
-· sandbox execution
+### Out of Scope (V1)
 
-### สถาปัตยกรรมระดับสูง (High-Level Architecture)
+- Full compiler
+- Advanced optimizations
+- Fully complex static type system
+- User-defined functions
+- Async processing
+- Sandbox execution
 
-#### ระบบถูกออกแบบเป็นชั้น (layer) ตามลำดับการทำงาน
+### High-Level Architecture
 
-Layer ชื่อ หน้าที่
-1 Input รับข้อความสูตร เช่น if(score > 50, "pass", "fail")
-2 Lexer แปลงข้อความ → Token Stream
-3 Parser แปลง Token Stream → AST (Abstract Syntax Tree)
-4 Semantic / Validation ตรวจสอบความหมายพื้นฐาน (ฟังก์ชันมีจริง, จำนวนพารามิเตอร์, ชนิดข้อมูลเข้าได้)
-5 Evaluator เดิน AST และสร้าง Value
-6 Context เก็บข้อมูล runtime (ตัวแปร, ข้อมูล record, environment)
-7 Function Registry จัดเก็บบิ้วท์อินฟังก์ชัน
-8 Error System จัดการ error ที่มี span (ตำแหน่ง) ทุกตัว
+#### Layered System Architecture
 
-รายละเอียดแต่ละโมดูล (Component Specification)
+| Layer | Name | Responsibility |
+|-------|------|----------------|
+| 1 | Input | Receives formula text e.g., `if(score > 50, "pass", "fail")` |
+| 2 | Lexer | Converts text → Token Stream |
+| 3 | Parser | Converts Token Stream → AST (Abstract Syntax Tree) |
+| 4 | Semantic / Validation | Basic semantic checks (function existence, argument count, data types) |
+| 5 | Evaluator | Walks AST and produces Value |
+| 6 | Context | Stores runtime data (variables, record info, environment) |
+| 7 | Function Registry | Stores built-in functions |
+| 8 | Error System | Manages errors with spans (positions) |
 
-1. AST (ast.rs)
+## Component Specification
 
-· เป็นโครงสร้างกลางที่ไม่มี logic การคำนวณ
-· ประกอบด้วย enum Expr (Literal, UnaryExpr, BinaryExpr, FunctionCall, VariableRef, Grouping)
-· มี BinaryOp และ UnaryOp แยกออกมา
+### 1. AST (ast.rs)
 
-2. Lexer (lexer.rs)
+- Middle structure with no calculation logic.
+- Consists of `enum Expr` (Literal, UnaryExpr, BinaryExpr, FunctionCall, VariableRef, Grouping).
+- Separate `BinaryOp` and `UnaryOp`.
 
-· รับข้อความ สร้าง token ทีละตัว
-· Token ประกอบด้วย TokenKind (Identifier, Number, String, LParen, RParen, Comma, Operator, Keyword)
-· เก็บตำแหน่ง (บรรทัด/คอลัมน์) เพื่อสร้าง Span
-· ละเว้น whitespace, จัดการ literal, แยก operator
+### 2. Lexer (lexer.rs)
 
-3. Parser (parser.rs)
+- Receives text and generates tokens one by one.
+- Token consists of `TokenKind` (Identifier, Number, String, LParen, RParen, Comma, Operator, Keyword).
+- Stores position (line/column) for `Span`.
+- Ignores whitespace, handles literals, separates operators.
 
-· ใช้ recursive descent โดยมีตารางลำดับความสำคัญ (precedence) และกฎ associativity
-· ลำดับความสำคัญของ operator:
-  1. วงเล็บ ()
-  2. Unary -, !
-  3. *, /
-  4. +, -
-  5. เปรียบเทียบ (<, >, <=, >=)
-  6. เท่ากัน (==, !=)
+### 3. Parser (parser.rs)
+
+- Uses recursive descent with precedence table and associativity rules.
+- Operator precedence:
+  1. Parentheses `()`
+  2. Unary `-`, `!`
+  3. `*`, `/`
+  4. `+`, `-`
+  5. Comparison (`<`, `>`, `<=`, `>=`)
+  6. Equality (`==`, `!=`)
   7. Logical AND
   8. Logical OR
-· รองรับ function call และ variable reference
-· รายงาน syntax error พร้อม span
-· มีระบบ error recovery ขั้นต้น (optional)
+- Supports function calls and variable references.
+- Reports syntax errors with spans.
+- Basic error recovery system (optional).
 
-4. Value (value.rs)
+### 4. Value (value.rs)
 
-· ชนิดข้อมูลที่ evaluator คืนค่า
-· Enum Value:
-  · Number(f64)
-  · String(String)
-  · Bool(bool)
-  · Null
-  · (Phase 2: Array(Vec<Value>), DateTime(...), Object(Map))
-· ใช้ f64 ในช่วงแรก หากต้องการความแม่นยำสูงค่อยเปลี่ยนเป็น decimal type
+- Data type returned by evaluator.
+- `Enum Value`:
+  - `Number(f64)`
+  - `String(String)`
+  - `Bool(bool)`
+  - `Null`
+  - (Phase 2: Array, DateTime, Object/Map)
+- Uses `f64` initially; consider decimal type if high precision is required.
 
-5. Context (context.rs)
+### 5. Context (context.rs)
 
-· เก็บตัวแปร runtime ใน HashMap<String, Value>
-· ฟังก์ชัน get(name) -> Option<Value> และ set(name, value)
-· ใช้สำหรับ resolve identifier เช่น score, user.name (อาจทำ nested lookup ภายหลัง)
+- Stores runtime variables in `HashMap<String, Value>`.
+- Functions `get(name) -> Option<Value>` and `set(name, value)`.
+- Used for identifier resolution like `score`, `user.name` (nested lookup later).
 
-6. Function Registry (functions.rs)
+### 6. Function Registry (functions.rs)
 
-· เก็บ built-in functions ใน HashMap<String, BuiltinFunction>
-· BuiltinFunction มี name, arity (จำนวนอาร์กิวเมนต์) และ call(args: &[Value]) -> Value
-· ตรวจสอบจำนวนพารามิเตอร์ก่อนเรียก
-· เพิ่มฟังก์ชันใหม่ได้โดยไม่ต้องแก้ evaluator
+- Stores built-in functions in `HashMap<String, BuiltinFunction>`.
+- `BuiltinFunction` has name, arity (argument count), and `call(args: &[Value]) -> Value`.
+- Validates parameter count before calling.
+- Add new functions without modifying the evaluator.
 
-7. Evaluator (eval.rs)
+### 7. Evaluator (eval.rs)
 
-· ฟังก์ชัน eval(expr: &Expr, ctx: &Context, functions: &FunctionRegistry) -> Result<Value, EvalError>
-· ทำงานแบบ recursive: match ตาม Expr และประมวลผลตามชนิด
-· ส่งคืน error สำหรับการดำเนินการที่ไม่ถูกต้อง (เช่น หารศูนย์, ชนิดข้อมูลเข้ากันไม่ได้)
+- Function `eval(expr: &Expr, ctx: &Context, functions: &FunctionRegistry) -> Result<Value, EvalError>`.
+- Recursive: matches `Expr` and processes by type.
+- Returns error for invalid operations (e.g., division by zero, type mismatch).
 
-8. Error System (error.rs, span.rs, diagnostics.rs)
+### 8. Error System (error.rs, span.rs, diagnostics.rs)
 
-· ทุก error ประกอบด้วย code, message, span (ตำแหน่งใน source), category
-· Categories: LexError, ParseError, EvalError, TypeError, FunctionError, ContextError
-· span.rs เก็บ Span { start: Position, end: Position } สำหรับใช้ชี้ตำแหน่งในข้อความสูตร
-· diagnostics.rs ช่วยจัดรูปแบบข้อความ error ที่มีที่มา
+- Every error consists of code, message, span, and category.
+- Categories: LexError, ParseError, EvalError, TypeError, FunctionError, ContextError.
+- `span.rs` stores `Span { start: Position, end: Position }` for position tracking.
+- `diagnostics.rs` helps format error messages with context.
 
-9. Built-in Functions (builtins/)
+### 9. Built-in Functions (builtins/)
 
-จัดกลุ่มเป็นโมดูล:
+Grouped into modules:
 
-· string.rs: len, upper, lower, contains, starts_with, ends_with, replace
-· math.rs: abs, round, min, max, sqrt
-· logic.rs: if, and, or, not
-· date.rs: now, date_add, date_diff (เพิ่มภายหลัง)
+- `string.rs`: len, upper, lower, contains, starts_with, ends_with, replace
+- `math.rs`: abs, round, min, max, sqrt
+- `logic.rs`: if, and, or, not
+- `date.rs`: now, date_add, date_diff (added later)
 
-รายละเอียดฟังก์ชันขั้นต่ำ V1
+#### Minimum V1 Functions
 
-ฟังก์ชัน คำอธิบาย จำนวนพารามิเตอร์
-if(cond, a, b) ถ้า cond เป็นจริง คืน a มิฉะนั้นคืน b 3
-len(text) ความยาวสตริง 1
-upper(text) แปลงเป็นตัวพิมพ์ใหญ่ 1
-lower(text) แปลงเป็นตัวพิมพ์เล็ก 1
+| Function | Description | Parameter Count |
+|----------|-------------|-----------------|
+| `if(cond, a, b)` | If cond is true, return a, else b | 3 |
+| `len(text)` | String length | 1 |
+| `upper(text)` | Convert to uppercase | 1 |
+| `lower(text)` | Convert to lowercase | 1 |
 
-ข้อกำหนดของ Syntax (Grammar คร่าว ๆ)
+## Syntax Specification (Basic Grammar)
 
 ```
 expression → logical_or
@@ -144,25 +148,25 @@ primary → NUMBER | STRING | IDENTIFIER | '(' expression ')' | function_call
 function_call → IDENTIFIER '(' expression (',' expression)* ')'
 ```
 
-ข้อกำหนด Error
+## Error Specification
 
-Error ทุกตัวต้องมี:
+Every error must have:
 
-· code (รหัสประจำตัว เช่น E001)
-· message (ข้อความอธิบาย)
-· span (ตำแหน่งเริ่มต้น-สิ้นสุดในข้อความ)
-· category (กลุ่มข้อผิดพลาด)
+- **code** (Identifier like E001)
+- **message** (Explanation)
+- **span** (Start-End position in text)
+- **category** (Error group)
 
-ตัวอย่าง Error Codes:
+### Example Error Codes:
 
-· E001 – UnexpectedToken
-· E002 – UnknownIdentifier
-· E003 – UnsupportedOperator
-· E004 – DivisionByZero
-· E005 – ArgumentCountMismatch
-· E006 – TypeMismatch
+- E001 – UnexpectedToken
+- E002 – UnknownIdentifier
+- E003 – UnsupportedOperator
+- E004 – DivisionByZero
+- E005 – ArgumentCountMismatch
+- E006 – TypeMismatch
 
-โครงสร้างไฟล์ Rust ที่แนะนำ
+## Recommended Rust File Structure
 
 ```
 src/
@@ -185,44 +189,36 @@ src/
     date.rs
 ```
 
-แผนการพัฒนาแบบเฟส (Roadmap)
+## Phased Development Roadmap
 
-Phase 0: Design & Scope Lock
+### Phase 0: Design & Scope Lock
+- Define use case, syntax, value types, operators, built-ins, error format
+- Document spec v1
 
-· กำหนด use case, syntax, value types, operators, built‑ins, error format
-· เอกสาร spec v1
+### Phase 1: Lexer + AST + Parser
+- Create tokenizer and parser
+- Parse `1 + 2 * 3` into correct AST
 
-Phase 1: Lexer + AST + Parser
+### Phase 2: Basic Evaluator
+- Implement Value and evaluator
+- Process math, comparison, logic
 
-· สร้าง tokenizer และ parser
-· แปลง 1 + 2 * 3 ให้ได้ AST ที่ถูกต้อง
+### Phase 3: Function System
+- Create registry, call `if`, `len`, `upper`
 
-Phase 2: Basic Evaluator
+### Phase 4: Context Resolution
+- Support variables from context
 
-· ใช้ Value และ evaluator
-· ประมวลผลได้คณิตศาสตร์ เปรียบเทียบ ตรรกะ
+### Phase 5: Type Handling & Validation (Later)
+- Validate data types before evaluation for clearer errors
 
-Phase 3: Function System
+### Phase 6: Advanced Features (Array, DateTime, Object, chaining)
 
-· สร้าง registry, เรียก if, len, upper
+### Phase 7: Quality & Tooling (tests, docs, benchmarks)
 
-Phase 4: Context Resolution
+## Non-Functional Requirements (NFR)
 
-· รองรับตัวแปรจาก context
-
-Phase 5: Type Handling & Validation (ภายหลัง)
-
-· ตรวจสอบชนิดข้อมูลก่อน evaluation ให้ error ชัดเจนขึ้น
-
-Phase 6: Advanced Features (Array, DateTime, Object, chaining)
-
-Phase 7: Quality & Tooling (tests, docs, benchmarks)
-
-Non-Functional Requirements (NFR)
-
-· ประสิทธิภาพ: response ต่อโทเค็นนับร้อยภายในหลักมิลลิวินาที
-· ความสามารถในการดูแลรักษา: เพิ่มฟังก์ชันใหม่โดยไม่ต้องแก้ไข core evaluator
-· การรายงาน error: ระบุตำแหน่งที่แน่นอนได้
-· ความเสถียร: ห้าม panic จาก input ที่ผิดปกติ (ใช้ Result ทุกจุด)
-
----
+- **Performance**: Response to hundreds of tokens within milliseconds.
+- **Maintainability**: Add new functions without modifying core evaluator.
+- **Error Reporting**: Identify exact positions.
+- **Stability**: Never panic from abnormal input (use `Result` everywhere).
