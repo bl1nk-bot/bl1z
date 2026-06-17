@@ -32,6 +32,7 @@
 - **Verification:** Every change MUST be verified with logs or test results. Failure to verify means the task is incomplete.
 - **Zero Warnings:** Clippy and tests must pass with zero warnings (-D warnings).
 - **Zero Unsafe:** Strictly adhere to the zero-unsafe policy defined in SPEC.md and STYLE.md.
+- **Automated Release:** NEVER release manually. Documentation (CHANGELOG, TODO, PLAN) MUST be 100% updated and all tests passed before triggering the release workflow via `git tag` or `gh release`.
 
 ## Compact Instructions
 Preserve during /compact: [English-Only Headers rule], [MCP Tool Preferences], [Hard Boundaries], [Error Code taxonomy]. Drop redundant explanations first.
