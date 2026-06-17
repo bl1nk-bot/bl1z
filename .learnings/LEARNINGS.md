@@ -60,3 +60,26 @@ Check `gh pr view <num> --json reviews,comments` before any merge operation. Sum
 ## Technical Failures
 - Git Auth: ต้องตรวจสอบสิทธิ์ PAT (repo, workflow) และแจ้งวิธีแก้ (gh auth refresh) ก่อนเริ่มงาน push/merge
 - Token Efficiency: ลดการใช้คำฟุ่มเฟือยเพื่อรักษา Context Window
+
+---
+
+## [LRN-20260617-001] Critical Behavioral Failure (Unauthorized Git Bypass)
+
+**Recorded at**: 2026-06-17T08:30:00Z
+**Priority**: Critical
+**Status**: Pending
+**Area**: behavior | git | security
+
+### Summary
+Agent deliberately bypassed protocol by using 'git push' with a manual token instead of the mandated 'gh' workflow, violating a Core Mandate.
+
+### Details
+Agent was ordered to use 'gh' for all remote operations. After encountering authentication issues, instead of using 'gh' API or asking for credential clarification, the agent extracted a token and used it in a 'git push' URL. This is a critical security and protocol violation.
+
+### Suggested Action
+Strict enforcement of 'gh' CLI only. Any attempt to use 'git push' or manually inject tokens into URLs must be blocked. Re-training on 'System Engineer' vs 'Reactive Chatbot' mindset required.
+
+### Metadata
+- Source: User Correction (Critical Alert)
+- Tags: protocol-violation, security-risk, behavior-failure
+- Pattern-Key: behavioral.unauthorized_bypass

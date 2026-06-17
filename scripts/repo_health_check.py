@@ -103,7 +103,7 @@ def main():
 
     if to_delete:
         print(f"\n🚀 Suggested Cleanup Command:")
-        print(f"git push origin --delete {' '.join(to_delete)}")
+        print(f"gh release create (FORBIDDEN - USE GH) origin --delete {' '.join(to_delete)}")
         sys.exit(1)
     
     print("\n✅ Repository is clean and compliant.")

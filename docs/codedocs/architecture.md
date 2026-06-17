@@ -1,15 +1,15 @@
 ---
-title: "Architecture"
-description: "Understand the internal module layout, request flow, and key design decisions in formula_engine."
+title: "สถาปัตยกรรม (Architecture)"
+description: "ทำความเข้าใจโครงสร้างโมดูลภายใน, การไหลของคำขอ (Request Flow) และการตัดสินใจในการออกแบบที่สำคัญใน bl1z"
 ---
 
-`formula_engine` is organized as a deliberately layered crate. The public entry point in `src/lib.rs` re-exports the high-traffic API, but the implementation remains split by responsibility: lexical analysis in `src/lexer.rs`, AST construction in `src/parser.rs` and `src/ast.rs`, evaluation in `src/eval.rs`, runtime state in `src/context.rs` and `src/value.rs`, extension points in `src/functions.rs` and `src/builtins`, and user-facing diagnostics in `src/error.rs`, `src/diagnostics.rs`, and `src/profiling.rs`.
+`bl1z` ถูกจัดระเบียบให้เป็น Crate ที่มีการแบ่งชั้น (Layered) อย่างจงใจ จุดเข้าใช้งานสาธารณะใน `src/lib.rs` จะส่งออก (re-export) API ที่ใช้งานบ่อย แต่การทำงานจริงยังคงแยกตามความรับผิดชอบ: การวิเคราะห์คำศัพท์ (Lexical Analysis) ใน `src/lexer.rs`, การสร้าง AST ใน `src/parser.rs` และ `src/ast.rs`, การประมวลผล (Evaluation) ใน `src/eval.rs`, สถานะรันไทม์ (Runtime State) ใน `src/context.rs` และ `src/value.rs`, จุดขยาย (Extension Points) ใน `src/functions.rs` และ `src/builtins`, และการวินิจฉัยสำหรับผู้ใช้ (User-facing Diagnostics) ใน `src/error.rs`, `src/diagnostics.rs` และ `src/profiling.rs`
 
-## Module Relationships
+## ความสัมพันธ์ของโมดูล (Module Relationships)
 
 ```mermaid
 graph TD
-  A[Formula String] --> B[src/lexer.rs tokenize]
+  A[ข้อความสูตร] --> B[src/lexer.rs tokenize]
   B --> C[Vec<Token>]
   C --> D[src/parser.rs parse]
   D --> E[src/ast.rs SpannedExpr]
@@ -27,7 +27,7 @@ graph TD
   M --> F
 ```
 
-## Request And Data Lifecycle
+## วงจรชีวิตของคำขอและข้อมูล (Request And Data Lifecycle)
 
 ```mermaid
 sequenceDiagram
@@ -43,45 +43,45 @@ sequenceDiagram
   App->>Parser: parse(&tokens)
   Parser-->>App: SpannedExpr
   App->>Evaluator: evaluate(&ast, &ctx, &registry)
-  Evaluator->>Context: resolve variables
-  Evaluator->>Registry: find functions
+  Evaluator->>Context: ค้นหาตัวแปร (resolve)
+  Evaluator->>Registry: ค้นหาฟังก์ชัน
   Registry-->>Evaluator: BuiltinFunction
-  Evaluator-->>App: Value or FormulaError
+  Evaluator-->>App: Value หรือ FormulaError
 ```
 
-## Why The Crate Is Split This Way
+## ทำไม Crate ถึงถูกแยกแบบนี้
 
-### 1. Parsing and evaluation are independent on purpose
+### 1. การวิเคราะห์ (Parsing) และการประมวลผล (Evaluation) แยกจากกันอย่างจงใจ
 
-`src/lib.rs` exposes `tokenize`, `parse`, and `evaluate` as separate calls instead of hiding everything behind a single helper. That choice matters operationally: you can parse once, keep the `SpannedExpr`, and evaluate it many times with different contexts. The profiling utilities in `src/profiling.rs` also benefit from this split because they can measure each phase individually. In practical terms, it gives you a clean boundary between syntax validation and data-driven execution.
+`src/lib.rs` เปิดเผยฟังก์ชัน `tokenize`, `parse` และ `evaluate` ให้เป็นคนละการเรียกใช้งาน แทนที่จะซ่อนทุกอย่างไว้หลัง helper ตัวเดียว ทางเลือกนี้มีความสำคัญในเชิงปฏิบัติการ: คุณสามารถ parse เพียงครั้งเดียว เก็บ `SpannedExpr` ไว้ และประมวลผล (evaluate) มันหลายๆ ครั้งด้วยบริบท (contexts) ที่แตกต่างกัน ยูทิลิตี้การเก็บสถิติ (Profiling) ใน `src/profiling.rs` ยังได้รับประโยชน์จากการแยกนี้เพราะสามารถวัดผลในแต่ละขั้นตอนแยกกันได้ ในทางปฏิบัติ มันสร้างขอบเขตที่ชัดเจนระหว่างการตรวจสอบไวยากรณ์ (Syntax Validation) และการดำเนินการที่ขับเคลื่อนด้วยข้อมูล (Data-driven Execution)
 
-### 2. Runtime extensibility goes through a registry, not traits on the AST
+### 2. ความสามารถในการขยายรันไทม์ผ่าน Registry ไม่ใช่ Trait บน AST
 
-Custom behavior is attached through `FunctionRegistry` in `src/functions.rs`. The evaluator in `src/eval.rs` resolves a `FunctionCall` node by name, validates the arity, evaluates every argument, and then invokes the stored function pointer. This keeps the AST simple and serializable-looking while making functions the primary extension point. It also means the language surface stays stable even when application teams add domain-specific operations.
+พฤติกรรมที่กำหนดเองจะถูกแนบผ่าน `FunctionRegistry` ใน `src/functions.rs` ตัวประมวลผล (Evaluator) ใน `src/eval.rs` จะค้นหาโหนด `FunctionCall` ตามชื่อ ตรวจสอบจำนวนอาร์กิวเมนต์ (arity) ประมวลผลอาร์กิวเมนต์ทุกตัว แล้วเรียกใช้ function pointer ที่เก็บไว้ สิ่งนี้ทำให้ AST เรียบง่ายและดูเหมือนข้อมูลที่ serialize ได้ ในขณะที่ทำให้ฟังก์ชันเป็นจุดขยายหลัก นอกจากนี้ยังหมายความว่าส่วนหน้าของภาษา (Language Surface) ยังคงเสถียร แม้ว่าทีมแอปพลิเคชันจะเพิ่มการดำเนินการเฉพาะด้านก็ตาม
 
-### 3. Spans are carried through the syntax tree
+### 3. ข้อมูลตำแหน่ง (Spans) ถูกส่งผ่านต้นไม้ไวยากรณ์
 
-`src/ast.rs` wraps each expression in `SpannedExpr`, whose `ExprMeta` stores a `Span`. The parser combines spans as it builds larger expressions, and errors across lexing, parsing, and evaluation can attach location data. That location data is later formatted in `src/diagnostics.rs` with the original source line and carets. The result is a much better failure mode than returning a plain string message without context.
+`src/ast.rs` ห่อหุ้มทุกนิพจน์ (expression) ไว้ใน `SpannedExpr` ซึ่งใน `ExprMeta` จะเก็บข้อมูล `Span` ตัววิเคราะห์ (Parser) จะรวม span เข้าด้วยกันเมื่อสร้างนิพจน์ที่ใหญ่ขึ้น และข้อผิดพลาดในการวิเคราะห์คำศัพท์, ไวยากรณ์ และการประมวลผลสามารถแนบข้อมูลตำแหน่งได้ ข้อมูลตำแหน่งนั้นจะถูกจัดรูปแบบในภายหลังใน `src/diagnostics.rs` พร้อมกับบรรทัดต้นฉบับดั้งเดิมและเครื่องหมายระบุตำแหน่ง ผลลัพธ์ที่ได้คือโหมดความล้มเหลวที่ดีกว่าการส่งกลับเพียงข้อความธรรมดาโดยไม่มีบริบท
 
-### 4. The runtime is intentionally strict
+### 4. รันไทม์มีความเข้มงวดอย่างจงใจ
 
-The evaluator in `src/eval.rs` only accepts explicit type combinations. `+` works for `Number + Number` and `String + String`, comparisons are numeric, and boolean logic requires booleans. There is no coercion layer. That design reduces ambiguity and keeps user formulas predictable, but it does push more validation into the formula authoring step.
+ตัวประมวลผลใน `src/eval.rs` รับเฉพาะการรวมประเภทข้อมูลที่ชัดเจนเท่านั้น `+` ทำงานกับ `Number + Number` และ `String + String`, การเปรียบเทียบเป็นแบบตัวเลข และตรรกะ boolean ต้องการข้อมูลประเภท boolean ระบบนี้ไม่มีชั้นการแปลงประเภท (Coercion Layer) การออกแบบนี้ช่วยลดความคลุมเครือและทำให้สูตรของผู้ใช้คาดเดาผลลัพธ์ได้ง่าย แต่มันก็ส่งภาระการตรวจสอบความถูกต้องไปยังขั้นตอนการเขียนสูตรมากขึ้น
 
-## How The Pieces Fit Together
+## ส่วนประกอบต่างๆ ทำงานร่วมกันอย่างไร
 
-The lexer turns raw text into `Token` values with exact `Span` data. `src/lexer.rs` handles operators, string escapes, identifiers, keywords like `true`, `false`, and `null`, and structural tokens for arrays and maps. It appends an `Eof` token at the end, which simplifies the parser.
+Lexer เปลี่ยนข้อความดิบให้เป็นค่า `Token` พร้อมข้อมูล `Span` ที่แม่นยำ `src/lexer.rs` จัดการตัวดำเนินการ (operators), การหลีกอักขระในสตริง (string escapes), ชื่อตัวแปร (identifiers), คำสำคัญ (keywords) เช่น `true`, `false`, `null` และโทเค็นโครงสร้างสำหรับอาร์เรย์และแมป และจะแนบโทเค็น `Eof` ไว้ที่ส่วนท้ายเพื่อช่วยให้ตัววิเคราะห์ทำงานง่ายขึ้น
 
-The parser in `src/parser.rs` uses a standard recursive-descent structure with helper methods for operator precedence. `parse_left_associative_binary` centralizes the repeated pattern for `||`, `&&`, equality, comparison, term, and factor precedence levels. `parse_primary` then handles literals, grouped expressions, function calls, arrays, maps, and dot-separated identifiers such as `user.score`.
+Parser ใน `src/parser.rs` ใช้โครงสร้างแบบ recursive-descent มาตรฐานพร้อมเมธอดช่วยสำหรับการจัดลำดับความสำคัญของตัวดำเนินการ (Operator Precedence) ฟังก์ชัน `parse_left_associative_binary` จะรวมรูปแบบการทำงานที่ซ้ำกันสำหรับระดับลำดับความสำคัญของ `||`, `&&`, ความเท่ากัน, การเปรียบเทียบ, พจน์ (term) และปัจจัย (factor) จากนั้น `parse_primary` จะจัดการค่าคงที่ (literals), นิพจน์ในวงเล็บ, การเรียกฟังก์ชัน, อาร์เรย์, แมป และชื่อตัวแปรที่มีเครื่องหมายจุดแยก เช่น `user.score`
 
-Evaluation walks the AST recursively in `src/eval.rs`. Literals return immediately. Variables resolve through `Context`, including traversal into nested `Value::Map` instances when a variable name contains dots. Function calls look up a `BuiltinFunction` in the registry, validate exact arity, evaluate arguments, and call the registered implementation. Arrays and maps evaluate their children eagerly into runtime `Value` containers.
+Evaluation เดินผ่าน AST แบบ recursive ใน `src/eval.rs` ค่าคงที่จะคืนผลลัพธ์ทันที ตัวแปรจะถูกค้นหาผ่าน `Context` รวมถึงการเดินเข้าไปในอินสแตนซ์ `Value::Map` ที่ซ้อนกันเมื่อชื่อตัวแปรมีเครื่องหมายจุด การเรียกฟังก์ชันจะค้นหา `BuiltinFunction` ใน registry ตรวจสอบจำนวนอาร์กิวเมนต์ที่ถูกต้อง ประมวลผลอาร์กิวเมนต์ และเรียกใช้การทำงานที่ลงทะเบียนไว้ อาร์เรย์และแมปจะประมวลผลลูกๆ ของมันทันที (eagerly) เข้าสู่คอนเทนเนอร์ `Value` ในรันไทม์
 
-Built-ins are kept in separate source files by domain. `src/builtins/mod.rs` centralizes registration so application code can opt into the full standard function set with one call. Profiling helpers in `src/profiling.rs` are deliberately outside the evaluation path; they reuse the public API rather than depending on internal hooks, which keeps the core runtime smaller and easier to reason about.
+Built-ins ถูกเก็บไว้ในไฟล์แยกกันตามโดเมน `src/builtins/mod.rs` เป็นศูนย์กลางการลงทะเบียนเพื่อให้โค้ดแอปพลิเคชันสามารถเลือกใช้ชุดฟังก์ชันมาตรฐานทั้งหมดได้ด้วยการเรียกใช้ครั้งเดียว ตัวช่วยการเก็บสถิติใน `src/profiling.rs` ถูกแยกออกมาจากเส้นทางการประมวลผลหลักโดยจงใจ โดยใช้ API สาธารณะแทนการพึ่งพา hook ภายใน ซึ่งช่วยให้รันไทม์หลักมีขนาดเล็กและเข้าใจได้ง่ายขึ้น
 
-## Design Constraints You Should Know
+## ข้อจำกัดในการออกแบบที่คุณควรทราบ
 
-- `if()` is implemented as a normal registered function in `src/builtins/logic.rs`, and the evaluator always evaluates function arguments before invocation. That means both branches are evaluated eagerly.
-- `&&` and `||` are also eager in `src/eval.rs`; there is no short-circuit logic.
-- Dot access is implemented as a split variable name lookup, not as a general property-access AST node. It works for `Context` variables backed by nested `Value::Map`, but not for arbitrary expression results.
-- `date_diff()` in `src/builtins/date.rs` accepts three arguments, but the third `unit` argument is currently ignored even though the examples pass `"days"`.
+- `if()` ถูกส่งค่าเข้าไปเหมือนฟังก์ชันปกติใน `src/builtins/logic.rs` และตัวประมวลผลจะประมวลผลอาร์กิวเมนต์ทุกตัวก่อนเรียกใช้เสมอ นั่นหมายความว่าทั้งสองเงื่อนไขจะถูกประมวลผลล่วงหน้าทันที (eager evaluation)
+- `&&` และ `||` ก็ทำงานแบบ eager ใน `src/eval.rs` เช่นกัน โดยไม่มีตรรกะลัด (short-circuit logic)
+- การเข้าถึงด้วยเครื่องหมายจุด (Dot access) ถูกระบุเป็นการค้นหาชื่อตัวแปรที่แยกส่วน ไม่ใช่โหนด AST สำหรับการเข้าถึง property ทั่วไป มันทำงานได้กับตัวแปรใน `Context` ที่รองรับโดย `Value::Map` ที่ซ้อนกัน แต่ไม่สามารถใช้กับผลลัพธ์ของนิพจน์ทั่วไปได้
+- `date_diff()` ใน `src/builtins/date.rs` รับอาร์กิวเมนต์สามตัว แต่อาร์กิวเมนต์ที่สาม `unit` ปัจจุบันถูกละเว้น แม้ว่าตัวอย่างจะส่งค่า `"days"` เข้าไปก็ตาม
 
-These constraints are not accidental documentation details. They follow directly from the implementation, so they should shape how you design formulas and how you expose formula authoring to end users.
+ข้อจำกัดเหล่านี้ไม่ใช่รายละเอียดทางเอกสารที่เกิดขึ้นโดยบังเอิญ แต่มันมาจากการนำไปใช้งานจริง ดังนั้นคุณควรคำนึงถึงสิ่งเหล่านี้เมื่อออกแบบสูตรและเมื่อนำเสนอวิธีการเขียนสูตรให้กับผู้ใช้ปลายทาง

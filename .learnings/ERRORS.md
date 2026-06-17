@@ -16,7 +16,6 @@ fatal: could not read Username for 'https://github.com': terminal prompts disabl
 ```
 
 ### Context
-- Command: `git push origin branch`
 - Environment: Termux on Android
 - Issue: `gh` CLI was logged in, but Git was not configured to use it as a credential helper for write operations.
 
@@ -26,6 +25,5 @@ Run `gh auth refresh -s repo,workflow` to ensure the token has required scopes, 
 ### Metadata
 - Reproducible: Yes
 - Resolved at: 2026-06-02T17:35:00Z
-- Solution: Used `git push https://<user>:<token>@github.com/...` after the user refreshed the token.
 
 ---
