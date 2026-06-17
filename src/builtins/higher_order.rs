@@ -48,7 +48,7 @@ pub fn reduce() -> BuiltinFunction {
             let arr = require_array(&args[0])?;
             let lambda = &args[1];
             let initial = &args[2];
-            
+
             let mut acc = initial.clone();
             for val in arr {
                 // ส่ง acc และ val เข้า lambda (arity 2)
@@ -65,7 +65,9 @@ pub fn sort() -> BuiltinFunction {
         name: "sort".to_string(),
         arity: 999,
         call: |args, reg| {
-            if args.is_empty() { return Ok(Value::Array(Vec::new())); }
+            if args.is_empty() {
+                return Ok(Value::Array(Vec::new()));
+            }
             let mut arr = require_array(&args[0])?.clone();
             if args.len() == 1 {
                 arr.sort_by(|a, b| format!("{}", a).cmp(&format!("{}", b)));
@@ -91,14 +93,18 @@ pub fn sort_with() -> BuiltinFunction {
         call: |args, reg| {
             let mut arr = require_array(&args[0])?.clone();
             let lambda = &args[1];
-            
+
             let mut sort_error = None;
             arr.sort_by(|a, b| {
                 match crate::eval::apply_lambda(lambda, &[a.clone(), b.clone()], reg) {
                     Ok(Value::Number(n)) => {
-                        if n < 0.0 { std::cmp::Ordering::Less }
-                        else if n > 0.0 { std::cmp::Ordering::Greater }
-                        else { std::cmp::Ordering::Equal }
+                        if n < 0.0 {
+                            std::cmp::Ordering::Less
+                        } else if n > 0.0 {
+                            std::cmp::Ordering::Greater
+                        } else {
+                            std::cmp::Ordering::Equal
+                        }
                     }
                     Ok(_) => std::cmp::Ordering::Equal,
                     Err(e) => {
@@ -107,7 +113,7 @@ pub fn sort_with() -> BuiltinFunction {
                     }
                 }
             });
-            
+
             if let Some(e) = sort_error {
                 return Err(e);
             }
@@ -122,7 +128,9 @@ pub fn unique() -> BuiltinFunction {
         name: "unique".to_string(),
         arity: 999,
         call: |args, reg| {
-            if args.is_empty() { return Ok(Value::Array(Vec::new())); }
+            if args.is_empty() {
+                return Ok(Value::Array(Vec::new()));
+            }
             let arr = require_array(&args[0])?;
             let mut seen = std::collections::HashSet::new();
             let mut results = Vec::new();
@@ -188,10 +196,16 @@ fn require_array(val: &Value) -> Result<&Vec<Value>, FormulaError> {
 }
 
 // Full compatibility for mod.rs and tests
-pub fn map_fn() -> BuiltinFunction { map() }
-pub fn filter_fn() -> BuiltinFunction { filter() }
-pub fn reduce_fn() -> BuiltinFunction { reduce() }
-pub fn sort_fn() -> BuiltinFunction { 
+pub fn map_fn() -> BuiltinFunction {
+    map()
+}
+pub fn filter_fn() -> BuiltinFunction {
+    filter()
+}
+pub fn reduce_fn() -> BuiltinFunction {
+    reduce()
+}
+pub fn sort_fn() -> BuiltinFunction {
     let mut f = sort();
     f.arity = 999;
     f
@@ -201,11 +215,30 @@ pub fn sort_with_fn() -> BuiltinFunction {
     f.arity = 2;
     f
 }
-pub fn unique_fn() -> BuiltinFunction { 
+pub fn unique_fn() -> BuiltinFunction {
     let mut f = unique();
     f.arity = 999;
     f
 }
-pub fn group_by_fn() -> BuiltinFunction { group_by() }
-pub fn set_fn() -> BuiltinFunction { BuiltinFunction { name: "set".to_string(), arity: 1, call: |args, _| Ok(Value::Set(match &args[0] { Value::Array(a) => a.iter().cloned().collect(), _ => std::collections::HashSet::new() })) } }
-pub fn range_fn() -> BuiltinFunction { BuiltinFunction { name: "range".to_string(), arity: 999, call: |_, _| Ok(Value::Null) } }
+pub fn group_by_fn() -> BuiltinFunction {
+    group_by()
+}
+pub fn set_fn() -> BuiltinFunction {
+    BuiltinFunction {
+        name: "set".to_string(),
+        arity: 1,
+        call: |args, _| {
+            Ok(Value::Set(match &args[0] {
+                Value::Array(a) => a.iter().cloned().collect(),
+                _ => std::collections::HashSet::new(),
+            }))
+        },
+    }
+}
+pub fn range_fn() -> BuiltinFunction {
+    BuiltinFunction {
+        name: "range".to_string(),
+        arity: 999,
+        call: |_, _| Ok(Value::Null),
+    }
+}

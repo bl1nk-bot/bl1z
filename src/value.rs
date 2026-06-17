@@ -67,11 +67,7 @@ pub enum Value {
     /// เซตของข้อมูลที่ไม่มีค่าซ้ำ (Set)
     Set(HashSet<Value>),
     /// ช่วงของตัวเลข (Range)
-    Range {
-        start: i64,
-        end: i64,
-        step: i64,
-    },
+    Range { start: i64, end: i64, step: i64 },
 }
 
 impl PartialEq for Value {

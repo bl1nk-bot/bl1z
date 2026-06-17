@@ -1,3 +1,49 @@
+# LEARNINGS LOG
+
+## [LRN-20260602-001] Communication Protocol Correction
+
+**Recorded at**: 2026-06-02T17:40:00Z
+**Priority**: High
+**Status**: Promoted
+**Area**: behavior
+
+### Summary
+Agents must never apologize. Instead, they should immediately provide a technical fix or identify the required information to move forward.
+
+### Details
+Apologizing consumes tokens and provides zero technical value. The user explicitly demanded high-fidelity execution and immediate correction of errors without filler text.
+
+### Suggested Action
+Modify system prompts or instructions to enforce a "No Apology" rule and a "Immediate Technical Correction" pattern.
+
+### Metadata
+- Source: User Correction
+- Files: .gemini/GEMINI.md, .agents/LEARN.md
+- Promoted: SOUL.md, GEMINI.md
+
+---
+
+## [LRN-20260602-002] PR Merge Protocol (Review First)
+
+**Recorded at**: 2026-06-02T17:40:00Z
+**Priority**: Critical
+**Status**: Pending
+**Area**: infra | workflow
+
+### Summary
+Do not merge PRs blindly. Always read all review comments (especially from other bots or human reviewers) and address them before merging.
+
+### Details
+Blindly merging PR #25 led to missing critical feedback about error codes and regression in documentation that was previously addressed in other PRs. It also caused unnecessary conflicts in PR #26.
+
+### Suggested Action
+Check `gh pr view <num> --json reviews,comments` before any merge operation. Summarize the findings to the user and ensure all blockers are resolved.
+
+### Metadata
+- Source: Discovery
+- Tags: workflow, git, quality-control
+
+---
 # AGENT LEARNING LOG
 
 - Session: 2026-06-02
