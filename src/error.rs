@@ -25,6 +25,8 @@ pub enum ErrorKind {
     SerializationError, // E701
     // Phase 13: Plugin errors
     PluginError, // E801
+    // Phase 15: Recovery errors
+    RecoveryError, // E901
 }
 
 /// ข้อผิดพลาดที่เกิดขึ้นใน engine

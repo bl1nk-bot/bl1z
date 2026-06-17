@@ -1,4 +1,5 @@
 use crate::ast::{BinaryOp, Expr, SpannedExpr, UnaryOp};
+use crate::config::EngineConfig;
 use crate::context::{Context, UserFunction};
 use crate::error::{ErrorKind, FormulaError};
 use crate::functions::FunctionRegistry;
@@ -12,8 +13,43 @@ pub fn evaluate(
     ctx: &Context,
     registry: &FunctionRegistry,
 ) -> Result<Value, FormulaError> {
+    let config = EngineConfig::default();
     let mut ctx_clone = ctx.clone();
-    evaluate_impl(expr, &mut ctx_clone, registry, 0)
+    evaluate_impl(expr, &mut ctx_clone, registry, 0, &config, None)
+}
+
+/// Evaluate with custom EngineConfig.
+///
+/// Allows controlling max_depth and timeout (max_time_ms).
+pub fn evaluate_with_config(
+    expr: &SpannedExpr,
+    ctx: &Context,
+    registry: &FunctionRegistry,
+    config: &EngineConfig,
+) -> Result<Value, FormulaError> {
+    let start = if config.max_time_ms.is_some() {
+        Some(std::time::Instant::now())
+    } else {
+        None
+    };
+    let mut ctx_clone = ctx.clone();
+    evaluate_impl(expr, &mut ctx_clone, registry, 0, config, start)
+}
+
+/// Evaluate with AST optimization (constant folding + simplification).
+///
+/// Parses the expression through the optimizer before evaluation.
+/// Prefer this over `evaluate` when the same formula is evaluated once
+/// or when compile-time folding can eliminate work.
+pub fn evaluate_optimized(
+    expr: &SpannedExpr,
+    ctx: &Context,
+    registry: &FunctionRegistry,
+) -> Result<Value, FormulaError> {
+    let config = EngineConfig::default();
+    let optimized = crate::optimizer::optimize(expr.clone());
+    let mut ctx_clone = ctx.clone();
+    evaluate_impl(&optimized, &mut ctx_clone, registry, 0, &config, None)
 }
 
 /// ประเมินผล SpannedExpr กับ mutable context (สำหรับ UDF registration)
@@ -22,7 +58,8 @@ pub fn evaluate_mut(
     ctx: &mut Context,
     registry: &FunctionRegistry,
 ) -> Result<Value, FormulaError> {
-    evaluate_impl(expr, ctx, registry, 0)
+    let config = EngineConfig::default();
+    evaluate_impl(expr, ctx, registry, 0, &config, None)
 }
 
 fn evaluate_impl(
@@ -30,14 +67,28 @@ fn evaluate_impl(
     ctx: &mut Context,
     registry: &FunctionRegistry,
     depth: usize,
+    config: &EngineConfig,
+    start_time: Option<std::time::Instant>,
 ) -> Result<Value, FormulaError> {
-    if depth > 100 {
+    if depth > config.max_depth {
         return Err(FormulaError::new(
             ErrorKind::RecursionLimitExceeded,
             "E303",
             "การประมวลผลซ้อนลึกเกินกำหนด (Recursion limit exceeded)",
             Some(expr.meta.span),
         ));
+    }
+
+    // Check timeout every 1000 steps (approximate via depth)
+    if let (Some(max_ms), Some(start)) = (config.max_time_ms, start_time) {
+        if depth.is_multiple_of(1000) && start.elapsed().as_millis() as u64 > max_ms {
+            return Err(FormulaError::new(
+                ErrorKind::EvalError,
+                "E304",
+                &format!("หมดเวลาประมวลผล ({}ms timeout exceeded)", max_ms),
+                Some(expr.meta.span),
+            ));
+        }
     }
     let span = expr.meta.span;
     match &expr.expr {
@@ -51,7 +102,7 @@ fn evaluate_impl(
             )
         }),
         Expr::PropertyAccess { object, property } => {
-            let obj = evaluate_impl(object, ctx, registry, depth + 1)?;
+            let obj = evaluate_impl(object, ctx, registry, depth + 1, config, start_time)?;
             match obj {
                 Value::Map(map) => map.get(property).cloned().ok_or_else(|| {
                     FormulaError::new(
@@ -70,8 +121,8 @@ fn evaluate_impl(
             }
         }
         Expr::IndexAccess { object, index } => {
-            let obj = evaluate_impl(object, ctx, registry, depth + 1)?;
-            let idx = evaluate_impl(index, ctx, registry, depth + 1)?;
+            let obj = evaluate_impl(object, ctx, registry, depth + 1, config, start_time)?;
+            let idx = evaluate_impl(index, ctx, registry, depth + 1, config, start_time)?;
             match (obj, idx) {
                 (Value::Array(arr), Value::Number(n)) => {
                     if !n.is_finite() || n.fract() != 0.0 {
@@ -108,9 +159,9 @@ fn evaluate_impl(
                 )),
             }
         }
-        Expr::Grouping(inner) => evaluate_impl(inner, ctx, registry, depth + 1),
+        Expr::Grouping(inner) => evaluate_impl(inner, ctx, registry, depth + 1, config, start_time),
         Expr::UnaryExpr { op, expr } => {
-            let val = evaluate_impl(expr, ctx, registry, depth + 1)?;
+            let val = evaluate_impl(expr, ctx, registry, depth + 1, config, start_time)?;
             match op {
                 UnaryOp::Neg => {
                     if let Value::Number(n) = val {
@@ -151,8 +202,8 @@ fn evaluate_impl(
             }
         }
         Expr::BinaryExpr { left, op, right } => {
-            let l = evaluate_impl(left, ctx, registry, depth + 1)?;
-            let r = evaluate_impl(right, ctx, registry, depth + 1)?;
+            let l = evaluate_impl(left, ctx, registry, depth + 1, config, start_time)?;
+            let r = evaluate_impl(right, ctx, registry, depth + 1, config, start_time)?;
             match op {
                 BinaryOp::Add => add_values(l, r, span),
                 BinaryOp::Sub => sub_values(l, r, span),
@@ -171,14 +222,14 @@ fn evaluate_impl(
         Expr::ArrayLiteral(elements) => {
             let values: Result<Vec<Value>, _> = elements
                 .iter()
-                .map(|e| evaluate_impl(e, ctx, registry, depth + 1))
+                .map(|e| evaluate_impl(e, ctx, registry, depth + 1, config, start_time))
                 .collect();
             Ok(Value::Array(values?))
         }
         Expr::MapLiteral(pairs) => {
             let mut map = std::collections::HashMap::new();
             for (key, expr) in pairs {
-                let value = evaluate_impl(expr, ctx, registry, depth + 1)?;
+                let value = evaluate_impl(expr, ctx, registry, depth + 1, config, start_time)?;
                 map.insert(key.clone(), value);
             }
             Ok(Value::Map(map))
@@ -211,7 +262,7 @@ fn evaluate_impl(
             // Phase 10: Evaluate each expression in sequence, return last result
             let mut result = Value::Null;
             for e in exprs {
-                result = evaluate_impl(e, ctx, registry, depth + 1)?;
+                result = evaluate_impl(e, ctx, registry, depth + 1, config, start_time)?;
             }
             Ok(result)
         }
@@ -226,13 +277,27 @@ fn evaluate_impl(
                         Some(span),
                     ));
                 }
-                let cond = evaluate_impl(&args[0], ctx, registry, depth + 1)?;
+                let cond = evaluate_impl(&args[0], ctx, registry, depth + 1, config, start_time)?;
                 match cond {
                     Value::Bool(true) => {
-                        return evaluate_impl(&args[1], ctx, registry, depth + 1);
+                        return evaluate_impl(
+                            &args[1],
+                            ctx,
+                            registry,
+                            depth + 1,
+                            config,
+                            start_time,
+                        );
                     }
                     Value::Bool(false) => {
-                        return evaluate_impl(&args[2], ctx, registry, depth + 1);
+                        return evaluate_impl(
+                            &args[2],
+                            ctx,
+                            registry,
+                            depth + 1,
+                            config,
+                            start_time,
+                        );
                     }
                     _ => {
                         return Err(FormulaError::new(
@@ -249,7 +314,7 @@ fn evaluate_impl(
             if let Some(user_func) = ctx.get_function(name.as_str()).cloned() {
                 let evaluated_args: Vec<Value> = args
                     .iter()
-                    .map(|a| evaluate_impl(a, ctx, registry, depth + 1))
+                    .map(|a| evaluate_impl(a, ctx, registry, depth + 1, config, start_time))
                     .collect::<Result<_, _>>()?;
 
                 if user_func.params.len() != evaluated_args.len() {
@@ -271,7 +336,14 @@ fn evaluate_impl(
                 for (i, param) in user_func.params.iter().enumerate() {
                     func_ctx.set(param, evaluated_args[i].clone());
                 }
-                return evaluate_impl(&user_func.body, &mut func_ctx, registry, depth + 1);
+                return evaluate_impl(
+                    &user_func.body,
+                    &mut func_ctx,
+                    registry,
+                    depth + 1,
+                    config,
+                    start_time,
+                );
             }
 
             // Check if function name exists as a variable (might be a lambda)
@@ -279,9 +351,16 @@ fn evaluate_impl(
                 let func_val = ctx.get(name.as_str()).unwrap().clone();
                 let evaluated_args: Vec<Value> = args
                     .iter()
-                    .map(|a| evaluate_impl(a, ctx, registry, depth + 1))
+                    .map(|a| evaluate_impl(a, ctx, registry, depth + 1, config, start_time))
                     .collect::<Result<_, _>>()?;
-                return apply_lambda_impl(&func_val, &evaluated_args, registry, depth + 1);
+                return apply_lambda_impl(
+                    &func_val,
+                    &evaluated_args,
+                    registry,
+                    depth + 1,
+                    config,
+                    start_time,
+                );
             }
 
             let func_info = registry.find_info(name).ok_or_else(|| {
@@ -308,7 +387,7 @@ fn evaluate_impl(
             }
             let evaluated_args: Vec<Value> = args
                 .iter()
-                .map(|a| evaluate_impl(a, ctx, registry, depth + 1))
+                .map(|a| evaluate_impl(a, ctx, registry, depth + 1, config, start_time))
                 .collect::<Result<_, _>>()?;
             // เรียกฟังก์ชันที่ implement ด้วย FormulaError โดยตรง
             (func_info.call)(&evaluated_args, registry)
@@ -323,7 +402,8 @@ pub fn apply_lambda(
     args: &[Value],
     registry: &FunctionRegistry,
 ) -> Result<Value, FormulaError> {
-    apply_lambda_impl(lambda, args, registry, 0)
+    let config = EngineConfig::default();
+    apply_lambda_impl(lambda, args, registry, 0, &config, None)
 }
 
 fn apply_lambda_impl(
@@ -331,6 +411,8 @@ fn apply_lambda_impl(
     args: &[Value],
     registry: &FunctionRegistry,
     depth: usize,
+    config: &EngineConfig,
+    start_time: Option<std::time::Instant>,
 ) -> Result<Value, FormulaError> {
     match lambda {
         Value::Lambda(body_expr, params, captured_vars, captured_funcs) => {
@@ -362,7 +444,14 @@ fn apply_lambda_impl(
             }
 
             // Evaluate body with the lambda context
-            evaluate_impl(body_expr, &mut lambda_ctx, registry, depth + 1)
+            evaluate_impl(
+                body_expr,
+                &mut lambda_ctx,
+                registry,
+                depth + 1,
+                config,
+                start_time,
+            )
         }
         _ => Err(FormulaError::new(
             ErrorKind::TypeError,

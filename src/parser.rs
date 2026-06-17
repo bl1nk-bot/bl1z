@@ -1,6 +1,6 @@
 use crate::ast::*;
 use crate::error::{ErrorKind, FormulaError};
-use crate::lexer::{Token, TokenKind};
+use crate::lexer::{tokenize, Token, TokenKind};
 use crate::span::Span;
 
 /// สร้าง Span จาก token list โดยอ้างอิง index
@@ -14,11 +14,16 @@ fn token_span(tokens: &[Token], idx: usize) -> Span {
 pub struct Parser<'a> {
     tokens: &'a [Token],
     pos: usize,
+    config_depth_limit: usize,
 }
 
 impl<'a> Parser<'a> {
     pub fn new(tokens: &'a [Token]) -> Self {
-        Self { tokens, pos: 0 }
+        Self {
+            tokens,
+            pos: 0,
+            config_depth_limit: 100,
+        }
     }
 
     fn peek(&self) -> TokenKind {
@@ -566,7 +571,16 @@ impl<'a> Parser<'a> {
 }
 
 pub fn parse(tokens: &[Token]) -> Result<SpannedExpr, FormulaError> {
+    parse_with_config(tokens, &crate::config::EngineConfig::default())
+}
+
+/// Parse tokens using custom EngineConfig
+pub fn parse_with_config(
+    tokens: &[Token],
+    config: &crate::config::EngineConfig,
+) -> Result<SpannedExpr, FormulaError> {
     let mut parser = Parser::new(tokens);
+    parser.config_depth_limit = config.max_depth;
     let first_expr = parser.parse_expression()?;
 
     // Phase 10: Check for sequence (semicolons)
@@ -605,6 +619,128 @@ pub fn parse(tokens: &[Token]) -> Result<SpannedExpr, FormulaError> {
         ));
     }
     Ok(first_expr)
+}
+
+/// Parse a formula string with custom EngineConfig.
+///
+/// Checks `max_formula_length` before tokenizing, then tokenizes and parses.
+/// This is the recommended way to use config-aware parsing from a raw string.
+pub fn parse_formula_with_config(
+    source: &str,
+    config: &crate::config::EngineConfig,
+) -> Result<SpannedExpr, FormulaError> {
+    // Check formula length before tokenizing
+    if source.len() > config.max_formula_length {
+        return Err(FormulaError::new(
+            ErrorKind::ParseError,
+            "E204",
+            &format!(
+                "สูตรยาวเกินกำหนด (สูงสุด {} ตัวอักษร แต่ได้ {})",
+                config.max_formula_length,
+                source.len()
+            ),
+            None,
+        ));
+    }
+
+    let tokens = tokenize(source)?;
+    parse_with_config(&tokens, config)
+}
+
+/// Result type for error recovery parsing
+///
+/// Contains whatever AST was successfully parsed alongside all errors encountered.
+/// When a parse error occurs, the parser skips tokens until the next semicolon or
+/// end-of-input and continues, collecting all errors rather than failing fast.
+pub struct RecoveryResult {
+    /// The successfully parsed AST (if any expressions were parsed)
+    pub ast: Option<SpannedExpr>,
+    /// All errors encountered during parsing
+    pub errors: Vec<FormulaError>,
+}
+
+/// Parse tokens with error recovery.
+///
+/// Instead of returning on the first error, this function collects ALL errors.
+/// When a parse error occurs, it skips tokens until the next semicolon or
+/// end-of-input, records the error, and continues parsing.
+///
+/// Returns a `RecoveryResult` containing whatever AST was successfully parsed
+/// alongside all errors encountered.
+pub fn parse_with_recovery(tokens: &[Token]) -> RecoveryResult {
+    parse_with_recovery_config(tokens, &crate::config::EngineConfig::default())
+}
+
+/// Parse tokens with error recovery using custom EngineConfig.
+pub fn parse_with_recovery_config(
+    tokens: &[Token],
+    _config: &crate::config::EngineConfig,
+) -> RecoveryResult {
+    let mut errors = Vec::new();
+    let mut expressions = Vec::new();
+
+    // Split tokens by semicolons into individual statements
+    let mut stmt_start = 0;
+
+    while stmt_start < tokens.len() && tokens[stmt_start].kind != TokenKind::Eof {
+        // Find the end of this statement (next semicolon or EOF)
+        let mut stmt_end = stmt_start;
+        while stmt_end < tokens.len()
+            && tokens[stmt_end].kind != TokenKind::Semicolon
+            && tokens[stmt_end].kind != TokenKind::Eof
+        {
+            stmt_end += 1;
+        }
+
+        // Build statement tokens with EOF sentinel so the parser is happy
+        let base_tokens = &tokens[stmt_start..stmt_end];
+        let mut stmt_tokens: Vec<Token> = base_tokens.to_vec();
+        let eof_span = stmt_tokens.last().map(|t| t.span).unwrap_or(Span {
+            start: crate::span::Position { line: 1, column: 1 },
+            end: crate::span::Position { line: 1, column: 1 },
+        });
+        stmt_tokens.push(Token {
+            kind: TokenKind::Eof,
+            span: eof_span,
+            lexeme: String::new(),
+        });
+
+        // Try to parse this statement
+        match Parser::new(&stmt_tokens).parse_expression() {
+            Ok(expr) => expressions.push(expr),
+            Err(e) => {
+                // Wrap error as recovery error with E901 code
+                let recovery_err = FormulaError::new(
+                    ErrorKind::RecoveryError,
+                    "E901",
+                    &format!("การกู้คืนการวิเคราะห์: {}", e.message),
+                    e.span,
+                );
+                errors.push(recovery_err);
+            }
+        }
+
+        // Advance past this statement and its trailing semicolon
+        stmt_start = if stmt_end < tokens.len() && tokens[stmt_end].kind == TokenKind::Semicolon {
+            stmt_end + 1 // skip past semicolon
+        } else {
+            stmt_end // at EOF
+        };
+    }
+
+    let ast = if expressions.is_empty() {
+        None
+    } else if expressions.len() == 1 {
+        Some(expressions.remove(0))
+    } else {
+        let span = Span {
+            start: expressions.first().unwrap().meta.span.start,
+            end: expressions.last().unwrap().meta.span.end,
+        };
+        Some(SpannedExpr::new(Expr::Sequence(expressions), span))
+    };
+
+    RecoveryResult { ast, errors }
 }
 
 #[cfg(test)]

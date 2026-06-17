@@ -107,6 +107,7 @@
 pub mod ast;
 pub mod builtins;
 pub mod cache;
+pub mod config;
 pub mod context;
 pub mod diagnostics;
 pub mod error;
@@ -122,13 +123,20 @@ pub mod value;
 
 // re-export สิ่งที่ผู้ใช้ต้องการ
 pub use ast::Expr;
+pub use config::EngineConfig;
 pub use context::Context;
 pub use error::FormulaError;
 pub use eval::evaluate;
 pub use eval::evaluate_mut;
+pub use eval::evaluate_optimized;
+pub use eval::evaluate_with_config;
 pub use functions::FunctionRegistry;
 pub use lexer::tokenize;
 pub use parser::parse;
+pub use parser::parse_formula_with_config;
+pub use parser::parse_with_config;
+pub use parser::parse_with_recovery;
+pub use parser::RecoveryResult;
 pub use plugins::{Plugin, PluginManager};
 pub use value::Value;
 

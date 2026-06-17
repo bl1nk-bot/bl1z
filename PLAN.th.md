@@ -1,6 +1,6 @@
 # แผนงานแบบเฟส – Session 2 (Advanced Features)
 
-สถานะ: **V2 เสร็จสมบูรณ์** → Session 2 (Phase 8, 9, 10, 11, 12, 13, 14, 15 ✅)
+สถานะ: **V1 เสร็จสมบูรณ์** → Session 2 (Phase 8, 9, 10, 11, 12, 13 ✅ | Phase 14 🚧)
 
 ---
 
@@ -121,7 +121,7 @@
 
 ---
 
-## Phase 14: Performance & Optimization ✅
+## Phase 14: Performance & Optimization 🚧
 
 **Priority:** 🟢 (หลัง feature ครบ)
 
