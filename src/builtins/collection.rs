@@ -152,7 +152,7 @@ fn require_array(value: &Value) -> Result<&Vec<Value>, FormulaError> {
         _ => Err(FormulaError::new(
             ErrorKind::FunctionError,
             "E501",
-            "ต้องการ array",
+            &format!("ต้องการ Array แต่ได้ {}", value.type_name()),
             None,
         )),
     }
@@ -164,7 +164,7 @@ fn require_number(value: &Value) -> Result<f64, FormulaError> {
         _ => Err(FormulaError::new(
             ErrorKind::FunctionError,
             "E501",
-            "ต้องการตัวเลข",
+            &format!("ต้องการ Number แต่ได้ {}", value.type_name()),
             None,
         )),
     }
@@ -176,7 +176,7 @@ fn require_string(value: &Value) -> Result<String, FormulaError> {
         _ => Err(FormulaError::new(
             ErrorKind::FunctionError,
             "E501",
-            "ต้องการข้อความ",
+            &format!("ต้องการ String แต่ได้ {}", value.type_name()),
             None,
         )),
     }

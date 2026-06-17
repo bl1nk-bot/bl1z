@@ -6,6 +6,7 @@ pub mod date;
 pub mod higher_order; // Phase 9: Lambda & higher-order functions
 pub mod logic;
 pub mod math;
+pub mod sets; // Phase 11.6: Set operations
 pub mod string; // เพิ่ม
 
 use crate::functions::FunctionRegistry;
@@ -71,4 +72,11 @@ pub fn register_all(registry: &mut FunctionRegistry) {
     // Phase 11.6-11.7: set() and range()
     registry.register(higher_order::set_fn());
     registry.register(higher_order::range_fn());
+    registry.register(higher_order::range_to_array());
+
+    // Phase 11.6: Set operations
+    registry.register(sets::set_union());
+    registry.register(sets::set_intersection());
+    registry.register(sets::set_difference());
+    registry.register(sets::set_in());
 }

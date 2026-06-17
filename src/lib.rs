@@ -27,6 +27,7 @@
 //! - Numbers: `42`, `3.14`, `-5`
 //! - Strings: `"hello"`, `"world"`
 //! - Booleans: `true`, `false`
+//! - Date/Time: `@2024-01-01`, `@2024-06-17T10:00:00Z`
 //! - Arrays: `[1, 2, 3]`, `["a", "b"]`
 //! - Maps: `{key: "value", count: 42}`
 //!
@@ -34,13 +35,19 @@
 //! - Arithmetic: `+`, `-`, `*`, `/`
 //! - Comparison: `<`, `>`, `<=`, `>=`, `==`, `!=`
 //! - Logic: `&&`, `||`, `!`
+//! - Access: `obj.prop`, `arr[0]`
+//! - Lambda: `(x) => x * 2`
+//! - Definition: `fn double(x) = x * 2`
 //!
 //! ### Functions
-//! - String: `len()`, `upper()`, `lower()`, `contains()`
-//! - Math: `abs()`, `min()`, `max()`
+//! - String: `len()`, `upper()`, `lower()`, `contains()`, `trim()`, `split()`, `replace()`, `substring()`
+//! - Math: `abs()`, `pi()`, `round()`, `ceil()`, `floor()`, `sqrt()`, `pow()`, `sin()`, `cos()`, `tan()`, `random()`
 //! - Logic: `if()`
 //! - Collections: `sum()`, `avg()`, `min()`, `max()`, `count()`, `join()`
+//! - Functional: `map()`, `filter()`, `reduce()`, `sort()`, `group_by()`, `unique()`
 //! - Date: `now()`, `date_add()`, `date_diff()`, `year()`, `month()`, `day()`
+//! - Set: `set_union()`, `set_intersection()`, `set_difference()`, `set_in()`
+//! - Range: `range()`, `range_to_array()`
 //!
 //! ## Example
 //!
@@ -99,6 +106,7 @@
 /// ```
 pub mod ast;
 pub mod builtins;
+pub mod cache;
 pub mod context;
 pub mod diagnostics;
 pub mod error;

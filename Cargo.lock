@@ -52,13 +52,15 @@ checksum = "c4512299f36f043ab09a583e57bceb5a5aab7a73db1805848e8fef3c9e8c78b3"
 
 [[package]]
 name = "bl1z"
-version = "0.2.11"
+version = "0.3.0"
 dependencies = [
  "criterion",
  "insta",
  "jiff",
  "pretty_assertions",
  "rand",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

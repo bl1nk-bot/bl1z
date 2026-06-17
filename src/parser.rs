@@ -356,9 +356,20 @@ impl<'a> Parser<'a> {
                     }
                 };
                 let date_str = self.tokens[self.pos - 1].lexeme.clone();
-                // Try ISO 8601 date/datetime format
-                let parsed = jiff::Timestamp::strptime("%F", &date_str)
-                    .or_else(|_| jiff::Timestamp::strptime("%+", &date_str))
+
+                // Use a robust parsing logic: try Timestamp directly, then Civil Date
+                let parsed = date_str
+                    .parse::<jiff::Timestamp>()
+                    .or_else(|_| {
+                        date_str.parse::<jiff::civil::Date>().and_then(|d| {
+                            d.to_zoned(jiff::tz::TimeZone::UTC).map(|z| z.timestamp())
+                        })
+                    })
+                    .or_else(|_| {
+                        date_str.parse::<jiff::civil::DateTime>().and_then(|dt| {
+                            dt.to_zoned(jiff::tz::TimeZone::UTC).map(|z| z.timestamp())
+                        })
+                    })
                     .map_err(|_| {
                         FormulaError::new(
                             ErrorKind::ParseError,

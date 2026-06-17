@@ -325,6 +325,57 @@ impl Default for Context {
     }
 }
 
+// ── Serialization (Phase 12.4) ──────────────────────────────────────────
+#[cfg(feature = "serialization")]
+impl Context {
+    /// Serializes the current scope's variables to a JSON string.
+    ///
+    /// Only serializes the current scope — parent chain and user-defined
+    /// functions are excluded (functions are runtime constructs).
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// use bl1z::{Context, Value};
+    /// let mut ctx = Context::new();
+    /// ctx.set("x", Value::Number(42.0));
+    /// let json = ctx.to_json().unwrap();
+    /// // json == r#"{"x":{"type":"number","value":42.0}}"#
+    /// ```
+    pub fn to_json(&self) -> Result<String, serde_json::Error> {
+        let vars: std::collections::BTreeMap<&String, &Value> = self.variables.iter().collect();
+        serde_json::to_string(&vars)
+    }
+
+    /// Serializes the current scope's variables to a pretty-printed JSON string.
+    pub fn to_json_pretty(&self) -> Result<String, serde_json::Error> {
+        let vars: std::collections::BTreeMap<&String, &Value> = self.variables.iter().collect();
+        serde_json::to_string_pretty(&vars)
+    }
+
+    /// Deserializes variables from a JSON string into a new root Context.
+    ///
+    /// Creates a fresh root context with no parent chain. User-defined
+    /// functions are not restored (they are runtime constructs).
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// use bl1z::Context;
+    /// let json = r#"{"score":{"type":"number","value":100.0}}"#;
+    /// let ctx = Context::from_json(json).unwrap();
+    /// assert!(ctx.get("score").is_some());
+    /// ```
+    pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
+        let vars: std::collections::BTreeMap<String, Value> = serde_json::from_str(json)?;
+        let mut ctx = Context::new();
+        for (k, v) in vars {
+            ctx.set(&k, v);
+        }
+        Ok(ctx)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

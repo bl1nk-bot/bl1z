@@ -1,5 +1,6 @@
 ---
 source: tests/error_snapshots.rs
+assertion_line: 127
 expression: "format_error(\"sum(\\\"not_an_array\\\")\", &err)"
 ---
-[E501] ต้องการ array
+[E501] ต้องการ Array แต่ได้ String

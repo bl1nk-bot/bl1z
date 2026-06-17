@@ -1,5 +1,9 @@
 /// เก็บตำแหน่งในข้อความสูตร (บรรทัด, คอลัมน์)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(
+    feature = "serialization",
+    derive(serde::Serialize, serde::Deserialize)
+)]
 pub struct Position {
     pub line: usize,   // หมายเลขบรรทัด (เริ่มที่ 1)
     pub column: usize, // หมายเลขคอลัมน์ (เริ่มที่ 1)
@@ -7,6 +11,10 @@ pub struct Position {
 
 /// ช่วงตำแหน่งตั้งแต่ start ถึง end
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(
+    feature = "serialization",
+    derive(serde::Serialize, serde::Deserialize)
+)]
 pub struct Span {
     pub start: Position,
     pub end: Position,

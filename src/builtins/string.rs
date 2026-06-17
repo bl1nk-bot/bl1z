@@ -13,7 +13,7 @@ pub fn len() -> BuiltinFunction {
             _ => Err(FormulaError::new(
                 ErrorKind::FunctionError,
                 "E501",
-                "len ต้องการข้อความหรือ array",
+                &format!("len ต้องการ String หรือ Array แต่ได้ {}", args[0].type_name()),
                 None,
             )),
         },
@@ -31,7 +31,7 @@ pub fn upper() -> BuiltinFunction {
                 Err(FormulaError::new(
                     ErrorKind::FunctionError,
                     "E501",
-                    "upper ต้องการข้อความ",
+                    &format!("upper ต้องการ String แต่ได้ {}", args[0].type_name()),
                     None,
                 ))
             }
@@ -50,7 +50,7 @@ pub fn lower() -> BuiltinFunction {
                 Err(FormulaError::new(
                     ErrorKind::FunctionError,
                     "E501",
-                    "lower ต้องการข้อความ",
+                    &format!("lower ต้องการ String แต่ได้ {}", args[0].type_name()),
                     None,
                 ))
             }
@@ -69,7 +69,11 @@ pub fn contains() -> BuiltinFunction {
             _ => Err(FormulaError::new(
                 ErrorKind::FunctionError,
                 "E501",
-                "contains ต้องการข้อความสองตัว",
+                &format!(
+                    "contains ต้องการ String, String แต่ได้ {}, {}",
+                    args[0].type_name(),
+                    args[1].type_name()
+                ),
                 None,
             )),
         },
@@ -87,7 +91,11 @@ pub fn starts_with() -> BuiltinFunction {
             _ => Err(FormulaError::new(
                 ErrorKind::FunctionError,
                 "E501",
-                "starts_with ต้องการข้อความสองตัว",
+                &format!(
+                    "starts_with ต้องการ String, String แต่ได้ {}, {}",
+                    args[0].type_name(),
+                    args[1].type_name()
+                ),
                 None,
             )),
         },
@@ -103,7 +111,11 @@ pub fn ends_with() -> BuiltinFunction {
             _ => Err(FormulaError::new(
                 ErrorKind::FunctionError,
                 "E501",
-                "ends_with ต้องการข้อความสองตัว",
+                &format!(
+                    "ends_with ต้องการ String, String แต่ได้ {}, {}",
+                    args[0].type_name(),
+                    args[1].type_name()
+                ),
                 None,
             )),
         },
@@ -121,7 +133,7 @@ pub fn trim() -> BuiltinFunction {
                 Err(FormulaError::new(
                     ErrorKind::FunctionError,
                     "E501",
-                    "trim ต้องการข้อความ",
+                    &format!("trim ต้องการ String แต่ได้ {}", args[0].type_name()),
                     None,
                 ))
             }
@@ -140,7 +152,7 @@ pub fn trim_start() -> BuiltinFunction {
                 Err(FormulaError::new(
                     ErrorKind::FunctionError,
                     "E501",
-                    "trim_start ต้องการข้อความ",
+                    &format!("trim_start ต้องการ String แต่ได้ {}", args[0].type_name()),
                     None,
                 ))
             }
@@ -159,7 +171,7 @@ pub fn trim_end() -> BuiltinFunction {
                 Err(FormulaError::new(
                     ErrorKind::FunctionError,
                     "E501",
-                    "trim_end ต้องการข้อความ",
+                    &format!("trim_end ต้องการ String แต่ได้ {}", args[0].type_name()),
                     None,
                 ))
             }
@@ -180,7 +192,11 @@ pub fn split() -> BuiltinFunction {
             _ => Err(FormulaError::new(
                 ErrorKind::FunctionError,
                 "E501",
-                "split ต้องการข้อความสองตัว (ข้อความ, ตัวคั่น)",
+                &format!(
+                    "split ต้องการ String, String (ข้อความ, ตัวคั่น) แต่ได้ {}, {}",
+                    args[0].type_name(),
+                    args[1].type_name()
+                ),
                 None,
             )),
         },
@@ -198,7 +214,12 @@ pub fn replace() -> BuiltinFunction {
             _ => Err(FormulaError::new(
                 ErrorKind::FunctionError,
                 "E501",
-                "replace ต้องการข้อความสามตัว (ข้อความ, จาก, ไปยัง)",
+                &format!(
+                    "replace ต้องการ String, String, String แต่ได้ {}, {}, {}",
+                    args[0].type_name(),
+                    args[1].type_name(),
+                    args[2].type_name()
+                ),
                 None,
             )),
         },
@@ -209,21 +230,28 @@ pub fn substring() -> BuiltinFunction {
     BuiltinFunction {
         name: "substring".to_string(),
         arity: 3,
-        call: |args, _| match (&args[0], &args[1], &args[2]) {
-            (Value::String(s), Value::Number(start), Value::Number(len)) => {
-                let start = *start as usize;
-                let len = *len as usize;
+        call: |args, _| {
+            match (&args[0], &args[1], &args[2]) {
+                (Value::String(s), Value::Number(start), Value::Number(len)) => {
+                    let start = *start as usize;
+                    let len = *len as usize;
 
-                // Rust substring handling (safe)
-                let sub: String = s.chars().skip(start).take(len).collect();
-                Ok(Value::String(sub))
+                    // Rust substring handling (safe)
+                    let sub: String = s.chars().skip(start).take(len).collect();
+                    Ok(Value::String(sub))
+                }
+                _ => Err(FormulaError::new(
+                    ErrorKind::FunctionError,
+                    "E501",
+                    &format!(
+                        "substring ต้องการ String, Number, Number (ข้อความ, ตำแหน่งเริ่ม, ความยาว) แต่ได้ {}, {}, {}",
+                        args[0].type_name(),
+                        args[1].type_name(),
+                        args[2].type_name()
+                    ),
+                    None,
+                )),
             }
-            _ => Err(FormulaError::new(
-                ErrorKind::FunctionError,
-                "E501",
-                "substring ต้องการ (ข้อความ, ตำแหน่งเริ่ม, ความยาว)",
-                None,
-            )),
         },
     }
 }

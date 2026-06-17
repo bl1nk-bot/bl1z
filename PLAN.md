@@ -1,6 +1,6 @@
 # แผนงานแบบเฟส – Session 2 (Advanced Features)
 
-สถานะ: **V1 เสร็จสมบูรณ์** → Session 2 (Phase 8, 9, 10, 13 ✅ | Phase 11, 12, 14 🚧)
+สถานะ: **V1 เสร็จสมบูรณ์** → Session 2 (Phase 8, 9, 10, 11, 12, 13 ✅ | Phase 14 🚧)
 
 ---
 
@@ -71,7 +71,7 @@
 
 ---
 
-## Phase 11: Advanced Data Types (jiff) 🚧
+## Phase 11: Advanced Data Types (jiff) ✅
 
 **Priority:** 🟡 (จำเป็นสำหรับ date/time จริงจัง)
 
@@ -91,7 +91,7 @@
 
 ---
 
-## Phase 12: Serialization & Caching 🚧
+## Phase 12: Serialization & Caching ✅
 
 **Priority:** 🟢 (production ready)
 

@@ -86,8 +86,13 @@ This document describes the technical specifications for the bl1z calculation li
   - `String(String)`
   - `Bool(bool)`
   - `Null`
-  - (Phase 2: Array, DateTime, Object/Map)
-- Uses `f64` initially; consider decimal type if high precision is required.
+  - `Array(Vec<Value>)`
+  - `Map(HashMap<String, Value>)`
+  - `DateTime(jiff::Timestamp)`
+  - `Duration(jiff::Span)`
+  - `Set(HashSet<Value>)`
+  - `Range { start, end, step }`
+- Uses `f64` for numbers; `jiff` for date/time.
 
 ### 5. Context (context.rs)
 
@@ -219,6 +224,9 @@ src/
 ## Non-Functional Requirements (NFR)
 
 - **Performance**: Response to hundreds of tokens within milliseconds.
+- **Maintainability**: Add new functions without modifying core evaluator.
+- **Error Reporting**: Identify exact positions.
+- **Stability**: Never panic from abnormal input (use `Result` everywhere).f tokens within milliseconds.
 - **Maintainability**: Add new functions without modifying core evaluator.
 - **Error Reporting**: Identify exact positions.
 - **Stability**: Never panic from abnormal input (use `Result` everywhere).

@@ -743,3 +743,149 @@ fn evaluate_sequence_returns_last_value() {
 fn evaluate_trailing_semicolon() {
     assert_eq!(eval_formula_mut("42;"), Ok(Value::Number(42.0)));
 }
+
+// -- Phase 11.6: Set Operations Tests --
+
+#[test]
+fn evaluate_set_literal() {
+    let result = eval_formula("set([1, 2, 3])").unwrap();
+    match result {
+        Value::Set(s) => {
+            assert_eq!(s.len(), 3);
+            assert!(s.contains(&Value::Number(1.0)));
+            assert!(s.contains(&Value::Number(2.0)));
+            assert!(s.contains(&Value::Number(3.0)));
+        }
+        _ => panic!("Expected Set"),
+    }
+}
+
+#[test]
+fn evaluate_set_union() {
+    let result = eval_formula("set_union(set([1, 2]), set([2, 3]))").unwrap();
+    match result {
+        Value::Set(s) => {
+            assert_eq!(s.len(), 3);
+            assert!(s.contains(&Value::Number(1.0)));
+            assert!(s.contains(&Value::Number(2.0)));
+            assert!(s.contains(&Value::Number(3.0)));
+        }
+        _ => panic!("Expected Set"),
+    }
+}
+
+#[test]
+fn evaluate_set_intersection() {
+    let result = eval_formula("set_intersection(set([1, 2, 3]), set([2, 3, 4]))").unwrap();
+    match result {
+        Value::Set(s) => {
+            assert_eq!(s.len(), 2);
+            assert!(s.contains(&Value::Number(2.0)));
+            assert!(s.contains(&Value::Number(3.0)));
+        }
+        _ => panic!("Expected Set"),
+    }
+}
+
+#[test]
+fn evaluate_set_difference() {
+    let result = eval_formula("set_difference(set([1, 2, 3]), set([2]))").unwrap();
+    match result {
+        Value::Set(s) => {
+            assert_eq!(s.len(), 2);
+            assert!(s.contains(&Value::Number(1.0)));
+            assert!(s.contains(&Value::Number(3.0)));
+        }
+        _ => panic!("Expected Set"),
+    }
+}
+
+#[test]
+fn evaluate_set_in_found() {
+    assert_eq!(
+        eval_formula("set_in(2, set([1, 2, 3]))"),
+        Ok(Value::Bool(true))
+    );
+}
+
+#[test]
+fn evaluate_set_in_not_found() {
+    assert_eq!(
+        eval_formula("set_in(5, set([1, 2, 3]))"),
+        Ok(Value::Bool(false))
+    );
+}
+
+// -- Phase 11.7: Range Operations Tests --
+
+#[test]
+fn evaluate_range_one_arg() {
+    let result = eval_formula("range(5)").unwrap();
+    match result {
+        Value::Range { start, end, step } => {
+            assert_eq!(start, 0);
+            assert_eq!(end, 5);
+            assert_eq!(step, 1);
+        }
+        _ => panic!("Expected Range, got {:?}", result),
+    }
+}
+
+#[test]
+fn evaluate_range_two_args() {
+    let result = eval_formula("range(2, 8)").unwrap();
+    match result {
+        Value::Range { start, end, step } => {
+            assert_eq!(start, 2);
+            assert_eq!(end, 8);
+            assert_eq!(step, 1);
+        }
+        _ => panic!("Expected Range"),
+    }
+}
+
+#[test]
+fn evaluate_range_three_args() {
+    let result = eval_formula("range(0, 10, 2)").unwrap();
+    match result {
+        Value::Range { start, end, step } => {
+            assert_eq!(start, 0);
+            assert_eq!(end, 10);
+            assert_eq!(step, 2);
+        }
+        _ => panic!("Expected Range"),
+    }
+}
+
+#[test]
+fn evaluate_range_to_array() {
+    assert_eq!(
+        eval_formula("range_to_array(range(1, 4))"),
+        Ok(Value::Array(vec![
+            Value::Number(1.0),
+            Value::Number(2.0),
+            Value::Number(3.0)
+        ]))
+    );
+}
+
+#[test]
+fn evaluate_range_to_array_with_step() {
+    assert_eq!(
+        eval_formula("range_to_array(range(0, 10, 3))"),
+        Ok(Value::Array(vec![
+            Value::Number(0.0),
+            Value::Number(3.0),
+            Value::Number(6.0),
+            Value::Number(9.0)
+        ]))
+    );
+}
+
+#[test]
+fn evaluate_range_to_array_empty() {
+    assert_eq!(
+        eval_formula("range_to_array(range(5, 3))"),
+        Ok(Value::Array(vec![]))
+    );
+}

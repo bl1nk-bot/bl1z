@@ -1,6 +1,6 @@
 [package]
 name = "bl1z"
-version = "0.2.11"
+version = "0.2.12"
 edition = "2021"
 rust-version = "1.90.0"
 authors = ["bl1z Team"]
@@ -19,9 +19,15 @@ exclude = [
     "!README.md",
 ]
 
+[features]
+default = []
+serialization = ["dep:serde", "dep:serde_json", "jiff/serde"]
+
 [dependencies]
 jiff = "0.2"
 rand = "0.10"
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.8", features = ["html_reports"] }

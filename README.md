@@ -255,22 +255,23 @@ bl1z/
 - [x] Error Reporting: รายงานข้อผิดพลาดพร้อมตำแหน่ง
 - [x] Documentation: Doc-tests และ integration tests
 
-### ✅ เสร็จสมบูรณ์ (V2 - Phase 8 & 8.5)
+### ✅ เสร็จสมบูรณ์ (V2)
 
 - [x] Access chaining: `obj.prop`, `arr[0]`, `users[0].name`
-- [x] Nested access: `a.b[0].c.d`, `{a: {b: 1}}.a.b`
-- [x] Context scoping: parent chain resolution, variable shadowing
-- [x] Context utilities: `with_parent()`, `get_all()`, `depth()`
-- [x] Error codes: E207 (PropertyNotFound), E208 (IndexOutOfBounds)
+- [x] Functional programming: Lambda expressions `(x) => ...`
+- [x] Higher-order functions: `map`, `filter`, `reduce`, `sort`, etc.
+- [x] User-defined functions: `fn name(params) = expr`
+- [x] Advanced types: `DateTime`, `Duration`, `Set`, `Range`
+- [x] Serialization & Caching: JSON support and LRU Formula Cache
+- [x] Plugin SDK foundation
+- [x] Extended Math & String functions
 
-### 📋 แผนในอนาคต (Phase 9+)
+### 📋 แผนในอนาคต (Phase 14+)
 
-- [ ] Lambda & higher-order functions (`map`, `filter`, `reduce`)
-- [ ] User-defined functions (`def name(params) = expr`)
-- [ ] Native `DateTime`/`Duration` via `jiff`
-- [ ] Serialization & caching
-- [ ] Plugin SDK
-- [ ] Performance optimization
+- [ ] Performance optimization (Constant folding, Vectorization)
+- [ ] Native Date type refactor for all built-ins
+- [ ] Error recovery & Security limits
+- [ ] WASM-based plugin sandbox (V3)
 
 ---
 
@@ -315,6 +316,27 @@ cargo test --doc
 1. เปิด Issue เพื่อรายงานบั๊กหรือขอฟีเจอร์ใหม่
 2. Fork โปรเจกต์และสร้าง Pull Request
 3. เขียนทดสอบให้ครอบคลุมการเปลี่ยนแปลง
+4. อัพเดตเอกสารหากมีการเปลี่ยนแปลง API
+
+---
+
+## 📝 ใบอนุญาต
+
+โปรเจกต์นี้เผยแพร่ภายใต้ใบอนุญาต [MIT License](LICENSE)
+
+---
+
+## 🙏 ขอบคุณ
+
+- สร้างด้วย ❤️ โดยใช้ [Rust](https://www.rust-lang.org/)
+- ได้รับแรงบันดาลใจจาก Notion bl1z
+- พัฒนาสำหรับ POE SDK ecosystem
+
+---
+
+## 📞 ติดต่อ
+
+หากมีคำถามหรือต้องการความช่วยเหลือ กรุณาเปิด Issue ใน GitHub repository นีุ้มการเปลี่ยนแปลง
 4. อัพเดตเอกสารหากมีการเปลี่ยนแปลง API
 
 ---
