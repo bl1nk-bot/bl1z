@@ -28,6 +28,29 @@
 
 ### แก้ไข (Fixed)
 - **Higher-Order Functions**: ปรับปรุงการส่งค่า registry ให้มีประสิทธิภาพมากขึ้นเพื่อป้องกันการโคลนข้อมูลโดยไม่จำเป็นในระหว่างการวนซ้ำ
+- **Clippy**: แก้ไข `cloned_ref_to_slice_refs` warnings ด้วย `std::slice::from_ref`
+
+### เปลี่ยนแปลง (Changed)
+- **Date Builtins**: `now()` และ `date()` คืนค่า `Value::DateTime` แทน `Value::String`
+- **Date Input**: `year()`, `month()`, `day()`, `date_add()`, `date_diff()` รับทั้ง `Value::DateTime` และ `Value::String`
+- **Error Messages**: ทุก builtin แสดง expected vs received type (เช่น `abs ต้องการ Number แต่ได้ String`)
+- **Version**: อัพจาก `0.2.0` เป็น `0.2.12`
+
+### การเพิ่มประสิทธิภาพ (Phase 14)
+- **AST Optimizer** (`src/optimizer.rs`): Constant folding, algebraic identities (`x+0`, `x*1`, `x*0`, `--x`), string concat folding, comparison folding
+- **`evaluate_optimized()`**: Entry point ใหม่ที่รัน optimizer ก่อน evaluate
+- **Benchmarks**: 11 criterion benchmarks ครอบคลุม arithmetic, complex expressions, arrays, nested functions, dates, maps, access chaining, HOF, UDF vs lambda, formula cache, และ advanced types
+
+### การกู้คืนข้อผิดพลาด (Phase 15)
+- **`parse_with_recovery()`**: เก็บทุก parse error แทน fail-fast, ข้ามไปsemicolon ถัดไป
+- **`EngineConfig`**: กำหนดค่าขีดจำกัด — `max_formula_length` (default 10,000), `max_depth` (default 100), `max_time_ms` (optional timeout)
+- **`evaluate_with_config()`** และ `parse_with_config()`: parsing/evaluation ที่รองรับ config
+- **Timeout**: ใช้ `std::time::Instant` บังคับเวลา (ตรวจทุก 1,000 eval steps)
+- **Error Code E901**: Recovery errors สำหรับ partial parse results
+
+### เอกสาร
+- **PGO Guide** (`docs/PGO.md`): แนวทาง Profile-Guided Optimization สำหรับ bl1z
+- **Bilingual Docs**: เอกสารภาษาไทยสำหรับเอกสาร project-facing ทั้งหมด
 
 ## [0.2.0] - 2026-05-18
 

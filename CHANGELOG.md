@@ -28,6 +28,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Higher-Order Functions**: Optimized registry passing to prevent unnecessary clones during iteration.
+- **Clippy**: Resolved `cloned_ref_to_slice_refs` warnings with `std::slice::from_ref`.
+
+### Changed
+- **Date Builtins**: `now()` and `date()` return native `Value::DateTime` instead of `Value::String`.
+- **Date Input**: `year()`, `month()`, `day()`, `date_add()`, `date_diff()` accept both `Value::DateTime` and `Value::String`.
+- **Error Messages**: All builtins now report expected vs received types (e.g., `abs ต้องการ Number แต่ได้ String`).
+- **Version**: Bumped from `0.2.0` to `0.2.12`.
+
+### Optimization (Phase 14)
+- **AST Optimizer** (`src/optimizer.rs`): Constant folding, algebraic identities (`x+0`, `x*1`, `x*0`, `--x`), string concat folding, comparison folding.
+- **`evaluate_optimized()`**: New entry point that runs the optimizer before evaluation.
+- **Benchmarks**: 11 criterion benchmarks covering arithmetic, complex expressions, arrays, nested functions, dates, maps, access chaining, HOF, UDF vs lambda, formula cache, and advanced types.
+
+### Error Recovery (Phase 15)
+- **`parse_with_recovery()`**: Collects all parse errors instead of fail-fast, skipping to next semicolon.
+- **`EngineConfig`**: Configurable limits — `max_formula_length` (default 10,000), `max_depth` (default 100), `max_time_ms` (optional timeout).
+- **`evaluate_with_config()`** and `parse_with_config()`: Config-aware evaluation and parsing.
+- **Timeout**: Uses `std::time::Instant` to enforce time limits (checked every 1,000 eval steps).
+- **Error Code E901**: Recovery errors for partial parse results.
+
+### Documentation
+- **PGO Guide** (`docs/PGO.md`): Profile-Guided Optimization workflow for bl1z.
+- **Bilingual Docs**: Thai translations for all project-facing documentation.
 
 ## [0.2.0] - 2026-05-18
 
