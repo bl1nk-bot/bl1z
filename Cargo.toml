@@ -1,6 +1,6 @@
 [package]
 name = "bl1z"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 rust-version = "1.90.0"
 authors = ["bl1z Team"]
@@ -21,7 +21,7 @@ exclude = [
 
 [dependencies]
 jiff = "0.2"
-rand = "0.8"
+rand = "0.10"
 
 [dev-dependencies]
 criterion = { version = "0.8", features = ["html_reports"] }

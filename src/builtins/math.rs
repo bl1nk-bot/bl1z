@@ -189,9 +189,9 @@ pub fn random() -> BuiltinFunction {
         name: "random".to_string(),
         arity: 0,
         call: |_, _| {
-            use rand::Rng;
-            let mut rng = rand::thread_rng();
-            Ok(Value::Number(rng.gen()))
+            use rand::RngExt;
+            let mut rng = rand::rng();
+            Ok(Value::Number(rng.random()))
         },
     }
 }
