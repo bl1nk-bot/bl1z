@@ -25,22 +25,22 @@ Duration: 2 weeks
 
 - [x] **11.1** เพิ่ม `Value::DateTime(jiff::Timestamp)` และ `Value::Duration(jiff::SignedDuration)`
 - [x] **11.2** เพิ่ม `Value::Set(HashSet<Value>)` และ `Value::Range { start, end, step }`
-- [ ] **11.3** Refactor date builtins: `now()` → return `Value::DateTime`, `date()` → parse → `Value::DateTime`
-- [ ] **11.4** Refactor `date_add()`, `date_diff()` → operate บน native types
+- [x] **11.3** Refactor date builtins: `now()` → return `Value::DateTime`, `date()` → parse → `Value::DateTime`
+- [x] **11.4** Refactor `date_add()`, `date_diff()` → operate บน native types
 - [x] **11.5** เพิ่ม @ operator: `@2024-01-01` → DateTime literal
-- [ ] **11.6** Set operations: `union`, `intersection`, `difference`, `in`
-- [ ] **11.7** Range operations: `1..10`, iteration, `contains`
-- [ ] **11.8** Test: type coercion rules, display formatting
+- [x] **11.6** Set operations: `union`, `intersection`, `difference`, `in`
+- [x] **11.7** Range operations: `range(1, 10)`, `range_to_array()`
+- [x] **11.8** Test: type coercion rules, display formatting for advanced types
 
-## Phase 12: Serialization & Caching
+## 🟢 Phase 12: Serialization & Caching (1.5 สัปดาห์) ✅ DONE
 
 Duration: 1.5 weeks
 
-- [ ] **12.1** `#[derive(Serialize, Deserialize)]` on `Value`, `Expr` (behind `serde` feature gate)
-- [ ] **12.2** Feature gate: `serialization` in Cargo.toml
-- [ ] **12.3** `Evaluator::evaluate_cached()` — LRU cache for repeated expressions
-- [ ] **12.4** `Context::to_json()` / `Context::from_json()` — serialize/deserialize variable store
-- [ ] **12.5** Test: round-trip serialization, cache hit/miss
+- [x] **12.1** `#[derive(Serialize, Deserialize)]` on `Value`, `Expr` (behind `serde` feature gate)
+- [x] **12.2** Feature gate: `serialization` in Cargo.toml
+- [x] **12.3** `FormulaCache` — LRU cache for repeated expressions
+- [x] **12.4** `Context::to_json()` / `Context::from_json()` — serialize/deserialize variable store
+- [x] **12.5** Test: round-trip serialization, cache hit/miss
 
 ## 🔵 Phase 14: Performance & Optimization (2 สัปดาห์) 🔄 IN PROGRESS
 
@@ -64,4 +64,4 @@ Duration: 1 week
 - [ ] **15.5** Test: formula too long, recursion depth exceeded, timeout
 
 ---
-**Note:** For the history of completed tasks, see [docs/DONE_DETAILED.md](./docs/DONE_DETAILED.md).
+**Note:** For the history of completed tasks, see [docs/achives/DONE_DETAILED.md](./docs/achives/DONE_DETAILED.md).

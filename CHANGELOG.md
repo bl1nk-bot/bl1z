@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.12] - 2026-06-17
+
+### Added
+- **Lambda & Higher-Order Functions**: Added support for lambda expressions `(x) => x * 2` and functions like `map`, `filter`, `reduce`, `sort`, `group_by`, `unique`.
+- **User-Defined Functions**: New syntax `fn name(params) = expression` to define reusable functions within the context.
+- **Advanced Data Types**: Native support for `DateTime` (jiff), `Duration`, `Set`, and `Range`.
+- **DateTime Literals**: Added `@` operator for date literals (e.g., `@2024-01-01`).
+- **Set Operations**: New built-in functions for sets: `set_union`, `set_intersection`, `set_difference`, and `set_in`.
+- **Math Extensions**: Added `pi()`, `round()`, `ceil()`, `floor()`, `sqrt()`, `pow()`, `sin()`, `cos()`, `tan()`, and `random()`.
+- **String Extensions**: Added `trim()`, `trim_start()`, `trim_end()`, `split()`, `replace()`, and `substring()`.
+- **Serialization**: Added `serde` support for `Value`, `Expr`, and `Context` behind the `serialization` feature gate.
+- **Context Snapshot**: `Context::to_json()` and `Context::from_json()` for state persistence.
+- **Caching**: Added `FormulaCache` for efficient LRU caching of parsed expressions.
+- **Plugin SDK**: Foundation for external plugins with `Plugin` trait and `PluginManager`.
+- **Sequence Expressions**: Support for multiple expressions separated by semicolons `;`.
+
+### Changed
+- **Lexer**: Added tokens for `@`, `=>`, `fn`, `=`, and `;`.
+- **Value**: Added variants for `DateTime`, `Duration`, `Set`, and `Range`.
+- **Builtins**: Organized into category-specific modules (`math.rs`, `string.rs`, `sets.rs`, `higher_order.rs`).
+
+### Fixed
+- **Higher-Order Functions**: Optimized registry passing to prevent unnecessary clones during iteration.
+
 ## [0.2.0] - 2026-05-18
 
 ### Added

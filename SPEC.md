@@ -28,15 +28,15 @@ Current status: **V2 Ready to Start**
 - Built-in collection functions (sum, avg, min, max, count, join)
 - Basic date functions (now, year, month, day, date_add, date_diff) using internal `jiff`
 
-### 🚧 V2 (Under Development)
-- **Access chaining** (`obj.prop`, `arr[0]`)
-- **Lambda expression** `(x) => x * 2`
-- **Higher-order functions**: `map`, `filter`, `reduce`
-- **User-defined function**: `fn name(params) = expression`
-- **Native Date/Time/Duration** via `jiff`
-- **Set, Range literals**
-- **Serialization & caching**
-- **Plugin SDK foundation** (Trait + Manager)
+### ✅ V2 (Complete/In Progress)
+- **Access chaining** (`obj.prop`, `arr[0]`) ✅
+- **Lambda expression** `(x) => x * 2` ✅
+- **Higher-order functions**: `map`, `filter`, `reduce` ✅
+- **User-defined function**: `fn name(params) = expression` ✅
+- **Plugin SDK foundation** (Trait + Manager) ✅
+- **Serialization & caching** ✅
+- **Advanced Data Types**: `DateTime`, `Duration`, `Set`, `Range` 🔄 (Refactor pending)
+- **Math + String extensions** ✅
 
 ### ❌ Out of scope
 - WASM sandboxing for plugins

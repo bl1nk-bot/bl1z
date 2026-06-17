@@ -372,11 +372,43 @@ impl<'a> Lexer<'a> {
                     self.push_token(TokenKind::Colon, ":".to_string(), sl, sc);
                 }
                 '@' => {
-                    // Phase 11: DateTime literal (@2024-01-01)
+                    // Phase 11: DateTime literal (@2024-01-01 or @2024-06-17T12:00:00Z)
                     let sl = self.line;
                     let sc = self.col;
                     self.advance();
                     self.push_token(TokenKind::At, "@".to_string(), sl, sc);
+
+                    // Optional: If the next char is a digit, we can help the parser by
+                    // scanning the whole date-like sequence as an identifier
+                    if let Some(c) = self.peek() {
+                        if c.is_ascii_digit() {
+                            let start_line = self.line;
+                            let start_col = self.col;
+                            let mut lexeme = String::new();
+                            while let Some(c) = self.peek() {
+                                if c.is_ascii_digit()
+                                    || c == '-'
+                                    || c == ':'
+                                    || c == 'T'
+                                    || c == 'Z'
+                                    || c == '.'
+                                {
+                                    lexeme.push(c);
+                                    self.advance();
+                                } else {
+                                    break;
+                                }
+                            }
+                            if !lexeme.is_empty() {
+                                self.push_token(
+                                    TokenKind::Identifier,
+                                    lexeme,
+                                    start_line,
+                                    start_col,
+                                );
+                            }
+                        }
+                    }
                 }
                 c if c.is_alphabetic() || c == '_' => {
                     self.scan_identifier(c);

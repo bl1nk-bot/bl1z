@@ -151,7 +151,7 @@ pub struct FunctionRegistry {
     functions: HashMap<String, FunctionInfo>,
 }
 
-/// Internal function storage - wraps either BuiltinFunction or Box<dyn Function>
+/// Internal function storage — wraps either `BuiltinFunction` or `Box<dyn Function>`.
 struct FunctionInfo {
     builtin: BuiltinFunction,
     #[allow(dead_code)]
@@ -238,10 +238,8 @@ impl FunctionRegistry {
     /// use bl1z::{FunctionRegistry, Value, error::FormulaError};
     ///
     /// let mut registry = FunctionRegistry::new();
-    /// // Stateful functions require additional wrapper design (Phase 9.5 future work)
-    /// ```
-    /// // For simplicity, prefer register() for most use cases
-    /// ```
+    /// // For simplicity, prefer register() for most use cases.
+    /// // Stateful functions require additional wrapper design (Phase 9.5 future work).
     pub fn register_boxed(&mut self, _func: Rc<dyn Function>) {
         // Note: Full stateful function support (Phase 9.5) requires
         // changing FunctionRegistry to store trait objects instead of fn pointers.

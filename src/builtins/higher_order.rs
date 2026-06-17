@@ -63,7 +63,7 @@ pub fn reduce() -> BuiltinFunction {
     }
 }
 
-/// sort(array, [key_lambda]) -> Array
+/// sort(array, \[key_lambda\]) -> Array
 pub fn sort() -> BuiltinFunction {
     BuiltinFunction {
         name: "sort".to_string(),
@@ -126,7 +126,7 @@ pub fn sort_with() -> BuiltinFunction {
     }
 }
 
-/// unique(array, [key_lambda]) -> Array
+/// unique(array, \[key_lambda\]) -> Array
 pub fn unique() -> BuiltinFunction {
     BuiltinFunction {
         name: "unique".to_string(),
@@ -193,7 +193,7 @@ fn require_array(val: &Value) -> Result<&Vec<Value>, FormulaError> {
         _ => Err(FormulaError::new(
             ErrorKind::TypeError,
             "E401",
-            "ต้องการอาร์เรย์ (Array)",
+            &format!("ต้องการ Array แต่ได้ {}", val.type_name()),
             None,
         )),
     }
@@ -243,6 +243,105 @@ pub fn range_fn() -> BuiltinFunction {
     BuiltinFunction {
         name: "range".to_string(),
         arity: 999,
-        call: |_, _| Ok(Value::Null),
+        call: |args, _| {
+            match args.len() {
+                1 => {
+                    // range(end) → 0..end:1
+                    let end = to_i64(&args[0], "end")?;
+                    Ok(Value::Range {
+                        start: 0,
+                        end,
+                        step: 1,
+                    })
+                }
+                2 => {
+                    // range(start, end) → start..end:1
+                    let start = to_i64(&args[0], "start")?;
+                    let end = to_i64(&args[1], "end")?;
+                    Ok(Value::Range {
+                        start,
+                        end,
+                        step: 1,
+                    })
+                }
+                3 => {
+                    // range(start, end, step) → start..end:step
+                    let start = to_i64(&args[0], "start")?;
+                    let end = to_i64(&args[1], "end")?;
+                    let step = to_i64(&args[2], "step")?;
+                    if step == 0 {
+                        return Err(FormulaError::new(
+                            ErrorKind::TypeError,
+                            "E401",
+                            "step ต้องไม่เท่ากับ 0",
+                            None,
+                        ));
+                    }
+                    Ok(Value::Range { start, end, step })
+                }
+                _ => Err(FormulaError::new(
+                    ErrorKind::TypeError,
+                    "E401",
+                    &format!("range ต้องการ 1-3 อาร์กิวเมนต์ แต่ได้ {}", args.len()),
+                    None,
+                )),
+            }
+        },
+    }
+}
+
+fn to_i64(val: &Value, param_name: &str) -> Result<i64, FormulaError> {
+    match val {
+        Value::Number(n) => {
+            let i = *n as i64;
+            if (*n - i as f64).abs() > f64::EPSILON {
+                return Err(FormulaError::new(
+                    ErrorKind::TypeError,
+                    "E401",
+                    &format!("{} ต้องเป็นจำนวนเต็ม", param_name),
+                    None,
+                ));
+            }
+            Ok(i)
+        }
+        _ => Err(FormulaError::new(
+            ErrorKind::TypeError,
+            "E401",
+            &format!("ต้องการ Number แต่ได้ {}", val.type_name()),
+            None,
+        )),
+    }
+}
+
+/// range_to_array(range) → Value::Array (convert range to array, e.g. 1..3 → \[1,2\])
+pub fn range_to_array() -> BuiltinFunction {
+    BuiltinFunction {
+        name: "range_to_array".to_string(),
+        arity: 1,
+        call: |args, _| match &args[0] {
+            Value::Range { start, end, step } => {
+                let mut arr = Vec::new();
+                if *step > 0 {
+                    let mut i = *start;
+                    while i < *end {
+                        arr.push(Value::Number(i as f64));
+                        i += step;
+                    }
+                } else {
+                    let mut i = *start;
+                    while i > *end {
+                        arr.push(Value::Number(i as f64));
+                        i += step;
+                    }
+                }
+                Ok(Value::Array(arr))
+            }
+            _ => Err(FormulaError::new(
+                ErrorKind::TypeError,
+                "E401",
+                &format!("ต้องการ Range แต่ได้ {}", args[0].type_name()),
+                None,
+            )),
+        },
     }
 }

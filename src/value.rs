@@ -193,6 +193,25 @@ impl std::hash::Hash for Value {
     }
 }
 
+impl Value {
+    /// คืนชื่อชนิดข้อมูลของค่า (type name) สำหรับใช้ในข้อความ error
+    pub fn type_name(&self) -> &'static str {
+        match self {
+            Value::Number(_) => "Number",
+            Value::String(_) => "String",
+            Value::Bool(_) => "Bool",
+            Value::Null => "Null",
+            Value::Array(_) => "Array",
+            Value::Map(_) => "Map",
+            Value::Lambda(..) => "Lambda",
+            Value::DateTime(_) => "DateTime",
+            Value::Duration(_) => "Duration",
+            Value::Set(_) => "Set",
+            Value::Range { .. } => "Range",
+        }
+    }
+}
+
 impl std::fmt::Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -302,6 +321,189 @@ impl std::fmt::Debug for Value {
             }
             Value::Range { start, end, step } => {
                 write!(f, "Range({}..{}:{})", start, end, step)
+            }
+        }
+    }
+}
+
+// ── Serialization (Phase 12) ─────────────────────────────────────────────
+#[cfg(feature = "serialization")]
+mod serde_impl {
+    use super::*;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    impl Serialize for Value {
+        fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+            use serde::ser::SerializeMap;
+            match self {
+                Value::Number(n) => {
+                    let mut map = serializer.serialize_map(Some(2))?;
+                    map.serialize_entry("type", "number")?;
+                    map.serialize_entry("value", n)?;
+                    map.end()
+                }
+                Value::String(s) => {
+                    let mut map = serializer.serialize_map(Some(2))?;
+                    map.serialize_entry("type", "string")?;
+                    map.serialize_entry("value", s)?;
+                    map.end()
+                }
+                Value::Bool(b) => {
+                    let mut map = serializer.serialize_map(Some(2))?;
+                    map.serialize_entry("type", "bool")?;
+                    map.serialize_entry("value", b)?;
+                    map.end()
+                }
+                Value::Null => {
+                    let mut map = serializer.serialize_map(Some(1))?;
+                    map.serialize_entry("type", "null")?;
+                    map.end()
+                }
+                Value::Array(arr) => {
+                    let mut map = serializer.serialize_map(Some(2))?;
+                    map.serialize_entry("type", "array")?;
+                    map.serialize_entry("value", arr)?;
+                    map.end()
+                }
+                Value::Map(m) => {
+                    let mut map = serializer.serialize_map(Some(2))?;
+                    map.serialize_entry("type", "map")?;
+                    map.serialize_entry("value", m)?;
+                    map.end()
+                }
+                Value::Lambda(..) => Err(serde::ser::Error::custom(
+                    "cannot serialize Lambda (runtime closure)",
+                )),
+                Value::DateTime(dt) => {
+                    let mut map = serializer.serialize_map(Some(2))?;
+                    map.serialize_entry("type", "datetime")?;
+                    map.serialize_entry("value", &dt.to_string())?;
+                    map.end()
+                }
+                Value::Duration(d) => {
+                    let mut map = serializer.serialize_map(Some(2))?;
+                    map.serialize_entry("type", "duration")?;
+                    map.serialize_entry("value", &d.0.to_string())?;
+                    map.end()
+                }
+                Value::Set(set) => {
+                    let mut sorted: Vec<&Value> = set.iter().collect();
+                    sorted.sort_by_key(|v| format!("{:?}", v));
+                    let mut map = serializer.serialize_map(Some(2))?;
+                    map.serialize_entry("type", "set")?;
+                    map.serialize_entry("value", &sorted)?;
+                    map.end()
+                }
+                Value::Range { start, end, step } => {
+                    let mut map = serializer.serialize_map(Some(4))?;
+                    map.serialize_entry("type", "range")?;
+                    map.serialize_entry("start", start)?;
+                    map.serialize_entry("end", end)?;
+                    map.serialize_entry("step", step)?;
+                    map.end()
+                }
+            }
+        }
+    }
+
+    impl<'de> Deserialize<'de> for Value {
+        fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+            let map = serde_json::Value::deserialize(deserializer)?;
+            let obj = map
+                .as_object()
+                .ok_or_else(|| serde::de::Error::custom("expected a JSON object"))?;
+            let type_str = obj
+                .get("type")
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| serde::de::Error::custom("missing \"type\" field"))?;
+            match type_str {
+                "number" => {
+                    let val = obj
+                        .get("value")
+                        .and_then(|v| v.as_f64())
+                        .ok_or_else(|| serde::de::Error::custom("invalid number value"))?;
+                    Ok(Value::Number(val))
+                }
+                "string" => {
+                    let val = obj
+                        .get("value")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| serde::de::Error::custom("invalid string value"))?;
+                    Ok(Value::String(val.to_string()))
+                }
+                "bool" => {
+                    let val = obj
+                        .get("value")
+                        .and_then(|v| v.as_bool())
+                        .ok_or_else(|| serde::de::Error::custom("invalid bool value"))?;
+                    Ok(Value::Bool(val))
+                }
+                "null" => Ok(Value::Null),
+                "array" => {
+                    let val: Vec<Value> = serde_json::from_value(
+                        obj.get("value")
+                            .cloned()
+                            .ok_or_else(|| serde::de::Error::custom("missing array value"))?,
+                    )
+                    .map_err(serde::de::Error::custom)?;
+                    Ok(Value::Array(val))
+                }
+                "map" => {
+                    let val: HashMap<String, Value> = serde_json::from_value(
+                        obj.get("value")
+                            .cloned()
+                            .ok_or_else(|| serde::de::Error::custom("missing map value"))?,
+                    )
+                    .map_err(serde::de::Error::custom)?;
+                    Ok(Value::Map(val))
+                }
+                "datetime" => {
+                    let s = obj
+                        .get("value")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| serde::de::Error::custom("invalid datetime value"))?;
+                    let ts: jiff::Timestamp = s
+                        .parse()
+                        .map_err(|e| serde::de::Error::custom(format!("invalid timestamp: {e}")))?;
+                    Ok(Value::DateTime(ts))
+                }
+                "duration" => {
+                    let s = obj
+                        .get("value")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| serde::de::Error::custom("invalid duration value"))?;
+                    let span: jiff::Span = s
+                        .parse()
+                        .map_err(|e| serde::de::Error::custom(format!("invalid duration: {e}")))?;
+                    Ok(Value::Duration(Duration(span)))
+                }
+                "set" => {
+                    let vals: Vec<Value> = serde_json::from_value(
+                        obj.get("value")
+                            .cloned()
+                            .ok_or_else(|| serde::de::Error::custom("missing set value"))?,
+                    )
+                    .map_err(serde::de::Error::custom)?;
+                    Ok(Value::Set(vals.into_iter().collect()))
+                }
+                "range" => {
+                    let start = obj
+                        .get("start")
+                        .and_then(|v| v.as_i64())
+                        .ok_or_else(|| serde::de::Error::custom("invalid range start"))?;
+                    let end = obj
+                        .get("end")
+                        .and_then(|v| v.as_i64())
+                        .ok_or_else(|| serde::de::Error::custom("invalid range end"))?;
+                    let step = obj
+                        .get("step")
+                        .and_then(|v| v.as_i64())
+                        .ok_or_else(|| serde::de::Error::custom("invalid range step"))?;
+                    Ok(Value::Range { start, end, step })
+                }
+                other => Err(serde::de::Error::custom(format!(
+                    "unknown Value type: {other}"
+                ))),
             }
         }
     }

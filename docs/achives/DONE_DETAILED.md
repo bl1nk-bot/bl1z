@@ -58,6 +58,34 @@ Duration: 1 week
 - [x] **10.4** Support recursive user-defined functions
 - [x] **10.5** Test: define → call, multiple definitions, shadowing builtins
 
+## Phase 10.5: Missing Math + String Builtins — DONE
+
+Duration: 2 weeks
+- [x] **10.5.1** Math: `pi()`, `round(n, d)`, `ceil()`, `floor()`, `sqrt()`, `pow(b, e)`
+- [x] **10.5.2** Trigonometry: `sin()`, `cos()`, `tan()`
+- [x] **10.5.3** Random: `random()` → 0-1
+- [x] **10.5.4** String: `trim()`, `trim_start()`, `trim_end()`
+- [x] **10.5.5** String Manipulation: `split(s, sep)`, `replace(s, old, new)`, `substring(s, start, len)`
+
+## Phase 11: Advanced Data Types (jiff) — PARTIAL
+
+Duration: 2 weeks
+- [x] **11.1** Added `Value::DateTime(jiff::Timestamp)` and `Value::Duration(jiff::SignedDuration)`
+- [x] **11.2** Added `Value::Set(HashSet<Value>)` and `Value::Range { start, end, step }`
+- [x] **11.5** Added `@` operator for DateTime literals: `@2024-01-01`
+- [x] **11.6** Set operations: `set_union`, `set_intersection`, `set_difference`, `set_in`
+- [x] **11.7** Range operations: `range(start, end)`, `range_to_array(range)`
+- [x] **11.8** Full test suite for sets, ranges, and DateTime parsing/display
+
+## Phase 12: Serialization & Caching — DONE
+
+Duration: 1.5 weeks
+- [x] **12.1** Implemented `serde` for `Value` and `Expr` (feature gated)
+- [x] **12.2** Added `serialization` feature in `Cargo.toml`
+- [x] **12.3** Created `FormulaCache` (LRU) for caching parsed ASTs
+- [x] **12.4** Added `Context::to_json()` and `Context::from_json()`
+- [x] **12.5** Round-trip serialization integration tests
+
 ## Phase 13: Plugin SDK Foundation — DONE
 
 Duration: 1.5 weeks

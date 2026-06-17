@@ -15,7 +15,7 @@ pub fn abs() -> BuiltinFunction {
                 Err(FormulaError::new(
                     ErrorKind::FunctionError,
                     "E501",
-                    "abs ต้องการตัวเลข",
+                    &format!("abs ต้องการ Number แต่ได้ {}", args[0].type_name()),
                     None,
                 ))
             }
@@ -43,7 +43,11 @@ pub fn round() -> BuiltinFunction {
                 Err(FormulaError::new(
                     ErrorKind::FunctionError,
                     "E501",
-                    "round ต้องการตัวเลข (ค่า, จำนวนทศนิยม)",
+                    &format!(
+                        "round ต้องการ Number, Number แต่ได้ {}, {}",
+                        args[0].type_name(),
+                        args[1].type_name()
+                    ),
                     None,
                 ))
             }
@@ -62,7 +66,7 @@ pub fn ceil() -> BuiltinFunction {
                 Err(FormulaError::new(
                     ErrorKind::FunctionError,
                     "E501",
-                    "ceil ต้องการตัวเลข",
+                    &format!("ceil ต้องการ Number แต่ได้ {}", args[0].type_name()),
                     None,
                 ))
             }
@@ -81,7 +85,7 @@ pub fn floor() -> BuiltinFunction {
                 Err(FormulaError::new(
                     ErrorKind::FunctionError,
                     "E501",
-                    "floor ต้องการตัวเลข",
+                    &format!("floor ต้องการ Number แต่ได้ {}", args[0].type_name()),
                     None,
                 ))
             }
@@ -100,7 +104,7 @@ pub fn sqrt() -> BuiltinFunction {
                 Err(FormulaError::new(
                     ErrorKind::FunctionError,
                     "E501",
-                    "sqrt ต้องการตัวเลข",
+                    &format!("sqrt ต้องการ Number แต่ได้ {}", args[0].type_name()),
                     None,
                 ))
             }
@@ -119,7 +123,11 @@ pub fn pow() -> BuiltinFunction {
                 Err(FormulaError::new(
                     ErrorKind::FunctionError,
                     "E501",
-                    "pow ต้องการตัวเลข (base, exp)",
+                    &format!(
+                        "pow ต้องการ Number, Number (base, exp) แต่ได้ {}, {}",
+                        args[0].type_name(),
+                        args[1].type_name()
+                    ),
                     None,
                 ))
             }
@@ -138,7 +146,7 @@ pub fn sin() -> BuiltinFunction {
                 Err(FormulaError::new(
                     ErrorKind::FunctionError,
                     "E501",
-                    "sin ต้องการตัวเลข (เรเดียน)",
+                    &format!("sin ต้องการ Number (เรเดียน) แต่ได้ {}", args[0].type_name()),
                     None,
                 ))
             }
@@ -157,7 +165,7 @@ pub fn cos() -> BuiltinFunction {
                 Err(FormulaError::new(
                     ErrorKind::FunctionError,
                     "E501",
-                    "cos ต้องการตัวเลข (เรเดียน)",
+                    &format!("cos ต้องการ Number (เรเดียน) แต่ได้ {}", args[0].type_name()),
                     None,
                 ))
             }
@@ -176,7 +184,7 @@ pub fn tan() -> BuiltinFunction {
                 Err(FormulaError::new(
                     ErrorKind::FunctionError,
                     "E501",
-                    "tan ต้องการตัวเลข (เรเดียน)",
+                    &format!("tan ต้องการ Number (เรเดียน) แต่ได้ {}", args[0].type_name()),
                     None,
                 ))
             }

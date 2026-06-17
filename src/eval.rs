@@ -442,6 +442,7 @@ fn compare_values(l: Value, r: Value, span: Span, op: BinaryOp) -> Result<Value,
         (Value::Number(a), Value::Number(b)) => a.partial_cmp(b),
         (Value::String(a), Value::String(b)) => Some(a.cmp(b)),
         (Value::Bool(a), Value::Bool(b)) => Some(a.cmp(b)),
+        (Value::DateTime(a), Value::DateTime(b)) => Some(a.cmp(b)),
         (Value::Null, Value::Null) => Some(Ordering::Equal),
         _ => {
             return Err(FormulaError::new(
