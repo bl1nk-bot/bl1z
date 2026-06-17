@@ -5,7 +5,7 @@
 รูปแบบอ้างอิงตาม [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 และโปรเจกต์นี้ปฏิบัติตามกฎ [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
-## [0.2.12] - 2026-06-17
+## [0.2.15] - 2026-06-17
 
 ### เพิ่มเติม (Added)
 - **Lambda & Higher-Order Functions**: เพิ่มการรองรับ lambda expression `(x) => x * 2` และฟังก์ชันต่างๆ เช่น `map`, `filter`, `reduce`, `sort`, `group_by`, `unique`
@@ -34,7 +34,7 @@
 - **Date Builtins**: `now()` และ `date()` คืนค่า `Value::DateTime` แทน `Value::String`
 - **Date Input**: `year()`, `month()`, `day()`, `date_add()`, `date_diff()` รับทั้ง `Value::DateTime` และ `Value::String`
 - **Error Messages**: ทุก builtin แสดง expected vs received type (เช่น `abs ต้องการ Number แต่ได้ String`)
-- **Version**: อัพจาก `0.2.0` เป็น `0.2.12`
+- **Version**: อัพจาก `0.2.0` เป็น `0.2.15`
 
 ### การเพิ่มประสิทธิภาพ (Phase 14)
 - **AST Optimizer** (`src/optimizer.rs`): Constant folding, algebraic identities (`x+0`, `x*1`, `x*0`, `--x`), string concat folding, comparison folding

@@ -1,6 +1,6 @@
 # bl1z Benchmark Report (2026-06-17)
 
-Performance baseline for bl1z v0.2.12.
+Performance baseline for bl1z v0.2.15.
 
 ## Summary
 

@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.12] - 2026-06-17
+## [0.2.15] - 2026-06-17
 
 ### Added
 - **Lambda & Higher-Order Functions**: Added support for lambda expressions `(x) => x * 2` and functions like `map`, `filter`, `reduce`, `sort`, `group_by`, `unique`.
@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Date Builtins**: `now()` and `date()` return native `Value::DateTime` instead of `Value::String`.
 - **Date Input**: `year()`, `month()`, `day()`, `date_add()`, `date_diff()` accept both `Value::DateTime` and `Value::String`.
 - **Error Messages**: All builtins now report expected vs received types (e.g., `abs ต้องการ Number แต่ได้ String`).
-- **Version**: Bumped from `0.2.0` to `0.2.12`.
+- **Version**: Bumped from `0.2.0` to `0.2.15`.
 
 ### Optimization (Phase 14)
 - **AST Optimizer** (`src/optimizer.rs`): Constant folding, algebraic identities (`x+0`, `x*1`, `x*0`, `--x`), string concat folding, comparison folding.

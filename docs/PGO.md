@@ -96,7 +96,7 @@ charts and comparison with previous baselines.
 
 ## Baseline benchmarks
 
-These numbers are from bl1z **v0.2.12** on a typical development machine
+These numbers are from bl1z **v0.2.15** on a typical development machine
 (LTO + `codegen-units = 1`, no PGO).
 
 | Benchmark | Time | Description |
