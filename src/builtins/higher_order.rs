@@ -12,7 +12,11 @@ pub fn map() -> BuiltinFunction {
             let arr = require_array(&args[0])?;
             let mut results = Vec::new();
             for val in arr {
-                results.push(crate::eval::apply_lambda(&args[1], &[val.clone()], reg)?);
+                results.push(crate::eval::apply_lambda(
+                    &args[1],
+                    std::slice::from_ref(val),
+                    reg,
+                )?);
             }
             Ok(Value::Array(results))
         },
@@ -28,7 +32,7 @@ pub fn filter() -> BuiltinFunction {
             let arr = require_array(&args[0])?;
             let mut results = Vec::new();
             for val in arr {
-                let res = crate::eval::apply_lambda(&args[1], &[val.clone()], reg)?;
+                let res = crate::eval::apply_lambda(&args[1], std::slice::from_ref(val), reg)?;
                 if is_truthy(&res) {
                     results.push(val.clone());
                 }
@@ -74,7 +78,7 @@ pub fn sort() -> BuiltinFunction {
             } else {
                 let mut mapped: Vec<(String, Value)> = Vec::new();
                 for val in &arr {
-                    let key = crate::eval::apply_lambda(&args[1], &[val.clone()], reg)?;
+                    let key = crate::eval::apply_lambda(&args[1], std::slice::from_ref(val), reg)?;
                     mapped.push((format!("{}", key), val.clone()));
                 }
                 mapped.sort_by(|a, b| a.0.cmp(&b.0));
@@ -136,7 +140,7 @@ pub fn unique() -> BuiltinFunction {
             let mut results = Vec::new();
             for val in arr {
                 let key = if args.len() > 1 {
-                    crate::eval::apply_lambda(&args[1], &[val.clone()], reg)?
+                    crate::eval::apply_lambda(&args[1], std::slice::from_ref(val), reg)?
                 } else {
                     val.clone()
                 };
@@ -158,7 +162,7 @@ pub fn group_by() -> BuiltinFunction {
             let arr = require_array(&args[0])?;
             let mut groups: HashMap<String, Vec<Value>> = HashMap::new();
             for val in arr {
-                let key = crate::eval::apply_lambda(&args[1], &[val.clone()], reg)?;
+                let key = crate::eval::apply_lambda(&args[1], std::slice::from_ref(val), reg)?;
                 let key_str = format!("{}", key);
                 groups.entry(key_str).or_default().push(val.clone());
             }
