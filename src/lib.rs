@@ -113,6 +113,7 @@ pub mod error;
 pub mod eval;
 pub mod functions;
 pub mod lexer;
+pub mod optimizer;
 pub mod parser;
 pub mod plugins;
 pub mod profiling;
