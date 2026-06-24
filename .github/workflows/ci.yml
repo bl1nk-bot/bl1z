@@ -28,7 +28,7 @@ jobs:
       - name: Check commit message format
         run: |
           # Pattern enforcing type(scope): Title (Total length ~50 chars)
-          PATTERN="^(feat|fix|ci|docs|style|refactor|test|chore)(\([a-zA-Z0-9._-]+\))?: .{1,40}$"
+          PATTERN="^(feat|fix|ci|docs|style|refactor|test|chore)([a-zA-Z0-9._-]+)?: .{1,50}$"
           
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             commits=$(git log --format=%s origin/${{ github.base_ref }}..HEAD)
@@ -199,6 +199,7 @@ jobs:
     needs: [test, audit]
     permissions:
       contents: write
+      id-token: write
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Checkout repository
@@ -211,18 +212,18 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Build release binary
-        run: cargo build --release --all-features
-
-      - name: Package artifacts
-        run: |
-          mkdir -p artifacts
-          cp target/release/libbl1z.rlib artifacts/ || true
-          tar -czf bl1z-artifacts.tar.gz artifacts/
+      - name: Build documentation
+        run: cargo doc --release --all-features --no-deps
 
       - name: Get Version
         id: get_version
         run: echo "version=$(grep -m1 '^version = ' Cargo.toml | cut -d '\"' -f2)" >> $GITHUB_OUTPUT
+
+      - name: Publish to crates.io
+        if: github.ref == 'refs/heads/main'
+        uses: rust-lang/crate-publish@v2
+        env:
+          CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
 
       - name: Create Release
         env:
@@ -232,8 +233,6 @@ jobs:
           VERSION="v${{ steps.get_version.outputs.version }}"
           if ! git rev-parse "$VERSION" >/dev/null 2>&1; then
             gh release create "$VERSION" \
-              bl1z-artifacts.tar.gz \
-              Cargo.lock \
               --generate-notes
           else
             echo "Release $VERSION already exists. Skipping."
