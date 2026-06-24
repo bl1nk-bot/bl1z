@@ -2,7 +2,7 @@
 
 การติดตั้งภาษา Rust สำหรับสร้าง **ไลบรารีสูตร/การคำนวณ** ที่เติบโตอย่างต่อเนื่อง เหมาะสำหรับ bl1z รูปแบบ Notion-like และ POE SDK
 
-สถานะปัจจุบัน: **V2 พร้อมเริ่มต้น**
+สถานะปัจจุบัน: **V2 เสร็จสมบูรณ์**
 
 ---
 
@@ -28,14 +28,14 @@
 - ฟังก์ชันคอลเลกชันภายใน (sum, avg, min, max, count, join)
 - ฟังก์ชันวันที่พื้นฐาน (now, year, month, day, date_add, date_diff) โดยใช้ `jiff` ภายใน
 
-### ✅ V2 (เสร็จสมบูรณ์/กำลังดำเนินการ)
+### ✅ V2 (เสร็จสมบูรณ์)
 - **การเชื่อมต่อการเข้าถึง (Access chaining)** (`obj.prop`, `arr[0]`) ✅
 - **นิพจน์ Lambda (Lambda expression)** `(x) => x * 2` ✅
 - **ฟังก์ชันระดับสูง (Higher-order functions)**: `map`, `filter`, `reduce` ✅
 - **ฟังก์ชันนิยามโดยผู้ใช้ (User-defined function)**: `fn name(params) = expression` ✅
 - **โครงสร้างพื้นฐาน Plugin SDK** (Trait + Manager) ✅
 - **การแปลงข้อมูลและการทำแคช (Serialization & caching)** ✅
-- **ชนิดข้อมูลขั้นสูง (Advanced Data Types)**: `DateTime`, `Duration`, `Set`, `Range` 🔄 (อยู่ระหว่างการปรับปรุงโครงสร้าง)
+- **ชนิดข้อมูลขั้นสูง (Advanced Data Types)**: `DateTime`, `Duration`, `Set`, `Range` ✅
 - **ส่วนขยายคณิตศาสตร์และข้อความ** ✅
 
 ### ❌ นอกเหนือขอบเขต

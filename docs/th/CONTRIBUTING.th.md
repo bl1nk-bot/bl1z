@@ -320,7 +320,7 @@ docs(api): update function documentation
 สำหรับช่องโหว่ด้านความปลอดภัย:
 - **ห้าม** สร้าง GitHub issues แบบสาธารณะ
 - ส่งอีเมลถึงผู้ดูแลโดยตรง
-- ดูรายละเอียดที่ [นโยบายด้านความปลอดภัย (Security Policy)](SECURITY.md)
+- ดูรายละเอียดที่ [นโยบายด้านความปลอดภัย (Security Policy)](SECURITY.th.md)
 
 ## การยอมรับผลงาน (Recognition)
 

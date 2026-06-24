@@ -2,10 +2,10 @@
 
 | Build | Quality | Security | License |
 |:---:|:---:|:---:|:---:|
-| [![CI](https://github.com/bl1nk-bot/bl1z/actions/workflows/ci.yml/badge.svg)](https://github.com/bl1nk-bot/bl1z/actions/workflows/ci.yml) | [![CodeQL](https://github.com/bl1nk-bot/bl1z/actions/workflows/codeql.yml/badge.svg)](https://github.com/bl1nk-bot/bl1z/actions/workflows/codeql.yml) | [![CI Failure Handler](https://github.com/bl1nk-bot/bl1z/actions/workflows/ci-fail.yml/badge.svg)](https://github.com/bl1nk-bot/bl1z/actions/workflows/ci-fail.yml) | [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE) |
+| [![CI](https://github.com/bl1nk-bot/bl1z/actions/workflows/ci.yml/badge.svg)](https://github.com/bl1nk-bot/bl1z/actions/workflows/ci.yml) | [![CodeQL](https://github.com/bl1nk-bot/bl1z/actions/workflows/codeql.yml/badge.svg)](https://github.com/bl1nk-bot/bl1z/actions/workflows/codeql.yml) | [![CI Failure Handler](https://github.com/bl1nk-bot/bl1z/actions/workflows/ci-fail.yml/badge.svg)](https://github.com/bl1nk-bot/bl1z/actions/workflows/ci-fail.yml) | [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](../../LICENSE) |
 
 [![Rust](https://img.shields.io/badge/rust-1.95%2B-orange.svg)](https://www.rust-lang.org)
-[![Version](https://img.shields.io/badge/version-0.2.0-green.svg)](https://crates.io/crates/bl1z)
+[![Version](https://img.shields.io/badge/version-0.2.15-green.svg)](https://crates.io/crates/bl1z)
 [![Documentation](https://docs.rs/bl1z/badge.svg)](https://docs.rs/bl1z)
 
 ## 📖 ภาพรวม
@@ -34,7 +34,7 @@
 
 ```toml
 [dependencies]
-bl1z = "0.2.0"
+bl1z = "0.2.15"
 ```
 
 หรือหากต้องการใช้จาก source code ในเครื่อง:
@@ -301,11 +301,11 @@ cargo test --doc
 
 ## 📄 เอกสารเพิ่มเติม
 
-- **[SPEC.md](SPEC.md)**: ข้อมูลจำเพาะทางเทคนิคและสถาปัตยกรรมโดยละเอียด
-- **[PLAN.md](PLAN.md)**: แผนงานการพัฒนาแต่ละเฟส
-- **[docs/PRD.md](docs/PRD.md)**: เอกสารความต้องการผลิตภัณฑ์
-- **[docs/idea-extension-poe.md](docs/idea-extension-poe.md)**: ไอเดียการขยายระบบ
-- **[docs/overview-extension-gemini.md](docs/overview-extension-gemini.md)**: ภาพรวมการขยายสำหรับ POE SDK
+- **[SPEC.th.md](SPEC.th.md)**: ข้อมูลจำเพาะทางเทคนิคและสถาปัตยกรรมโดยละเอียด
+- **[PLAN.md](../../PLAN.md)**: แผนงานการพัฒนาแต่ละเฟส
+- **[PRD.th.md](PRD.th.md)**: เอกสารความต้องการผลิตภัณฑ์
+- **[idea-extension-poe.th.md](idea-extension-poe.th.md)**: ไอเดียการขยายระบบ
+- **[overview-extension-gemini.th.md](overview-extension-gemini.th.md)**: ภาพรวมการขยายสำหรับ POE SDK
 
 ---
 
@@ -322,7 +322,7 @@ cargo test --doc
 
 ## 📝 ใบอนุญาต
 
-โปรเจกต์นี้เผยแพร่ภายใต้ใบอนุญาต [MIT License](LICENSE)
+โปรเจกต์นี้เผยแพร่ภายใต้ใบอนุญาต [MIT License](../../LICENSE)
 
 ---
 

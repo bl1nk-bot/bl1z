@@ -5,7 +5,7 @@
 | [![CI](https://github.com/bl1nk-bot/bl1z/actions/workflows/ci.yml/badge.svg)](https://github.com/bl1nk-bot/bl1z/actions/workflows/ci.yml) | [![CodeQL](https://github.com/bl1nk-bot/bl1z/actions/workflows/codeql.yml/badge.svg)](https://github.com/bl1nk-bot/bl1z/actions/workflows/codeql.yml) | [![CI Failure Handler](https://github.com/bl1nk-bot/bl1z/actions/workflows/ci-fail.yml/badge.svg)](https://github.com/bl1nk-bot/bl1z/actions/workflows/ci-fail.yml) | [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE) |
 
 [![Rust](https://img.shields.io/badge/rust-1.95%2B-orange.svg)](https://www.rust-lang.org)
-[![Version](https://img.shields.io/badge/version-0.2.0-green.svg)](https://crates.io/crates/bl1z)
+[![Version](https://img.shields.io/badge/version-0.2.15-green.svg)](https://crates.io/crates/bl1z)
 [![Documentation](https://docs.rs/bl1z/badge.svg)](https://docs.rs/bl1z)
 
 ## 📖 ภาพรวม
@@ -34,7 +34,7 @@
 
 ```toml
 [dependencies]
-bl1z = "0.2.0"
+bl1z = "0.2.15"
 ```
 
 หรือหากต้องการใช้จาก source code ในเครื่อง:
@@ -266,12 +266,12 @@ bl1z/
 - [x] Plugin SDK foundation
 - [x] Extended Math & String functions
 
-### 📋 แผนในอนาคต (Phase 14+)
+### 📋 แผนในอนาคต (Session 3+)
 
-- [ ] Performance optimization (Constant folding, Vectorization)
-- [ ] Native Date type refactor for all built-ins
-- [ ] Error recovery & Security limits
-- [ ] WASM-based plugin sandbox (V3)
+- [ ] WASM-based plugin sandbox
+- [ ] Dynamic plugin loading
+- [ ] JIT/Cranelift compilation
+- [ ] IDE Language Server Protocol (LSP)
 
 ---
 
@@ -304,8 +304,8 @@ cargo test --doc
 - **[SPEC.md](SPEC.md)**: ข้อมูลจำเพาะทางเทคนิคและสถาปัตยกรรมโดยละเอียด
 - **[PLAN.md](PLAN.md)**: แผนงานการพัฒนาแต่ละเฟส
 - **[docs/PRD.md](docs/PRD.md)**: เอกสารความต้องการผลิตภัณฑ์
-- **[docs/idea-extension-gemini.md](docs/idea-extension-gemini.md)**: ไอเดียการขยายระบบ
-- **[docs/overview-extension-poe.md](docs/overview-extension-poe.md)**: ภาพรวมการขยายสำหรับ POE SDK
+- **[docs/idea-extension-poe.md](docs/idea-extension-poe.md)**: ไอเดียการขยายระบบ
+- **[docs/overview-extension-gemini.md](docs/overview-extension-gemini.md)**: ภาพรวมการขยายสำหรับ POE SDK
 
 ---
 
@@ -316,27 +316,6 @@ cargo test --doc
 1. เปิด Issue เพื่อรายงานบั๊กหรือขอฟีเจอร์ใหม่
 2. Fork โปรเจกต์และสร้าง Pull Request
 3. เขียนทดสอบให้ครอบคลุมการเปลี่ยนแปลง
-4. อัพเดตเอกสารหากมีการเปลี่ยนแปลง API
-
----
-
-## 📝 ใบอนุญาต
-
-โปรเจกต์นี้เผยแพร่ภายใต้ใบอนุญาต [MIT License](LICENSE)
-
----
-
-## 🙏 ขอบคุณ
-
-- สร้างด้วย ❤️ โดยใช้ [Rust](https://www.rust-lang.org/)
-- ได้รับแรงบันดาลใจจาก Notion bl1z
-- พัฒนาสำหรับ POE SDK ecosystem
-
----
-
-## 📞 ติดต่อ
-
-หากมีคำถามหรือต้องการความช่วยเหลือ กรุณาเปิด Issue ใน GitHub repository นีุ้มการเปลี่ยนแปลง
 4. อัพเดตเอกสารหากมีการเปลี่ยนแปลง API
 
 ---

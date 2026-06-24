@@ -64,3 +64,5 @@ Duration: 1 week
 
 ---
 **Note:** V2 is complete. All phases (8-15) are done. See [CHANGELOG.md](./CHANGELOG.md) for release details.
+
+- [x] Docs: move Thai docs to `docs/th/` and archive outdated docs to `.achives/` (2026-06-24)
