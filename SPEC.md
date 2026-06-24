@@ -2,7 +2,7 @@
 
 Rust implementation for building a **formula/calculation library** that grows incrementally, suitable for Notion-like bl1z and POE SDK.
 
-Current status: **V2 Ready to Start**
+Current status: **V2 Complete**
 
 ---
 
@@ -11,11 +11,11 @@ Current status: **V2 Ready to Start**
 1. **Parse** formula text into internal structure ✅
 2. **Evaluate** formula to get value ✅
 3. **Extend** easily add functions/data types/context ✅
-4. **Navigate** access nested data via dot/index notation 🚧 (Phase 8)
-5. **Functional** support lambda, higher-order functions 🚧 (Phase 9)
-6. **User-defined** allow users to create functions 🚧 (Phase 10)
-7. **Rich Types** native DateTime/Duration (via `jiff`) 🚧 (Phase 11)
-8. **Plugin SDK** open for third-party expansion 🚧 (Phase 13)
+4. **Navigate** access nested data via dot/index notation ✅ (Phase 8)
+5. **Functional** support lambda, higher-order functions ✅ (Phase 9)
+6. **User-defined** allow users to create functions ✅ (Phase 10)
+7. **Rich Types** native DateTime/Duration (via `jiff`) ✅ (Phase 11)
+8. **Plugin SDK** open for third-party expansion ✅ (Phase 13)
 
 ---
 
@@ -28,14 +28,14 @@ Current status: **V2 Ready to Start**
 - Built-in collection functions (sum, avg, min, max, count, join)
 - Basic date functions (now, year, month, day, date_add, date_diff) using internal `jiff`
 
-### ✅ V2 (Complete/In Progress)
+### ✅ V2 (Complete)
 - **Access chaining** (`obj.prop`, `arr[0]`) ✅
 - **Lambda expression** `(x) => x * 2` ✅
 - **Higher-order functions**: `map`, `filter`, `reduce` ✅
 - **User-defined function**: `fn name(params) = expression` ✅
 - **Plugin SDK foundation** (Trait + Manager) ✅
 - **Serialization & caching** ✅
-- **Advanced Data Types**: `DateTime`, `Duration`, `Set`, `Range` 🔄 (Refactor pending)
+- **Advanced Data Types**: `DateTime`, `Duration`, `Set`, `Range` ✅
 - **Math + String extensions** ✅
 
 ### ❌ Out of scope
@@ -50,10 +50,10 @@ Current status: **V2 Ready to Start**
 ## 3) High-Level Architecture (Extended)
 
 ### Layer 1: Input Layer ✅
-### Layer 2: Lexing 🚧 (Added Dot token)
-### Layer 3: Parsing 🚧 (Added postfix chain, lambda)
-### Layer 4: Evaluation 🚧 (Added property/index access, lambda call, UDF)
-### Layer 5: Plugin SDK 🆕 (Phase 13)
+### Layer 2: Lexing ✅ (Added Dot token)
+### Layer 3: Parsing ✅ (Added postfix chain, lambda)
+### Layer 4: Evaluation ✅ (Added property/index access, lambda call, UDF)
+### Layer 5: Plugin SDK ✅ (Phase 13)
 
 ---
 
