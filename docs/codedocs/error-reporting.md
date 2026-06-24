@@ -3,7 +3,7 @@ title: "Error Reporting"
 description: "See how FormulaError, spans, diagnostics, and profiling helpers support debugging and user feedback."
 ---
 
-Error handling in `formula_engine` is intentionally structured, not ad hoc. The crate uses `FormulaError` from `src/error.rs` for lexing, parsing, evaluation, function, and context failures, and it preserves `Span` data wherever possible so callers can attach failures back to the original formula string.
+Error handling in `bl1z` is intentionally structured, not ad hoc. The crate uses `FormulaError` from `src/error.rs` for lexing, parsing, evaluation, function, context, serialization, plugin, and recovery failures, and it preserves `Span` data wherever possible so callers can attach failures back to the original formula string.
 
 ## What This Concept Is
 
@@ -20,7 +20,7 @@ Formula systems usually fail in front of end users or configuration authors, not
 
 ## How It Works Internally
 
-`src/error.rs` defines `ErrorKind` with six variants: `LexError`, `ParseError`, `EvalError`, `TypeError`, `FunctionError`, and `ContextError`. `FormulaError::new` constructs the error object, and the `Display` implementation renders it as `[CODE] message`.
+`src/error.rs` defines `ErrorKind` for the full engine lifecycle, including `LexError`, `ParseError`, `EvalError`, `TypeError`, `FunctionError`, `ContextError`, `PropertyNotFound`, `IndexOutOfBounds`, `RecursionLimitExceeded`, `SerializationError`, `PluginError`, and `RecoveryError`. `FormulaError::new` constructs the error object, and the `Display` implementation renders it as `[CODE] message`.
 
 `src/diagnostics.rs` takes the original source string plus a `FormulaError`. If the error contains a span, it extracts the source line and draws a caret underline at the error column range. That logic depends on `Span` and `Position` from `src/span.rs`.
 
@@ -44,8 +44,8 @@ The [Execution Pipeline](/docs/execution-pipeline) produces the errors, the [Run
 ## Basic Usage: Render A User-Facing Diagnostic
 
 ```rust
-use formula_engine::diagnostics::format_error;
-use formula_engine::tokenize;
+use bl1z::diagnostics::format_error;
+use bl1z::tokenize;
 
 fn main() {
     let source = r#""unterminated"#;
@@ -67,9 +67,9 @@ Example output:
 ## Advanced Usage: Match On Error Kind And Code
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::error::ErrorKind;
-use formula_engine::{evaluate, parse, tokenize, Context, FunctionRegistry};
+use bl1z::builtins;
+use bl1z::error::ErrorKind;
+use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry};
 
 fn main() {
     let mut registry = FunctionRegistry::new();

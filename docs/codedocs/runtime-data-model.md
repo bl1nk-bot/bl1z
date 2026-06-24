@@ -3,11 +3,11 @@ title: "Runtime Data Model"
 description: "Understand the Value enum, Context storage, spans, and AST shapes that carry formulas through execution."
 ---
 
-The runtime data model is the contract between the parser and evaluator. In `formula_engine`, this model is spread across `src/value.rs`, `src/context.rs`, `src/ast.rs`, and `src/span.rs`. Together, those modules answer four questions: what values formulas can produce, how external data is injected, how expressions are represented, and how source locations are preserved.
+The runtime data model is the contract between the parser and evaluator. In `bl1z`, this model is spread across `src/value.rs`, `src/context.rs`, `src/ast.rs`, and `src/span.rs`. Together, those modules answer four questions: what values formulas can produce, how external data is injected, how expressions are represented, and how source locations are preserved.
 
 ## What This Concept Is
 
-The crate reduces formulas into a single runtime enum, `Value`, and represents syntax with `Expr` wrapped in `SpannedExpr`. Application data is stored in `Context`, which is effectively a `HashMap<String, Value>`. `Span` and `Position` attach human-usable coordinates to syntax and errors.
+The crate reduces formulas into a single runtime enum, `Value`, and represents syntax with `Expr` wrapped in `SpannedExpr`. Application data is stored in `Context`, which uses deterministic per-scope storage plus parent-linked lookup. `Span` and `Position` attach human-usable coordinates to syntax and errors.
 
 ## Why It Exists
 
@@ -25,10 +25,15 @@ pub enum Value {
     Null,
     Array(Vec<Value>),
     Map(std::collections::HashMap<String, Value>),
+    Lambda(...),
+    DateTime(jiff::Timestamp),
+    Duration(bl1z::value::Duration),
+    Set(std::collections::HashSet<Value>),
+    Range { start: i64, end: i64, step: i64 },
 }
 ```
 
-`src/context.rs` stores variables in a private `HashMap<String, Value>` and exposes `new`, `set`, and `get`. During evaluation, `src/eval.rs` resolves variables by name and supports dot-separated lookups such as `user.score` by splitting the variable string and traversing nested `Value::Map` objects.
+`src/context.rs` stores variables in a private `BTreeMap<String, Value>` for each scope and exposes `new`, `set`, `get`, `with_parent`, `get_all`, and `depth`. During evaluation, `src/eval.rs` resolves variables by name and supports explicit AST nodes for property access and indexing.
 
 `src/ast.rs` defines the syntax tree. The important part is that every expression becomes a `SpannedExpr`, which wraps an `Expr` plus `ExprMeta { span }`. Arrays and maps are first-class nodes in the AST, not post-processing tricks.
 
@@ -48,6 +53,11 @@ graph TD
   J --> N[Expr::FunctionCall]
   J --> O[Expr::ArrayLiteral]
   J --> P[Expr::MapLiteral]
+  J --> Q[Expr::PropertyAccess]
+  J --> R[Expr::IndexAccess]
+  J --> S[Expr::LambdaExpr]
+  J --> T[Expr::FunctionDef]
+  J --> U[Expr::Sequence]
 ```
 
 ## How It Relates To Other Concepts
@@ -57,8 +67,8 @@ The [Execution Pipeline](/docs/execution-pipeline) produces these structures, th
 ## Basic Usage: Supplying Variables
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
+use bl1z::builtins;
+use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut registry = FunctionRegistry::new();
@@ -79,8 +89,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ## Advanced Usage: Nested Maps With Dot Access
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
+use bl1z::builtins;
+use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
 use std::collections::HashMap;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -105,7 +115,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-<Callout type="warn">Dot access only works when the root variable comes from `Context` and each intermediate value is a `Value::Map`. There is no array indexing syntax, no quoted-map-key access, and no property access on arbitrary expression results such as `date(2025, 1, 1).year`.</Callout>
+<Callout type="warn">Property access still requires `Value::Map`-like intermediate values, but the language now supports both array indexing (`items[0]`) and chained access on evaluated expressions when the intermediate runtime values support it. Quoted keys in map literals are still not part of the formula syntax.</Callout>
 
 ## Trade-Offs
 

@@ -3,7 +3,7 @@ title: "Function System"
 description: "Use FunctionRegistry and built-ins to extend formulas with domain-specific behavior."
 ---
 
-Functions are the main extension mechanism in `formula_engine`. Instead of hard-coding every operation into the evaluator, the crate stores callable entries in `FunctionRegistry` from `src/functions.rs`, and built-ins are just pre-registered `BuiltinFunction` values returned from modules in `src/builtins`.
+Functions are the main extension mechanism in `bl1z`. Instead of hard-coding every operation into the evaluator, the crate stores callable entries in `FunctionRegistry` from `src/functions.rs`, and built-ins are just pre-registered `BuiltinFunction` values returned from modules in `src/builtins`.
 
 ## What This Concept Is
 
@@ -11,9 +11,9 @@ A `BuiltinFunction` bundles three things:
 
 - `name: String`
 - `arity: usize`
-- `call: fn(&[Value]) -> Result<Value, FormulaError>`
+- `call: fn(&[Value], &FunctionRegistry) -> Result<Value, FormulaError>`
 
-`FunctionRegistry` stores those entries by name in a `HashMap`, and `builtins::register_all` populates the registry with the standard library of string, logic, collection, math, and date helpers.
+`FunctionRegistry` stores those entries by name, and `builtins::register_all` populates the registry with the standard library of string, logic, collection, math, date, higher-order, and set helpers.
 
 ## Why It Exists
 
@@ -37,7 +37,7 @@ flowchart TD
   B -->|found| D[Check arity]
   D -->|wrong| E[E503 FunctionError]
   D -->|ok| F[Evaluate all args]
-  F --> G[call fn(&[Value])]
+  F --> G[call fn(&[Value], &FunctionRegistry)]
   G --> H[Value or FormulaError]
 ```
 
@@ -48,8 +48,8 @@ The [Execution Pipeline](/docs/execution-pipeline) reaches the function system d
 ## Basic Usage: Register All Built-Ins
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::{evaluate, parse, tokenize, Context, FunctionRegistry};
+use bl1z::builtins;
+use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut registry = FunctionRegistry::new();
@@ -66,10 +66,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ## Advanced Usage: Add A Custom Function
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::error::{ErrorKind, FormulaError};
-use formula_engine::functions::BuiltinFunction;
-use formula_engine::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
+use bl1z::builtins;
+use bl1z::error::{ErrorKind, FormulaError};
+use bl1z::functions::BuiltinFunction;
+use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
 
 fn clamp(args: &[Value]) -> Result<Value, FormulaError> {
     match (args.first(), args.get(1), args.get(2)) {
@@ -108,7 +108,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 <Accordions>
 <Accordion title="Why functions use plain function pointers instead of closures or trait objects">
-`BuiltinFunction` stores `call: fn(&[Value]) -> Result<Value, FormulaError>`, which makes registration straightforward and keeps the runtime representation small. Plain function pointers are easy to copy, easy to store in `HashMap`, and avoid lifetime or heap-allocation complexity. The trade-off is that registered functions cannot capture external state directly the way closures can. If you need configuration-dependent behavior, build the function from immutable global data, or expose data through `Context` so the function can read it from its arguments instead of its environment.
+`BuiltinFunction` stores `call: fn(&[Value], &FunctionRegistry) -> Result<Value, FormulaError>`, which keeps registration straightforward while still allowing built-ins to invoke other registered functions through the registry. Plain function pointers are easy to copy and avoid lifetime or heap-allocation complexity. The trade-off is that registered functions cannot capture external state directly the way closures can. If you need configuration-dependent behavior, build the function from immutable global data, or expose data through `Context` so the function can read it from its arguments instead of its environment.
 </Accordion>
 <Accordion title="Why built-ins are opt-in instead of globally available">
 The crate could have shipped a pre-populated global registry, but `src/functions.rs` and `src/builtins/mod.rs` intentionally keep registration explicit. That makes startup predictable and keeps tests or host applications in control of which functions exist. The trade-off is a small amount of boilerplate at the call site, because nearly every application begins with `let mut registry = FunctionRegistry::new(); builtins::register_all(&mut registry);`. In exchange, your application can remove built-ins it does not want to expose or layer custom functions on top without hidden global state.

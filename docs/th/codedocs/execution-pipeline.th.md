@@ -3,7 +3,7 @@ title: "Execution Pipeline"
 description: "เรียนรู้วิธีที่สูตรเคลื่อนที่จากข้อความต้นฉบับไปสู่โทเค็น, โหนด AST และค่ารันไทม์สุดท้าย"
 ---
 
-Execution pipeline คือหัวใจของ `formula_engine` ทุกสูตรจะเคลื่อนที่ผ่านสามขั้นตอนที่ชัดเจนซึ่งถูกเปิดเผยจาก crate root: `tokenize`, `parse` และ `evaluate` สิ่งนี้ไม่ใช่แค่สไตล์ของ API แต่มันสะท้อนถึงการแยกการทำงานจริงใน `src/lexer.rs`, `src/parser.rs` และ `src/eval.rs` และยังช่วยให้คุณควบคุมการทำ caching, การตรวจสอบความถูกต้อง (validation) และการรายงานข้อผิดพลาดได้อย่างมีประสิทธิภาพ
+Execution pipeline คือหัวใจของ `bl1z` ทุกสูตรจะเคลื่อนที่ผ่านสามขั้นตอนที่ชัดเจนซึ่งถูกเปิดเผยจาก crate root: `tokenize`, `parse` และ `evaluate` สิ่งนี้ไม่ใช่แค่สไตล์ของ API แต่มันสะท้อนถึงการแยกการทำงานจริงใน `src/lexer.rs`, `src/parser.rs` และ `src/eval.rs` และยังช่วยให้คุณควบคุมการทำ caching, การตรวจสอบความถูกต้อง (validation) และการรายงานข้อผิดพลาดได้อย่างมีประสิทธิภาพ
 
 ## What This Concept Is
 
@@ -45,8 +45,8 @@ Pipeline นี้ขึ้นอยู่กับ [Runtime Data Model](/docs/r
 ## Basic Usage
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::{evaluate, parse, tokenize, Context, FunctionRegistry};
+use bl1z::builtins;
+use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut registry = FunctionRegistry::new();
@@ -66,8 +66,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 เนื่องจากการทำ parsing และ evaluation แยกออกจากกัน คุณจึงสามารถเฉลี่ยต้นทุนการ parse สำหรับการประมวลผลซ้ำๆ ได้
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
+use bl1z::builtins;
+use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut registry = FunctionRegistry::new();

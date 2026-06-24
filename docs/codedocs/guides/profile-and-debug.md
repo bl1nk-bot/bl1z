@@ -3,7 +3,7 @@ title: "Profile And Debug"
 description: "Measure formula cost and render better diagnostics with the profiling and diagnostics modules."
 ---
 
-This guide covers the operational side of `formula_engine`: understanding why a formula failed and deciding whether a formula is too expensive to evaluate repeatedly.
+This guide covers the operational side of `bl1z`: understanding why a formula failed and deciding whether a formula is too expensive to evaluate repeatedly.
 
 ## Problem
 
@@ -18,8 +18,8 @@ Use `diagnostics::format_error` to render errors with carets, and use `profiling
 ### Render syntax and runtime errors
 
 ```rust
-use formula_engine::diagnostics::format_error;
-use formula_engine::tokenize;
+use bl1z::diagnostics::format_error;
+use bl1z::tokenize;
 
 let source = "a & b";
 let err = tokenize(source).unwrap_err();
@@ -31,9 +31,9 @@ println!("{}", format_error(source, &err));
 ### Measure average stage timings
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::profiling::profile_formula;
-use formula_engine::{Context, FunctionRegistry};
+use bl1z::builtins;
+use bl1z::profiling::profile_formula;
+use bl1z::{Context, FunctionRegistry};
 
 let mut registry = FunctionRegistry::new();
 builtins::register_all(&mut registry);
@@ -46,7 +46,7 @@ println!("{metrics:?}");
 ### Analyze formulas before accepting them
 
 ```rust
-use formula_engine::profiling::analyze_formula;
+use bl1z::profiling::analyze_formula;
 
 let analysis = analyze_formula("sum([1,2,3,4,5,6,7,8,9,10])")?;
 println!("{analysis:?}");
@@ -58,10 +58,10 @@ println!("{analysis:?}");
 ## Complete Example
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::diagnostics::format_error;
-use formula_engine::profiling::{analyze_formula, profile_formula};
-use formula_engine::{Context, FunctionRegistry, tokenize};
+use bl1z::builtins;
+use bl1z::diagnostics::format_error;
+use bl1z::profiling::{analyze_formula, profile_formula};
+use bl1z::{Context, FunctionRegistry, tokenize};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut registry = FunctionRegistry::new();
@@ -71,8 +71,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bad_source = "1 + \"oops\"";
     let err = (|| {
         let tokens = tokenize(bad_source)?;
-        let ast = formula_engine::parse(&tokens)?;
-        formula_engine::evaluate(&ast, &ctx, &registry)
+        let ast = bl1z::parse(&tokens)?;
+        bl1z::evaluate(&ast, &ctx, &registry)
     })()
     .unwrap_err();
 

@@ -1,6 +1,6 @@
 ---
 title: "Register Custom Functions"
-description: "Extend formula_engine with application-specific functions using FunctionRegistry."
+description: "Extend bl1z with application-specific functions using FunctionRegistry."
 ---
 
 This guide covers the most important customization point in the crate: adding your own functions. The built-ins cover generic text, logic, collections, and dates, but real applications usually need functions that encode product rules or domain knowledge.
@@ -18,8 +18,8 @@ Implement a function with the signature required by `BuiltinFunction`, register 
 ### Write a function that accepts `&[Value]`
 
 ```rust
-use formula_engine::error::{ErrorKind, FormulaError};
-use formula_engine::Value;
+use bl1z::error::{ErrorKind, FormulaError};
+use bl1z::Value;
 
 fn percent_of(args: &[Value]) -> Result<Value, FormulaError> {
     match (args.first(), args.get(1)) {
@@ -41,8 +41,8 @@ fn percent_of(args: &[Value]) -> Result<Value, FormulaError> {
 ### Register it with an exact name and arity
 
 ```rust
-use formula_engine::functions::BuiltinFunction;
-use formula_engine::FunctionRegistry;
+use bl1z::functions::BuiltinFunction;
+use bl1z::FunctionRegistry;
 
 let mut registry = FunctionRegistry::new();
 registry.register(BuiltinFunction {
@@ -57,7 +57,7 @@ registry.register(BuiltinFunction {
 ### Combine built-ins and custom functions
 
 ```rust
-use formula_engine::builtins;
+use bl1z::builtins;
 
 builtins::register_all(&mut registry);
 ```
@@ -67,7 +67,7 @@ builtins::register_all(&mut registry);
 ### Evaluate formulas against the custom registry
 
 ```rust
-use formula_engine::{evaluate, parse, tokenize, Context};
+use bl1z::{evaluate, parse, tokenize, Context};
 
 let ast = parse(&tokenize("percent_of(250, 15)")?)?;
 let result = evaluate(&ast, &Context::new(), &registry)?;
@@ -79,10 +79,10 @@ let result = evaluate(&ast, &Context::new(), &registry)?;
 ## Complete Example
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::error::{ErrorKind, FormulaError};
-use formula_engine::functions::BuiltinFunction;
-use formula_engine::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
+use bl1z::builtins;
+use bl1z::error::{ErrorKind, FormulaError};
+use bl1z::functions::BuiltinFunction;
+use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
 
 fn percent_of(args: &[Value]) -> Result<Value, FormulaError> {
     match (args.first(), args.get(1)) {

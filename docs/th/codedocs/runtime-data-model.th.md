@@ -3,11 +3,11 @@ title: "Runtime Data Model"
 description: "ทำความเข้าใจ Value enum, Context storage, spans และรูปแบบ AST ที่นำพาสูตรผ่านกระบวนการประมวลผล"
 ---
 
-โมเดลข้อมูลรันไทม์คือข้อตกลงระหว่าง parser และ evaluator ใน `formula_engine` โมเดลนี้กระจายอยู่ใน `src/value.rs`, `src/context.rs`, `src/ast.rs` และ `src/span.rs` เมื่อรวมกันแล้ว โมดูลเหล่านี้จะตอบคำถามสี่ข้อ: สูตรสามารถสร้างค่าอะไรได้บ้าง, ข้อมูลภายนอกถูกส่งเข้ามาอย่างไร, นิพจน์ถูกแสดงผลอย่างไร และตำแหน่งต้นฉบับถูกรักษาไว้ได้อย่างไร
+โมเดลข้อมูลรันไทม์คือข้อตกลงระหว่าง parser และ evaluator ใน `bl1z` โมเดลนี้กระจายอยู่ใน `src/value.rs`, `src/context.rs`, `src/ast.rs` และ `src/span.rs` เมื่อรวมกันแล้ว โมดูลเหล่านี้จะตอบคำถามสี่ข้อ: สูตรสามารถสร้างค่าอะไรได้บ้าง, ข้อมูลภายนอกถูกส่งเข้ามาอย่างไร, นิพจน์ถูกแสดงผลอย่างไร และตำแหน่งต้นฉบับถูกรักษาไว้ได้อย่างไร
 
 ## What This Concept Is
 
-crate นี้จะลดรูปสูตรให้เหลือเพียง enum รันไทม์เดียวคือ `Value` และแสดงไวยากรณ์ด้วย `Expr` ที่ถูกห่อหุ้มใน `SpannedExpr` ข้อมูลแอปพลิเคชันจะถูกเก็บไว้ใน `Context` ซึ่งก็คือ `HashMap<String, Value>` ส่วน `Span` และ `Position` จะทำหน้าที่แนบพิกัดที่มนุษย์อ่านได้เข้ากับไวยากรณ์และข้อผิดพลาด
+crate นี้จะลดรูปสูตรให้เหลือเพียง enum รันไทม์เดียวคือ `Value` และแสดงไวยากรณ์ด้วย `Expr` ที่ถูกห่อหุ้มใน `SpannedExpr` ข้อมูลแอปพลิเคชันจะถูกเก็บไว้ใน `Context` ซึ่งใช้ที่เก็บข้อมูลแบบ deterministic ต่อ scope พร้อม parent-linked lookup ส่วน `Span` และ `Position` จะทำหน้าที่แนบพิกัดที่มนุษย์อ่านได้เข้ากับไวยากรณ์และข้อผิดพลาด
 
 ## Why It Exists
 
@@ -25,10 +25,15 @@ pub enum Value {
     Null,
     Array(Vec<Value>),
     Map(std::collections::HashMap<String, Value>),
+    Lambda(...),
+    DateTime(jiff::Timestamp),
+    Duration(bl1z::value::Duration),
+    Set(std::collections::HashSet<Value>),
+    Range { start: i64, end: i64, step: i64 },
 }
 ```
 
-`src/context.rs` เก็บตัวแปรไว้ใน `HashMap<String, Value>` ส่วนตัว และเปิดเผยฟังก์ชัน `new`, `set` และ `get` ในระหว่างการประมวลผล `src/eval.rs` จะค้นหาตัวแปรตามชื่อและรองรับการค้นหาแบบใช้จุดแยก (dot-separated lookups) เช่น `user.score` โดยการแบ่งสตริงตัวแปรและท่องเข้าไปในออบเจ็กต์ `Value::Map` ที่ซ้อนกันอยู่
+`src/context.rs` เก็บตัวแปรไว้ใน `BTreeMap<String, Value>` ส่วนตัวต่อหนึ่ง scope และเปิดเผยฟังก์ชัน `new`, `set`, `get`, `with_parent`, `get_all` และ `depth` ในระหว่างการประมวลผล `src/eval.rs` จะค้นหาตัวแปรตามชื่อและรองรับ AST nodes สำหรับ property access และ indexing โดยตรง
 
 `src/ast.rs` กำหนดโครงสร้างต้นไม้ไวยากรณ์ (syntax tree) ส่วนสำคัญคือทุกนิพจน์จะกลายเป็น `SpannedExpr` ซึ่งห่อหุ้ม `Expr` พร้อมด้วย `ExprMeta { span }` อาร์เรย์และแมปเป็นโหนดระดับแรก (first-class nodes) ใน AST ไม่ใช่แค่เทคนิคหลังการประมวลผล
 
@@ -48,6 +53,11 @@ graph TD
   J --> N[Expr::FunctionCall]
   J --> O[Expr::ArrayLiteral]
   J --> P[Expr::MapLiteral]
+  J --> Q[Expr::PropertyAccess]
+  J --> R[Expr::IndexAccess]
+  J --> S[Expr::LambdaExpr]
+  J --> T[Expr::FunctionDef]
+  J --> U[Expr::Sequence]
 ```
 
 ## How It Relates To Other Concepts
@@ -57,8 +67,8 @@ graph TD
 ## Basic Usage: Supplying Variables
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
+use bl1z::builtins;
+use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut registry = FunctionRegistry::new();
@@ -79,8 +89,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ## Advanced Usage: Nested Maps With Dot Access
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
+use bl1z::builtins;
+use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
 use std::collections::HashMap;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -105,7 +115,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-<Callout type="warn">การเข้าถึงด้วยจุด (Dot access) จะทำงานเมื่อตัวแปรราก (root variable) มาจาก `Context` และแต่ละค่าระหว่างทางเป็น `Value::Map` เท่านั้น ไม่มีการรองรับไวยากรณ์การเข้าถึงดัชนีอาร์เรย์ (array indexing), ไม่มีการเข้าถึงคีย์แมปแบบใส่เครื่องหมายอัญประกาศ และไม่มีการเข้าถึง property ของผลลัพธ์จากนิพจน์ทั่วไป เช่น `date(2025, 1, 1).year`</Callout>
+<Callout type="warn">การเข้าถึง property ยังคงต้องอาศัยค่ากลางที่เป็น `Value::Map` หรือค่าที่รองรับจริงในรันไทม์ แต่ภาษาปัจจุบันรองรับทั้ง array indexing (`items[0]`) และ chained access บนผลลัพธ์ที่ประเมินแล้วได้ คีย์แบบใส่เครื่องหมายอัญประกาศใน map literals ยังไม่ใช่ส่วนหนึ่งของไวยากรณ์สูตร</Callout>
 
 ## Trade-Offs
 

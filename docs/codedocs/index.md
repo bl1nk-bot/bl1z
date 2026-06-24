@@ -3,7 +3,7 @@ title: "Getting Started"
 description: "Build, parse, and evaluate Notion-like formulas in Rust with a small extensible runtime."
 ---
 
-`formula_engine` is a Rust crate for tokenizing, parsing, and evaluating Notion-like formula expressions with variables, built-in functions, arrays, maps, and date helpers.
+`bl1z` is a Rust crate for tokenizing, parsing, and evaluating Notion-like formula expressions with variables, built-in functions, collections, access chaining, lambdas, user-defined functions, and native date/time support.
 
 ## The Problem
 
@@ -14,11 +14,11 @@ description: "Build, parse, and evaluate Notion-like formulas in Rust with a sma
 
 ## The Solution
 
-`formula_engine` splits the job into clear stages exposed by the crate root in [`src/lib.rs`](https://github.com/bl1nk-bot/poe-sdk-rs/blob/main/src/lib.rs): `tokenize`, `parse`, and `evaluate`. You pass a formula string into the lexer, parse the token stream into a `SpannedExpr`, and evaluate the AST against a `Context` plus a `FunctionRegistry`. The same registry can hold built-ins from [`src/builtins`](https://github.com/bl1nk-bot/poe-sdk-rs/tree/main/src/builtins) and your own functions.
+`bl1z` splits the job into clear stages exposed by the crate root in [`src/lib.rs`](https://github.com/bl1nk-bot/bl1z/blob/main/src/lib.rs): `tokenize`, `parse`, and `evaluate`. You pass a formula string into the lexer, parse the token stream into a `SpannedExpr`, and evaluate the AST against a `Context` plus a `FunctionRegistry`. The same registry can hold built-ins from [`src/builtins`](https://github.com/bl1nk-bot/bl1z/tree/main/src/builtins) and your own functions.
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
+use bl1z::builtins;
+use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut registry = FunctionRegistry::new();
@@ -50,7 +50,7 @@ String("pass")
 
 ```toml
 [dependencies]
-formula_engine = "0.1.0"
+bl1z = "0.2.15"
 ```
 
 </Tab>
@@ -58,7 +58,7 @@ formula_engine = "0.1.0"
 
 ```toml
 [dependencies]
-formula_engine = { git = "https://github.com/bl1nk-bot/poe-sdk-rs", branch = "main" }
+bl1z = { git = "https://github.com/bl1nk-bot/bl1z", branch = "main" }
 ```
 
 </Tab>
@@ -66,7 +66,7 @@ formula_engine = { git = "https://github.com/bl1nk-bot/poe-sdk-rs", branch = "ma
 
 ```toml
 [dependencies]
-formula_engine = { path = "../poe-sdk-rs" }
+bl1z = { path = "../bl1z" }
 ```
 
 </Tab>
@@ -74,7 +74,7 @@ formula_engine = { path = "../poe-sdk-rs" }
 
 ```toml
 [workspace.dependencies]
-formula_engine = { path = "poe-sdk-rs" }
+bl1z = { path = "bl1z" }
 ```
 
 </Tab>
@@ -92,8 +92,8 @@ The minimum viable flow is:
 4. `tokenize`, then `parse`, then `evaluate`.
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
+use bl1z::builtins;
+use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut registry = FunctionRegistry::new();
@@ -126,17 +126,17 @@ If you are evaluating the same formula repeatedly, keep the parsed AST and call 
 ## Key Features
 
 - Layered pipeline: lexer, parser, evaluator, diagnostics, and profiling helpers are exposed as separate modules.
-- Runtime values support `Number`, `String`, `Bool`, `Null`, `Array`, and nested `Map`.
-- Built-ins cover string, logic, collection, and date operations and are registered explicitly with `builtins::register_all`.
-- `Context` resolves variables at runtime, including dot-separated access into nested `Value::Map` structures.
+- Runtime values support `Number`, `String`, `Bool`, `Null`, `Array`, `Map`, `DateTime`, `Duration`, `Set`, `Range`, and runtime lambdas.
+- Built-ins cover string, math, logic, collection, date, higher-order, and set operations and are registered explicitly with `builtins::register_all`.
+- `Context` resolves variables at runtime, including chained access such as `user.profile.score` and indexed access such as `items[0]`.
 - Errors carry an `ErrorKind`, a stable code like `E401`, and optional `Span` information for formatted diagnostics.
-- The crate includes lightweight profiling utilities for measuring and analyzing formula cost.
+- The crate includes config-aware parsing/evaluation, recovery parsing, caching, plugins, and lightweight profiling utilities.
 
 ## Supported Environments
 
-- Rust `1.70+` from the project README badge.
-- Edition `2021`, as declared in [`Cargo.toml`](https://github.com/bl1nk-bot/poe-sdk-rs/blob/main/Cargo.toml).
-- Standard library environments. The crate uses `std::collections::HashMap`, `std::time`, and the `jiff` date library.
+- Rust `1.90.0+` from the project README badge.
+- Edition `2021`, as declared in [`Cargo.toml`](https://github.com/bl1nk-bot/bl1z/blob/main/Cargo.toml).
+- Standard library environments. The crate uses `std::time`, `jiff`, and standard collection types for runtime values and context storage.
 
 ## Where To Go Next
 

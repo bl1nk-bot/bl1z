@@ -3,7 +3,7 @@ title: "Getting Started"
 description: "สร้าง, วิเคราะห์ และประมวลผลสูตรแบบ Notion ใน Rust ด้วยรันไทม์ขนาดเล็กที่ขยายความสามารถได้"
 ---
 
-`formula_engine` เป็น Rust crate สำหรับการทำ tokenizing, parsing และประมวลผล (evaluating) นิพจน์สูตรแบบ Notion ที่รองรับตัวแปร, ฟังก์ชันพื้นฐาน, อาร์เรย์, แมป และตัวช่วยด้านวันที่
+`bl1z` เป็น Rust crate สำหรับการทำ tokenizing, parsing และประมวลผล (evaluating) นิพจน์สูตรแบบ Notion ที่รองรับตัวแปร, ฟังก์ชันพื้นฐาน, คอลเลกชัน, access chaining, lambda, ฟังก์ชันนิยามโดยผู้ใช้ และชนิดข้อมูลวันเวลาแบบ native
 
 ## The Problem
 
@@ -14,11 +14,11 @@ description: "สร้าง, วิเคราะห์ และประม
 
 ## The Solution
 
-`formula_engine` แบ่งงานออกเป็นขั้นตอนที่ชัดเจนซึ่งถูกเปิดเผยโดย crate root ใน [`src/lib.rs`](https://github.com/bl1nk-bot/poe-sdk-rs/blob/main/src/lib.rs): `tokenize`, `parse` และ `evaluate` คุณส่งสตริงสูตรเข้าไปใน lexer, parse โทเค็นสตรีมให้เป็น `SpannedExpr` และประมวลผล AST กับ `Context` พร้อมกับ `FunctionRegistry` โดย registry เดียวกันนี้สามารถเก็บได้ทั้ง built-ins จาก [`src/builtins`](https://github.com/bl1nk-bot/poe-sdk-rs/tree/main/src/builtins) และฟังก์ชันของคุณเอง
+`bl1z` แบ่งงานออกเป็นขั้นตอนที่ชัดเจนซึ่งถูกเปิดเผยโดย crate root ใน [`src/lib.rs`](https://github.com/bl1nk-bot/bl1z/blob/main/src/lib.rs): `tokenize`, `parse` และ `evaluate` คุณส่งสตริงสูตรเข้าไปใน lexer, parse โทเค็นสตรีมให้เป็น `SpannedExpr` และประมวลผล AST กับ `Context` พร้อมกับ `FunctionRegistry` โดย registry เดียวกันนี้สามารถเก็บได้ทั้ง built-ins จาก [`src/builtins`](https://github.com/bl1nk-bot/bl1z/tree/main/src/builtins) และฟังก์ชันของคุณเอง
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
+use bl1z::builtins;
+use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut registry = FunctionRegistry::new();
@@ -50,7 +50,7 @@ String("pass")
 
 ```toml
 [dependencies]
-formula_engine = "0.1.0"
+bl1z = "0.2.15"
 ```
 
 </Tab>
@@ -58,7 +58,7 @@ formula_engine = "0.1.0"
 
 ```toml
 [dependencies]
-formula_engine = { git = "https://github.com/bl1nk-bot/poe-sdk-rs", branch = "main" }
+bl1z = { git = "https://github.com/bl1nk-bot/bl1z", branch = "main" }
 ```
 
 </Tab>
@@ -66,7 +66,7 @@ formula_engine = { git = "https://github.com/bl1nk-bot/poe-sdk-rs", branch = "ma
 
 ```toml
 [dependencies]
-formula_engine = { path = "../poe-sdk-rs" }
+bl1z = { path = "../bl1z" }
 ```
 
 </Tab>
@@ -74,7 +74,7 @@ formula_engine = { path = "../poe-sdk-rs" }
 
 ```toml
 [workspace.dependencies]
-formula_engine = { path = "poe-sdk-rs" }
+bl1z = { path = "bl1z" }
 ```
 
 </Tab>
@@ -92,8 +92,8 @@ formula_engine = { path = "poe-sdk-rs" }
 4. เรียกใช้ `tokenize`, ตามด้วย `parse`, แล้วจึง `evaluate`
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
+use bl1z::builtins;
+use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut registry = FunctionRegistry::new();
@@ -126,17 +126,17 @@ result: String("ALICE")
 ## Key Features
 
 - Pipeline แบบแบ่งชั้น: lexer, parser, evaluator, diagnostics และ profiling helpers ถูกเปิดเผยเป็นโมดูลแยกกัน
-- ค่ารันไทม์รองรับ `Number`, `String`, `Bool`, `Null`, `Array` และ `Map` ที่ซ้อนกันได้
-- Built-ins ครอบคลุมการทำงานด้านสตริง, ตรรกะ, คอลเลกชัน และวันที่ และถูกลงทะเบียนอย่างชัดเจนด้วย `builtins::register_all`
-- `Context` แก้ไขตัวแปรในขณะรันไทม์ รวมถึงการเข้าถึงแบบใช้จุดแยก (dot-separated access) เข้าไปยังโครงสร้าง `Value::Map` ที่ซ้อนกัน
+- ค่ารันไทม์รองรับ `Number`, `String`, `Bool`, `Null`, `Array`, `Map`, `DateTime`, `Duration`, `Set`, `Range` และ lambda ในขณะรันไทม์
+- Built-ins ครอบคลุมการทำงานด้านสตริง, คณิตศาสตร์, ตรรกะ, คอลเลกชัน, วันที่, higher-order และเซต และถูกลงทะเบียนอย่างชัดเจนด้วย `builtins::register_all`
+- `Context` แก้ไขตัวแปรในขณะรันไทม์ และรองรับ chained access เช่น `user.profile.score` รวมถึง indexed access เช่น `items[0]`
 - ข้อผิดพลาดจะเก็บข้อมูล `ErrorKind`, รหัสที่เสถียรเช่น `E401` และข้อมูล `Span` (ไม่บังคับ) สำหรับการวินิจฉัยที่มีรูปแบบชัดเจน
-- crate นี้มีเครื่องมือเก็บสถิติน้ำหนักเบา (profiling utilities) สำหรับการวัดผลและวิเคราะห์ต้นทุนของสูตร
+- crate นี้มี config-aware parsing/evaluation, recovery parsing, caching, plugins และเครื่องมือ profiling แบบน้ำหนักเบา
 
 ## Supported Environments
 
-- Rust `1.70+` ตามเครื่องหมาย README ของโปรเจกต์
-- Edition `2021` ตามที่ประกาศไว้ใน [`Cargo.toml`](https://github.com/bl1nk-bot/poe-sdk-rs/blob/main/Cargo.toml)
-- สภาพแวดล้อมไลบรารีมาตรฐาน crate นี้ใช้ `std::collections::HashMap`, `std::time` และไลบรารีวันที่ `jiff`
+- Rust `1.90.0+` ตามเครื่องหมาย README ของโปรเจกต์
+- Edition `2021` ตามที่ประกาศไว้ใน [`Cargo.toml`](https://github.com/bl1nk-bot/bl1z/blob/main/Cargo.toml)
+- สภาพแวดล้อมไลบรารีมาตรฐาน crate นี้ใช้ `std::time`, `jiff` และคอลเลกชันมาตรฐานสำหรับค่ารันไทม์และการเก็บข้อมูลใน context
 
 ## Where To Go Next
 

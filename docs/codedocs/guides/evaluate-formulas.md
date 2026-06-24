@@ -11,7 +11,7 @@ You need to evaluate expressions such as pricing rules, score thresholds, or fea
 
 ## Solution
 
-Use the explicit pipeline from `formula_engine`: create a registry, register built-ins, prepare a `Context`, tokenize the source, parse the tokens, and evaluate the AST. This aligns with the crate’s implementation in `src/lib.rs` and gives you clean hooks for validation and diagnostics.
+Use the explicit pipeline from `bl1z`: create a registry, register built-ins, prepare a `Context`, tokenize the source, parse the tokens, and evaluate the AST. This aligns with the crate’s implementation in `src/lib.rs` and gives you clean hooks for validation and diagnostics.
 
 <Steps>
 <Step>
@@ -19,12 +19,12 @@ Use the explicit pipeline from `formula_engine`: create a registry, register bui
 
 ```toml
 [dependencies]
-formula_engine = "0.1.0"
+bl1z = "0.2.15"
 ```
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::FunctionRegistry;
+use bl1z::builtins;
+use bl1z::FunctionRegistry;
 
 let mut registry = FunctionRegistry::new();
 builtins::register_all(&mut registry);
@@ -35,7 +35,7 @@ builtins::register_all(&mut registry);
 ### Build a runtime context from application data
 
 ```rust
-use formula_engine::{Context, Value};
+use bl1z::{Context, Value};
 
 let mut ctx = Context::new();
 ctx.set("subtotal", Value::Number(180.0));
@@ -48,7 +48,7 @@ ctx.set("customer_name", Value::String("Alice".to_string()));
 ### Tokenize, parse, and evaluate the formula
 
 ```rust
-use formula_engine::{evaluate, parse, tokenize};
+use bl1z::{evaluate, parse, tokenize};
 
 let source = r#"if(vip && subtotal > 100, upper(customer_name), "guest")"#;
 let tokens = tokenize(source)?;
@@ -61,7 +61,7 @@ let result = evaluate(&ast, &ctx, &registry)?;
 ### Handle errors in one place
 
 ```rust
-use formula_engine::diagnostics::format_error;
+use bl1z::diagnostics::format_error;
 
 match tokenize(source)
     .and_then(|tokens| parse(&tokens))
@@ -78,9 +78,9 @@ match tokenize(source)
 ## Complete Example
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::diagnostics::format_error;
-use formula_engine::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
+use bl1z::builtins;
+use bl1z::diagnostics::format_error;
+use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
 
 fn main() {
     let mut registry = FunctionRegistry::new();

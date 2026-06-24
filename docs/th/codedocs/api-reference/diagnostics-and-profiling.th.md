@@ -5,7 +5,7 @@ description: "เอกสารอ้างอิงสำหรับข้อ
 
 หน้านี้ครอบคลุมโมดูลสนับสนุนที่ทำงานควบคู่กับตัววิเคราะห์ไวยากรณ์และตัวประเมินค่า: `src/error.rs`, `src/diagnostics.rs` และ `src/profiling.rs`
 
-## `formula_engine::error`
+## `bl1z::error`
 
 ### `ErrorKind`
 
@@ -22,7 +22,7 @@ pub enum ErrorKind {
 
 ### `FormulaError`
 
-เส้นทางการนำเข้า (Import path): `formula_engine::FormulaError` หรือ `formula_engine::error::FormulaError`
+เส้นทางการนำเข้า (Import path): `bl1z::FormulaError` หรือ `bl1z::error::FormulaError`
 
 ```rust
 pub struct FormulaError {
@@ -46,11 +46,11 @@ pub fn new(kind: ErrorKind, code: &str, message: &str, span: Option<Span>) -> Se
 | `message` | `&str` | — | ข้อความอธิบายที่มนุษย์อ่านเข้าใจ |
 | `span` | `Option<Span>` | — | ตำแหน่งในซอร์สโค้ด (หากมี) |
 
-## `formula_engine::diagnostics`
+## `bl1z::diagnostics`
 
 ### `format_error`
 
-เส้นทางการนำเข้า (Import path): `formula_engine::diagnostics::format_error`
+เส้นทางการนำเข้า (Import path): `bl1z::diagnostics::format_error`
 
 ```rust
 pub fn format_error(source: &str, error: &FormulaError) -> String
@@ -64,14 +64,14 @@ pub fn format_error(source: &str, error: &FormulaError) -> String
 ตัวอย่าง:
 
 ```rust
-use formula_engine::diagnostics::format_error;
+use bl1z::diagnostics::format_error;
 
 let source = "a | b";
-let err = formula_engine::tokenize(source).unwrap_err();
+let err = bl1z::tokenize(source).unwrap_err();
 println!("{}", format_error(source, &err));
 ```
 
-## `formula_engine::profiling`
+## `bl1z::profiling`
 
 ### `PerformanceMetrics`
 
@@ -87,7 +87,7 @@ pub struct PerformanceMetrics {
 
 ### `profile_formula`
 
-เส้นทางการนำเข้า (Import path): `formula_engine::profiling::profile_formula`
+เส้นทางการนำเข้า (Import path): `bl1z::profiling::profile_formula`
 
 ```rust
 pub fn profile_formula(
@@ -127,7 +127,7 @@ pub enum FormulaComplexity {
 
 ### `analyze_formula`
 
-เส้นทางการนำเข้า (Import path): `formula_engine::profiling::analyze_formula`
+เส้นทางการนำเข้า (Import path): `bl1z::profiling::analyze_formula`
 
 ```rust
 pub fn analyze_formula(formula: &str) -> Result<OptimizationSuggestions, FormulaError>
@@ -147,9 +147,9 @@ pub fn analyze_formula(formula: &str) -> Result<OptimizationSuggestions, Formula
 ## ตัวอย่าง (Example)
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::profiling::{analyze_formula, profile_formula};
-use formula_engine::{Context, FunctionRegistry};
+use bl1z::builtins;
+use bl1z::profiling::{analyze_formula, profile_formula};
+use bl1z::{Context, FunctionRegistry};
 
 let mut registry = FunctionRegistry::new();
 builtins::register_all(&mut registry);

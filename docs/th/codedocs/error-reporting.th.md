@@ -3,7 +3,7 @@ title: "Error Reporting"
 description: "ดูวิธีที่ FormulaError, spans, diagnostics และ profiling helpers สนับสนุนการดีบั๊กและการตอบสนองต่อผู้ใช้"
 ---
 
-การจัดการข้อผิดพลาดใน `formula_engine` ถูกออกแบบให้มีโครงสร้างที่ชัดเจน ไม่ใช่การจัดการแบบเฉพาะหน้า (ad hoc) crate นี้ใช้ `FormulaError` จาก `src/error.rs` สำหรับความล้มเหลวในการวิเคราะห์คำศัพท์ (lexing), การวิเคราะห์ไวยากรณ์ (parsing), การประมวลผล (evaluation), ฟังก์ชัน และบริบท (context) และยังคงรักษาข้อมูล `Span` ไว้ทุกที่ที่เป็นไปได้ เพื่อให้ผู้เรียกสามารถเชื่อมโยงความล้มเหลวกลับไปยังสตริงสูตรต้นฉบับได้
+การจัดการข้อผิดพลาดใน `bl1z` ถูกออกแบบให้มีโครงสร้างที่ชัดเจน ไม่ใช่การจัดการแบบเฉพาะหน้า (ad hoc) crate นี้ใช้ `FormulaError` จาก `src/error.rs` สำหรับความล้มเหลวในการวิเคราะห์คำศัพท์ (lexing), การวิเคราะห์ไวยากรณ์ (parsing), การประมวลผล (evaluation), ฟังก์ชัน และบริบท (context) และยังคงรักษาข้อมูล `Span` ไว้ทุกที่ที่เป็นไปได้ เพื่อให้ผู้เรียกสามารถเชื่อมโยงความล้มเหลวกลับไปยังสตริงสูตรต้นฉบับได้
 
 ## What This Concept Is
 
@@ -44,8 +44,8 @@ flowchart TD
 ## Basic Usage: Render A User-Facing Diagnostic
 
 ```rust
-use formula_engine::diagnostics::format_error;
-use formula_engine::tokenize;
+use bl1z::diagnostics::format_error;
+use bl1z::tokenize;
 
 fn main() {
     let source = r#""unterminated"#;
@@ -67,9 +67,9 @@ Example output:
 ## Advanced Usage: Match On Error Kind And Code
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::error::ErrorKind;
-use formula_engine::{evaluate, parse, tokenize, Context, FunctionRegistry};
+use bl1z::builtins;
+use bl1z::error::ErrorKind;
+use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry};
 
 fn main() {
     let mut registry = FunctionRegistry::new();

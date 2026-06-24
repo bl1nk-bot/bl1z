@@ -18,7 +18,7 @@ Build a `Context` with nested `Value::Map` and `Value::Array` values, then use c
 ### Model nested data with `Value::Map`
 
 ```rust
-use formula_engine::{Context, Value};
+use bl1z::{Context, Value};
 use std::collections::HashMap;
 
 let mut profile = HashMap::new();
@@ -64,7 +64,7 @@ let label_formula = r#"if(avg(user.profile.scores) > 88, upper(user.profile.name
 ## Complete Example
 
 ```rust
-use formula_engine::builtins;
+use bl1z::builtins;
 use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
 use std::collections::HashMap;
 

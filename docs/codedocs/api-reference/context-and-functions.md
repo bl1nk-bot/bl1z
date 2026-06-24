@@ -5,7 +5,7 @@ description: "Reference Context, BuiltinFunction, FunctionRegistry, and builtins
 
 This page documents the runtime configuration API exposed through `src/context.rs`, `src/functions.rs`, and `src/builtins/mod.rs`.
 
-## `formula_engine::Context`
+## `bl1z::Context`
 
 Source: `src/context.rs`
 
@@ -15,11 +15,11 @@ Source: `src/context.rs`
 pub struct Context
 ```
 
-Stores variables in a private `HashMap<String, Value>`.
+Stores variables in a private `BTreeMap<String, Value>` for deterministic iteration and supports parent-linked scopes for shadowing and lookup.
 
 ### `Context::new`
 
-Import path: `formula_engine::Context::new`
+Import path: `bl1z::Context::new`
 
 ```rust
 pub fn new() -> Self
@@ -58,7 +58,7 @@ ctx.set("enabled", Value::Bool(true));
 assert_eq!(ctx.get("enabled"), Some(&Value::Bool(true)));
 ```
 
-## `formula_engine::functions::BuiltinFunction`
+## `bl1z::functions::BuiltinFunction`
 
 Source: `src/functions.rs`
 
@@ -66,7 +66,7 @@ Source: `src/functions.rs`
 pub struct BuiltinFunction {
     pub name: String,
     pub arity: usize,
-    pub call: fn(&[Value]) -> Result<Value, FormulaError>,
+    pub call: fn(&[Value], &FunctionRegistry) -> Result<Value, FormulaError>,
 }
 ```
 
@@ -75,9 +75,9 @@ This is the unit of registration in `FunctionRegistry`.
 Example:
 
 ```rust
-use formula_engine::error::{ErrorKind, FormulaError};
-use formula_engine::functions::BuiltinFunction;
-use formula_engine::Value;
+use bl1z::error::{ErrorKind, FormulaError};
+use bl1z::functions::BuiltinFunction;
+use bl1z::Value;
 
 fn double(args: &[Value]) -> Result<Value, FormulaError> {
     match args.first() {
@@ -93,7 +93,7 @@ let func = BuiltinFunction {
 };
 ```
 
-## `formula_engine::FunctionRegistry`
+## `bl1z::FunctionRegistry`
 
 Source: `src/functions.rs`
 
@@ -134,18 +134,18 @@ pub fn find(&self, name: &str) -> Option<&BuiltinFunction>
 Example:
 
 ```rust
-use formula_engine::{FunctionRegistry, builtins};
+use bl1z::{FunctionRegistry, builtins};
 
 let mut registry = FunctionRegistry::new();
 builtins::register_all(&mut registry);
 assert!(registry.find("len").is_some());
 ```
 
-## `formula_engine::builtins::register_all`
+## `bl1z::builtins::register_all`
 
 Source: `src/builtins/mod.rs`
 
-Import path: `formula_engine::builtins::register_all`
+Import path: `bl1z::builtins::register_all`
 
 ```rust
 pub fn register_all(registry: &mut FunctionRegistry)
@@ -157,19 +157,21 @@ pub fn register_all(registry: &mut FunctionRegistry)
 
 Registers built-ins from:
 
-- `formula_engine::builtins::string`
-- `formula_engine::builtins::math`
-- `formula_engine::builtins::logic`
-- `formula_engine::builtins::collection`
-- `formula_engine::builtins::date`
+- `bl1z::builtins::string`
+- `bl1z::builtins::math`
+- `bl1z::builtins::logic`
+- `bl1z::builtins::collection`
+- `bl1z::builtins::date`
+- `bl1z::builtins::higher_order`
+- `bl1z::builtins::sets`
 
 ## Common Pattern: Built-Ins Plus Custom Functions
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::error::{ErrorKind, FormulaError};
-use formula_engine::functions::BuiltinFunction;
-use formula_engine::{FunctionRegistry, Value};
+use bl1z::builtins;
+use bl1z::error::{ErrorKind, FormulaError};
+use bl1z::functions::BuiltinFunction;
+use bl1z::{FunctionRegistry, Value};
 
 fn is_even(args: &[Value]) -> Result<Value, FormulaError> {
     match args.first() {

@@ -3,7 +3,7 @@ title: "Function System"
 description: "ใช้ FunctionRegistry และ built-ins เพื่อขยายสูตรด้วยพฤติกรรมเฉพาะของโดเมน"
 ---
 
-ฟังก์ชันคือกลไกหลักในการขยายความสามารถใน `formula_engine` แทนที่จะเขียนโค้ดการทำงานทุกอย่างลงใน evaluator โดยตรง crate นี้จะจัดเก็บรายการที่สามารถเรียกใช้งานได้ใน `FunctionRegistry` จาก `src/functions.rs` และ built-ins เป็นเพียงค่า `BuiltinFunction` ที่ลงทะเบียนไว้ล่วงหน้าซึ่งส่งกลับมาจากโมดูลต่างๆ ใน `src/builtins`
+ฟังก์ชันคือกลไกหลักในการขยายความสามารถใน `bl1z` แทนที่จะเขียนโค้ดการทำงานทุกอย่างลงใน evaluator โดยตรง crate นี้จะจัดเก็บรายการที่สามารถเรียกใช้งานได้ใน `FunctionRegistry` จาก `src/functions.rs` และ built-ins เป็นเพียงค่า `BuiltinFunction` ที่ลงทะเบียนไว้ล่วงหน้าซึ่งส่งกลับมาจากโมดูลต่างๆ ใน `src/builtins`
 
 ## What This Concept Is
 
@@ -48,8 +48,8 @@ flowchart TD
 ## Basic Usage: Register All Built-Ins
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::{evaluate, parse, tokenize, Context, FunctionRegistry};
+use bl1z::builtins;
+use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut registry = FunctionRegistry::new();
@@ -66,10 +66,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ## Advanced Usage: Add A Custom Function
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::error::{ErrorKind, FormulaError};
-use formula_engine::functions::BuiltinFunction;
-use formula_engine::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
+use bl1z::builtins;
+use bl1z::error::{ErrorKind, FormulaError};
+use bl1z::functions::BuiltinFunction;
+use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
 
 fn clamp(args: &[Value]) -> Result<Value, FormulaError> {
     match (args.first(), args.get(1), args.get(2)) {

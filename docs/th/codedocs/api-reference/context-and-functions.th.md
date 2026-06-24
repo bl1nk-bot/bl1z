@@ -5,7 +5,7 @@ description: "เอกสารอ้างอิงสำหรับ Context,
 
 หน้านี้อธิบายรายละเอียด API สำหรับการตั้งค่ารันไทม์ที่เปิดเผยผ่าน `src/context.rs`, `src/functions.rs` และ `src/builtins/mod.rs`
 
-## `formula_engine::Context`
+## `bl1z::Context`
 
 ไฟล์ต้นฉบับ: `src/context.rs`
 
@@ -15,11 +15,11 @@ description: "เอกสารอ้างอิงสำหรับ Context,
 pub struct Context
 ```
 
-ทำหน้าที่จัดเก็บตัวแปรใน `HashMap<String, Value>` ส่วนตัว
+ทำหน้าที่จัดเก็บตัวแปรใน `BTreeMap<String, Value>` ส่วนตัวเพื่อให้ลำดับการวนซ้ำคงที่ และรองรับ parent-linked scopes สำหรับการ shadowing และการค้นหาค่า
 
 ### `Context::new`
 
-เส้นทางการนำเข้า (Import path): `formula_engine::Context::new`
+เส้นทางการนำเข้า (Import path): `bl1z::Context::new`
 
 ```rust
 pub fn new() -> Self
@@ -58,7 +58,7 @@ ctx.set("enabled", Value::Bool(true));
 assert_eq!(ctx.get("enabled"), Some(&Value::Bool(true)));
 ```
 
-## `formula_engine::functions::BuiltinFunction`
+## `bl1z::functions::BuiltinFunction`
 
 ไฟล์ต้นฉบับ: `src/functions.rs`
 
@@ -66,7 +66,7 @@ assert_eq!(ctx.get("enabled"), Some(&Value::Bool(true)));
 pub struct BuiltinFunction {
     pub name: String,
     pub arity: usize,
-    pub call: fn(&[Value]) -> Result<Value, FormulaError>,
+    pub call: fn(&[Value], &FunctionRegistry) -> Result<Value, FormulaError>,
 }
 ```
 
@@ -75,9 +75,9 @@ pub struct BuiltinFunction {
 ตัวอย่าง:
 
 ```rust
-use formula_engine::error::{ErrorKind, FormulaError};
-use formula_engine::functions::BuiltinFunction;
-use formula_engine::Value;
+use bl1z::error::{ErrorKind, FormulaError};
+use bl1z::functions::BuiltinFunction;
+use bl1z::Value;
 
 fn double(args: &[Value]) -> Result<Value, FormulaError> {
     match args.first() {
@@ -93,7 +93,7 @@ let func = BuiltinFunction {
 };
 ```
 
-## `formula_engine::FunctionRegistry`
+## `bl1z::FunctionRegistry`
 
 ไฟล์ต้นฉบับ: `src/functions.rs`
 
@@ -134,18 +134,18 @@ pub fn find(&self, name: &str) -> Option<&BuiltinFunction>
 ตัวอย่าง:
 
 ```rust
-use formula_engine::{FunctionRegistry, builtins};
+use bl1z::{FunctionRegistry, builtins};
 
 let mut registry = FunctionRegistry::new();
 builtins::register_all(&mut registry);
 assert!(registry.find("len").is_some());
 ```
 
-## `formula_engine::builtins::register_all`
+## `bl1z::builtins::register_all`
 
 ไฟล์ต้นฉบับ: `src/builtins/mod.rs`
 
-เส้นทางการนำเข้า (Import path): `formula_engine::builtins::register_all`
+เส้นทางการนำเข้า (Import path): `bl1z::builtins::register_all`
 
 ```rust
 pub fn register_all(registry: &mut FunctionRegistry)
@@ -157,19 +157,21 @@ pub fn register_all(registry: &mut FunctionRegistry)
 
 ลงทะเบียนฟังก์ชันภายในจาก:
 
-- `formula_engine::builtins::string`
-- `formula_engine::builtins::math`
-- `formula_engine::builtins::logic`
-- `formula_engine::builtins::collection`
-- `formula_engine::builtins::date`
+- `bl1z::builtins::string`
+- `bl1z::builtins::math`
+- `bl1z::builtins::logic`
+- `bl1z::builtins::collection`
+- `bl1z::builtins::date`
+- `bl1z::builtins::higher_order`
+- `bl1z::builtins::sets`
 
 ## รูปแบบการใช้งานทั่วไป: ฟังก์ชันภายในร่วมกับฟังก์ชันกำหนดเอง
 
 ```rust
-use formula_engine::builtins;
-use formula_engine::error::{ErrorKind, FormulaError};
-use formula_engine::functions::BuiltinFunction;
-use formula_engine::{FunctionRegistry, Value};
+use bl1z::builtins;
+use bl1z::error::{ErrorKind, FormulaError};
+use bl1z::functions::BuiltinFunction;
+use bl1z::{FunctionRegistry, Value};
 
 fn is_even(args: &[Value]) -> Result<Value, FormulaError> {
     match args.first() {
