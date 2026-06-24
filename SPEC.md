@@ -238,7 +238,28 @@ round(n, d), ceil(n), floor(n), sqrt(n), pow(b, e), log(n, base), sin, cos, tan,
 
 ---
 
-11) Error Handling Extensions
+11) Error Recovery + Security Limits (Phase 15)
+
+```rust
+pub struct EngineConfig {
+    pub max_formula_length: usize,  // default: 10,000
+    pub max_depth: usize,           // default: 100
+    pub max_time_ms: Option<u64>,   // default: None
+}
+
+pub struct RecoveryResult {
+    pub ast: Option<SpannedExpr>,
+    pub errors: Vec<FormulaError>,
+}
+```
+
+**`parse_with_recovery()`** - Collects all parse errors instead of fail-fast, skipping to next semicolon on error.
+**`evaluate_with_config()`** - Enforces `max_depth` and `max_time_ms` limits during evaluation.
+**Error Code E901** - Recovery error code for partial parse results.
+
+---
+
+12) Error Handling Extensions
 
 ```rust
 pub enum ErrorKind {
@@ -253,12 +274,13 @@ pub enum ErrorKind {
     LambdaArityMismatch,
     PluginError,
     SerializationError,
+    RecoveryError, // E901
 }
 ```
 
 ---
 
-12) Testing & CI
+13) Testing & CI
 
 · Unit tests สำหรับ AST parsing ทุกโหนดใหม่
 · Integration tests สำหรับ higher-order functions กับ lambda
@@ -268,7 +290,7 @@ pub enum ErrorKind {
 
 ---
 
-13) Migration from V1
+14) Migration from V1
 
 · API เดิมทั้งหมดยังคงใช้ได้
 · Value::DateTime และ Value::Duration เพิ่มเข้ามา แต่ไม่บังคับใช้
@@ -277,7 +299,7 @@ pub enum ErrorKind {
 
 ---
 
-14) Future (Session 3+)
+15) Future (Session 3+)
 
 · JIT/Cranelift compilation
 · WebAssembly-based plugin sandbox

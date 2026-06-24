@@ -238,7 +238,28 @@ round(n, d), ceil(n), floor(n), sqrt(n), pow(b, e), log(n, base), sin, cos, tan,
 
 ---
 
-11) ส่วนขยายการจัดการข้อผิดพลาด (Error Handling Extensions)
+12) การกู้คืนข้อผิดพลาด + ขีดจำกัดด้านความปลอดภัย (Phase 15)
+
+```rust
+pub struct EngineConfig {
+    pub max_formula_length: usize,  // default: 10,000
+    pub max_depth: usize,           // default: 100
+    pub max_time_ms: Option<u64>,   // default: None
+}
+
+pub struct RecoveryResult {
+    pub ast: Option<SpannedExpr>,
+    pub errors: Vec<FormulaError>,
+}
+```
+
+**`parse_with_recovery()`** - เก็บรวบรวมข้อผิดพลาดทั้งหมดแทนการยุติทันที ข้ามไปที่ semi-colon ถัดไปเมื่อเจอข้อผิดพลาด
+**`evaluate_with_config()`** - บังคับใช้ `max_depth` และ `max_time_ms` ระหว่างการประเมินผล
+**รหัสข้อผิดพลาด E901** - รหัสสำหรับผลลัพธ์การวิเคราะห์แบบกู้คืน
+
+---
+
+13) ส่วนขยายการจัดการข้อผิดพลาด (Error Handling Extensions)
 
 ```rust
 pub enum ErrorKind {
@@ -253,12 +274,13 @@ pub enum ErrorKind {
     LambdaArityMismatch,
     PluginError,
     SerializationError,
+    RecoveryError, // E901
 }
 ```
 
 ---
 
-12) การทดสอบและ CI (Testing & CI)
+14) การทดสอบและ CI (Testing & CI)
 
 · การทดสอบระดับหน่วย (Unit tests) สำหรับการแยกส่วน AST ทุกโหนดใหม่
 · การทดสอบระดับรวม (Integration tests) สำหรับฟังก์ชันระดับสูงร่วมกับ lambda
@@ -268,7 +290,7 @@ pub enum ErrorKind {
 
 ---
 
-13) การย้ายข้อมูลจาก V1 (Migration from V1)
+15) การย้ายข้อมูลจาก V1 (Migration from V1)
 
 · API เดิมทั้งหมดยังคงใช้งานได้
 · เพิ่ม Value::DateTime และ Value::Duration เข้ามา แต่ไม่บังคับใช้งาน
@@ -277,7 +299,7 @@ pub enum ErrorKind {
 
 ---
 
-14) อนาคต (Session 3+)
+16) อนาคต (Session 3+)
 
 · การคอมไพล์แบบ JIT/Cranelift
 · ปลั๊กอินแซนด์บ็อกซ์บนพื้นฐาน WebAssembly
