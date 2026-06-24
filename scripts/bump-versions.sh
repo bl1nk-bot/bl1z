@@ -29,6 +29,10 @@ if [[ "$INPUT" =~ ^[0-9]+$ ]]; then
     fi
 else
     # Input is semver
+    if [[ ! "$INPUT" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "Version must be a semver like 0.2.16"
+        exit 1
+    fi
     VERSION="$INPUT"
 fi
 
