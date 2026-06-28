@@ -39,8 +39,6 @@ Current status: **V2 Complete**
 - **Math + String extensions** ✅
 
 ### ❌ Out of scope
-- WASM sandboxing for plugins
-- JIT compilation
 - Asynchronous evaluation
 - Complex static type system
 - Null-safe navigation operator (`?.`)
@@ -157,7 +155,7 @@ impl PluginManager {
 }
 ```
 
-หมายเหตุ: WASM sandboxing, dynamic loading, security ไม่อยู่ใน Session 2
+หมายเหตุ: Dynamic loading, security ไม่อยู่ใน Session 2
 
 ---
 
@@ -299,10 +297,84 @@ pub enum ErrorKind {
 
 ---
 
-15) Future (Session 3+)
+15) Future Phase 16-20 (Session 3+)
 
-· JIT/Cranelift compilation
-· WebAssembly-based plugin sandbox
-· IDE Language Server Protocol (LSP)
-· User-defined types
-· Pattern matching
+**Phase 16) JIT/Cranelift Compilation**
+
+อ้างอิง: CapyScheme compilation pipeline
+
+**Pipeline:**
+```
+Formula AST
+    ↓
+Lowered IR (Postfix + optimized)
+    ↓
+Cranelift IR Generation
+    ↓
+Register Allocation (regalloc2)
+    ↓
+Machine Code (x86-64/ARM64/WASM)
+```
+
+**API:**
+```rust
+pub struct JITCompiler {
+    isa: isa::TargetIsa,
+}
+
+impl JITCompiler {
+    pub fn compile(&self, ast: &SpannedExpr) -> Result<CompiledFunction, CompileError> {
+        // Lower AST to Cranelift IR
+    }
+}
+```
+
+**Phase 17) WebAssembly Plugin Sandbox**
+
+อ้างอิง: Wasmtime fuel consumption
+
+```rust
+pub struct WasmPlugin {
+    engine: Engine,
+    module: Module,
+    store: Store<()>,
+    fuel: u64,
+}
+
+impl WasmPlugin {
+    pub fn new(wasm_bytes: &[u8], fuel_limit: u64) -> Result<Self, PluginError> {
+        config.consume_fuel(true);
+    }
+}
+```
+
+**Phase 18) Language Server Protocol (LSP)**
+
+อ้างอิง: tower-lsp
+
+- `textDocument/completion`, `textDocument/hover`, `textDocument/publishDiagnostics`
+- `textDocument/semanticTokens/full`, `textDocument/definition`, `textDocument/signatureHelp`
+
+**Phase 19) User-Defined Types**
+
+```
+type Person {
+    name: string,
+    age: number,
+    address: Address
+}
+```
+
+**Phase 20) Pattern Matching**
+
+```
+match x {
+    n if n > 100 => "big",
+    n => "small"
+}
+
+match arr {
+    [first, ..rest] => first,
+    [] => null
+}
+```

@@ -28,7 +28,7 @@ jobs:
       - name: Check commit message format
         run: |
           # Pattern enforcing type(scope): Title (Total length ~50 chars)
-          PATTERN="^(feat|fix|ci|docs|style|refactor|test|chore)([a-zA-Z0-9._-]+)?: .{1,50}$"
+          PATTERN="^(feat|fix|ci|docs|style|refactor|test|chore)(\([a-zA-Z0-9._ -]+\))?: .{1,50}$"
           
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             commits=$(git log --format=%s origin/${{ github.base_ref }}..HEAD)
