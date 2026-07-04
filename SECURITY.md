@@ -1,131 +1,158 @@
-# Security Policy
+# Security Policy / นโยบายด้านความปลอดภัย
 
-## Supported Versions
+## Supported Versions / เวอร์ชันที่ได้รับการสนับสนุน
 
-We take security seriously. This section outlines our security policy and how to report security vulnerabilities.
+We take security seriously. This document outlines our security policy and how to report vulnerabilities.
 
-### Version Support
+เราให้ความสำคัญกับความปลอดภัยอย่างสูงสุด หัวข้อนี้สรุปนโยบายด้านความปลอดภัยและวิธีการรายงานช่องโหว่ด้านความปลอดภัย
 
-| Version | Supported          |
+### Version Support / การสนับสนุนเวอร์ชัน
+
+| Version / เวอร์ชัน | Supported / สถานะการสนับสนุน |
 | ------- | ------------------ |
 | 0.1.x   | :white_check_mark: |
 | < 0.1.0 | :x:                |
 
-## Reporting a Vulnerability
+## Reporting a Vulnerability / การรายงานช่องโหว่
 
 If you discover a security vulnerability in bl1z, please help us by reporting it responsibly.
 
-### How to Report
+หากคุณพบช่องโหว่ด้านความปลอดภัยใน bl1z โปรดช่วยเหลือเราด้วยการรายงานอย่างมีความรับผิดชอบ
+
+### How to Report / วิธีการรายงาน
 
 **DO NOT** create public GitHub issues for security vulnerabilities.
 
-Instead, please report security vulnerabilities by emailing:
-- **Email**: security@bl1z.dev
-- **Subject**: `[SECURITY] Vulnerability Report`
+**ห้าม** สร้าง GitHub issues แบบสาธารณะสำหรับช่องโหว่ด้านความปลอดภัย
 
-### What to Include
+Please report security vulnerabilities via email:
+กรุณารายงานช่องโหว่ด้านความปลอดภัยผ่านอีเมล:
+
+- **Email / อีเมล**: security@bl1z.dev
+- **Subject / หัวข้อ**: `[SECURITY] Vulnerability Report`
+
+### What to Include / ข้อมูลที่ควรระบุ
 
 Please include the following information in your report:
+กรุณาระบุข้อมูลต่อไปนี้ในรายงานของคุณ:
 
-- **Description**: A clear description of the vulnerability
-- **Impact**: Potential impact and severity
-- **Steps to reproduce**: Detailed steps to reproduce the issue
-- **Proof of concept**: Code or steps demonstrating the vulnerability
-- **Environment**: Rust version, OS, dependencies used
-- **Suggested fix**: If you have suggestions for fixing the issue
+- **Description / คำอธิบาย**: Clear description of the vulnerability / อธิบายลักษณะของช่องโหว่ให้ชัดเจน
+- **Impact / ผลกระทบ**: Potential impact and severity / ผลกระทบที่อาจเกิดขึ้นและระดับความรุนแรง
+- **Steps to Reproduce / ขั้นตอนการเกิดปัญหา**: Detailed reproduction steps / รายละเอียดขั้นตอนการทำให้เกิดปัญหา
+- **Proof of Concept / การพิสูจน์แนวคิด**: Code or steps demonstrating the vulnerability / โค้ดหรือขั้นตอนที่แสดงให้เห็นถึงช่องโหว่
+- **Environment / สภาพแวดล้อม**: Rust version, OS, dependencies / เวอร์ชัน Rust, ระบบปฏิบัติการ, dependencies ที่ใช้งาน
+- **Suggested Fix / แนวทางแก้ไขที่เสนอ**: If you have suggestions for fixing the issue / หากคุณมีข้อเสนอแนะในการแก้ไขปัญหานี้
 
-### Response Timeline
+### Response Timeline / ระยะเวลาการตอบกลับ
 
 We will acknowledge your report within **48 hours** and provide a more detailed response within **7 days** indicating our next steps.
 
-We will keep you informed about our progress throughout the process of fixing the vulnerability.
+เราจะตอบรับรายงานของคุณภายใน **48 ชั่วโมง** และจะให้การตอบกลับที่ละเอียดขึ้นภายใน **7 วัน** เพื่อระบุขั้นตอนถัดไปของเรา
 
-## Security Considerations
+We will keep you informed about the progress throughout the vulnerability remediation process.
 
-### Memory Safety
+เราจะแจ้งให้คุณทราบเกี่ยวกับความคืบหน้าตลอดกระบวนการแก้ไขช่องโหว่
 
-bl1z is written in Rust and benefits from Rust's memory safety guarantees:
-- No buffer overflows
-- No use-after-free errors
-- No null pointer dereferences
-- Thread safety (when used correctly)
+## Security Considerations / ข้อควรพิจารณาด้านความปลอดภัย
 
-### Input Validation
+### Memory Safety / ความปลอดภัยของหน่วยความจำ
 
-- All user inputs are validated
-- Expression parsing includes bounds checking
-- Type validation prevents invalid operations
-- Error messages avoid leaking sensitive information
+bl1z is built with Rust and benefits from Rust's memory safety guarantees:
 
-### Dependencies
+bl1z พัฒนาด้วยภาษา Rust และได้รับประโยชน์จากการรับประกันความปลอดภัยของหน่วยความจำของ Rust:
 
-- We regularly audit dependencies for known vulnerabilities
-- Dependencies are kept up-to-date
-- Only minimal, well-audited dependencies are used
+- No buffer overflows / ไม่มีปัญหา Buffer overflows
+- No use-after-free / ไม่มีปัญหา Use-after-free
+- No null pointer dereferences / ไม่มีปัญหา Null pointer dereferences
+- Thread safety when used correctly / ความปลอดภัยในการทำงานแบบเธรดเมื่อใช้งานอย่างถูกต้อง
 
-### Best Practices
+### Input Validation / การตรวจสอบข้อมูลนำเข้า
+
+- All user input is validated / ข้อมูลนำเข้าจากผู้ใช้ทั้งหมดจะได้รับการตรวจสอบความถูกต้อง
+- Expression parsing includes bounds checking / การแยกส่วนนิพจน์รวมถึงการตรวจสอบขอบเขต
+- Type system validation prevents invalid operations / การตรวจสอบระบบชนิดข้อมูลเพื่อป้องกันการดำเนินการที่ไม่ถูกต้อง
+- Error messages avoid exposing sensitive information / ข้อความแสดงข้อผิดพลาดหลีกเลี่ยงการเปิดเผยข้อมูลที่ละเอียดอ่อน
+
+### Dependencies / การพึ่งพาภายนอก
+
+- We regularly audit dependencies for known vulnerabilities / เราทำการตรวจสอบ dependencies อย่างสม่ำเสมอเพื่อหาช่องโหว่ที่ทราบ
+- Dependencies are kept up to date / Dependencies จะถูกปรับปรุงให้ทันสมัยอยู่เสมอ
+- Only necessary and well-vetted dependencies are included / เลือกใช้งานเฉพาะ dependencies ที่มีความจำเป็นและผ่านการตรวจสอบมาอย่างดี
+
+### Best Practices / แนวทางปฏิบัติที่ดีที่สุด
 
 When using bl1z in production:
 
-1. **Validate Inputs**: Always validate formula inputs before evaluation
-2. **Limit Complexity**: Set reasonable limits on expression complexity
-3. **Sandbox Execution**: Run in isolated environments if processing untrusted formulas
-4. **Monitor Performance**: Watch for unusual performance patterns
-5. **Keep Updated**: Apply security updates promptly
+เมื่อใช้งาน bl1z ในสภาพแวดล้อมจริง:
 
-## Security Features
+1. **Validate Input / ตรวจสอบข้อมูลนำเข้า**: Always validate formulas before evaluation / ตรวจสอบความถูกต้องของสูตรนำเข้าก่อนการประเมินค่าเสมอ
+2. **Limit Complexity / จำกัดความซับซ้อน**: Set appropriate limits on expression complexity / ตั้งค่าขีดจำกัดที่เหมาะสมสำหรับความซับซ้อนของนิพจน์
+3. **Sandbox Execution / การรันในแซนด์บ็อกซ์**: Run in isolated environments if processing untrusted formulas / รันในสภาพแวดล้อมที่แยกต่างหากหากประมวลผลสูตรที่ไม่น่าเชื่อถือ
+4. **Monitor Performance / เฝ้าดูประสิทธิภาพ**: Watch for unusual performance patterns / ตรวจสอบรูปแบบประสิทธิภาพที่ผิดปกติ
+5. **Stay Updated / ปรับปรุงให้ทันสมัย**: Apply security updates promptly / ใช้การอัปเดตด้านความปลอดภัยอย่างทันท่วงที
 
-### Safe Evaluation
+## Security Features / คุณสมบัติด้านความปลอดภัย
 
-- **Type Safety**: Runtime type checking prevents invalid operations
-- **Bounds Checking**: Array and string operations are bounds-checked
-- **Recursion Limits**: Prevents infinite recursion attacks
-- **Resource Limits**: Configurable limits on evaluation complexity
+### Safe Evaluation / การประเมินค่าอย่างปลอดภัย
 
-### Error Handling
+- **Type Safety / ความปลอดภัยของชนิดข้อมูล**: Runtime type checking prevents invalid operations / การตรวจสอบชนิดข้อมูลในขณะรันไทม์ช่วยป้องกันการดำเนินการที่ไม่ถูกต้อง
+- **Bounds Checking / การตรวจสอบขอบเขต**: Array and string operations always check bounds / การดำเนินการกับอาร์เรย์และข้อความจะมีการตรวจสอบขอบเขตเสมอ
+- **Recursion Limits / ขีดจำกัดการเรียกซ้ำ**: Prevents infinite recursion attacks / ป้องกันการโจมตีแบบเรียกซ้ำไม่สิ้นสุด
+- **Resource Limits / ขีดจำกัดทรัพยากร**: Configurable limits on evaluation complexity / ตั้งค่าขีดจำกัดความซับซ้อนของการประเมินค่าได้
 
-- **No Information Leakage**: Error messages don't reveal internal state
-- **Controlled Output**: Evaluation results are validated before return
-- **Logging**: Security-relevant events can be logged
+### Error Handling / การจัดการข้อผิดพลาด
 
-### Code Quality
+- **No Information Leakage / ไม่มีการรั่วไหลของข้อมูล**: Error messages don't expose internal state / ข้อความแสดงข้อผิดพลาดจะไม่เปิดเผยสถานะภายในของระบบ
+- **Result Validation / การควบคุมผลลัพธ์**: Evaluation results are validated before return / ผลลัพธ์จากการประเมินค่าจะได้รับการตรวจสอบก่อนส่งกลับ
+- **Logging / การบันทึกเหตุการณ์**: Security-relevant events can be logged / เหตุการณ์ที่เกี่ยวข้องกับความปลอดภัยสามารถบันทึกเก็บไว้ได้
 
-- **No Unsafe Code**: Zero unsafe blocks in the codebase
-- **Comprehensive Testing**: High test coverage including edge cases
-- **Static Analysis**: Clippy and other tools catch potential issues
-- **Code Review**: All changes undergo security review
+### Code Quality / คุณภาพของโค้ด
 
-## Third-Party Security
+- **No Unsafe Code / ไม่มีโค้ดที่ไม่ปลอดภัย**: No unsafe blocks in source code / ไม่มีการใช้งานบล็อก unsafe ในซอร์สโค้ด
+- **Comprehensive Testing / การทดสอบที่ครอบคลุม**: High test coverage including edge cases / ความครอบคลุมของการทดสอบสูง รวมถึงกรณีขอบเขตต่างๆ
+- **Static Analysis / การวิเคราะห์แบบสถิต**: Clippy and other tools catch potential issues / ใช้งาน Clippy และเครื่องมืออื่นเพื่อตรวจจับปัญหาที่อาจเกิดขึ้น
+- **Code Review / การรีวิวโค้ด**: All changes undergo security review / การเปลี่ยนแปลงทั้งหมดต้องผ่านการรีวิวในแง่ความปลอดภัย
 
-### Reporting Dependencies
+## Third-Party Security / ความปลอดภัยจากบุคคลที่สาม
+
+### Dependency Reporting / การรายงาน Dependencies
 
 We monitor and address security issues in our dependencies:
 
-- **jiff**: Our date/time library - actively maintained with good security track record
-- **Rust Ecosystem**: Benefits from Rust's security-focused design
+เราเฝ้าติดตามและแก้ไขปัญหาด้านความปลอดภัยใน dependencies ของเรา:
 
-### Supply Chain Security
+- **jiff**: Date and time library - actively maintained with good security track record / ไลบรารีจัดการวันที่และเวลา - ได้รับการดูแลอย่างต่อเนื่องพร้อมประวัติความปลอดภัยที่ดี
+- **Rust Ecosystem / ระบบนิเวศของ Rust**: Benefits from Rust's security-focused design / ได้รับประโยชน์จากการออกแบบที่เน้นความปลอดภัยของ Rust
 
-- **Minimal Dependencies**: Only essential dependencies included
-- **Pinned Versions**: Dependencies are pinned to specific versions
-- **Regular Updates**: Dependencies updated regularly with security patches
+### Supply Chain Security / ความปลอดภัยของห่วงโซ่อุปทาน
 
-## Incident Response
+- **Minimal Dependencies / Dependencies ขั้นต่ำ**: Only include necessary dependencies / รวมเฉพาะ dependencies ที่จำเป็นเท่านั้น
+- **Pinned Versions / การล็อกเวอร์ชัน**: Dependencies locked to specific versions / Dependencies ถูกล็อกไว้ที่เวอร์ชันเฉพาะ
+- **Regular Updates / การอัปเดตสม่ำเสมอ**: Dependencies regularly updated with security patches / Dependencies จะได้รับการอัปเดตพร้อมแพตช์ความปลอดภัยอย่างสม่ำเสมอ
+
+## Incident Response / การตอบสนองต่อเหตุการณ์
 
 In the event of a confirmed security vulnerability:
 
-1. **Immediate Assessment**: Evaluate impact and severity
-2. **Fix Development**: Develop and test security fix
-3. **Coordinated Release**: Release fix with vulnerability details
-4. **Communication**: Notify users through appropriate channels
+ในกรณีที่ยืนยันพบช่องโหว่ด้านความปลอดภัย:
 
-## Contact Information
+1. **Immediate Assessment / การประเมินทันที**: Assess impact and severity / ประเมินผลกระทบและระดับความรุนแรง
+2. **Develop Fix / การพัฒนาการแก้ไข**: Develop and test security fix / พัฒนาและทดสอบการแก้ไขด้านความปลอดภัย
+3. **Coordinated Release / การเปิดตัวที่มีการประสานงาน**: Release fix with vulnerability details / เปิดตัวการแก้ไขพร้อมรายละเอียดของช่องโหว่
+4. **Communication / การสื่อสาร**: Notify users through appropriate channels / แจ้งผู้ใช้ผ่านช่องทางที่เหมาะสม
+
+## Contact Information / ข้อมูลการติดต่อ
 
 For security-related questions or concerns:
-- **Security Issues**: security@bl1z.dev
-- **General Support**: support@bl1z.dev
-- **GitHub Issues**: For non-security issues only
 
-## Acknowledgments
+สำหรับคำถามหรือข้อกังวลที่เกี่ยวข้องกับความปลอดภัย:
 
-We appreciate the security research community for helping keep open source software secure. Responsible disclosure is valued and recognized.
+- **Security Issues / ประเด็นความปลอดภัย**: security@bl1z.dev
+- **General Support / การสนับสนุนทั่วไป**: support@bl1z.dev
+- **GitHub Issues**: For non-security issues only / สำหรับประเด็นที่ไม่เกี่ยวกับความปลอดภัยเท่านั้น
+
+## Acknowledgments / กิตติกรรมประกาศ
+
+We appreciate the security research community's help in keeping open source software secure. Responsible disclosure is valued and recognized by us.
+
+เราขอขอบคุณชุมชนการวิจัยด้านความปลอดภัยที่ช่วยรักษาความปลอดภัยให้กับซอฟต์แวร์โอเพนซอร์ส การเปิดเผยข้อมูลอย่างมีความรับผิดชอบนั้นมีค่าและได้รับการยอมรับจากเรา
