@@ -1,131 +1,158 @@
-# นโยบายด้านความปลอดภัย (Security Policy)
+# Security Policy / นโยบายด้านความปลอดภัย
 
-## เวอร์ชันที่ได้รับการสนับสนุน (Supported Versions)
+## Supported Versions / เวอร์ชันที่ได้รับการสนับสนุน
+
+We take security seriously. This document outlines our security policy and how to report vulnerabilities.
 
 เราให้ความสำคัญกับความปลอดภัยอย่างสูงสุด หัวข้อนี้สรุปนโยบายด้านความปลอดภัยและวิธีการรายงานช่องโหว่ด้านความปลอดภัย
 
-### การสนับสนุนเวอร์ชัน (Version Support)
+### Version Support / การสนับสนุนเวอร์ชัน
 
-| เวอร์ชัน (Version) | สถานะการสนับสนุน (Supported) |
+| Version / เวอร์ชัน | Supported / สถานะการสนับสนุน |
 | ------- | ------------------ |
 | 0.1.x   | :white_check_mark: |
 | < 0.1.0 | :x:                |
 
-## การรายงานช่องโหว่ (Reporting a Vulnerability)
+## Reporting a Vulnerability / การรายงานช่องโหว่
+
+If you discover a security vulnerability in bl1z, please help us by reporting it responsibly.
 
 หากคุณพบช่องโหว่ด้านความปลอดภัยใน bl1z โปรดช่วยเหลือเราด้วยการรายงานอย่างมีความรับผิดชอบ
 
-### วิธีการรายงาน (How to Report)
+### How to Report / วิธีการรายงาน
+
+**DO NOT** create public GitHub issues for security vulnerabilities.
 
 **ห้าม** สร้าง GitHub issues แบบสาธารณะสำหรับช่องโหว่ด้านความปลอดภัย
 
+Please report security vulnerabilities via email:
 กรุณารายงานช่องโหว่ด้านความปลอดภัยผ่านอีเมล:
-- **อีเมล**: security@bl1z.dev
-- **หัวข้อ**: `[SECURITY] Vulnerability Report`
 
-### ข้อมูลที่ควรระบุ (What to Include)
+- **Email / อีเมล**: security@bl1z.dev
+- **Subject / หัวข้อ**: `[SECURITY] Vulnerability Report`
 
+### What to Include / ข้อมูลที่ควรระบุ
+
+Please include the following information in your report:
 กรุณาระบุข้อมูลต่อไปนี้ในรายงานของคุณ:
 
-- **คำอธิบาย**: อธิบายลักษณะของช่องโหว่ให้ชัดเจน
-- **ผลกระทบ**: ผลกระทบที่อาจเกิดขึ้นและระดับความรุนแรง
-- **ขั้นตอนการเกิดปัญหา**: รายละเอียดขั้นตอนการทำให้เกิดปัญหา
-- **การพิสูจน์แนวคิด (Proof of concept)**: โค้ดหรือขั้นตอนที่แสดงให้เห็นถึงช่องโหว่
-- **สภาพแวดล้อม**: เวอร์ชัน Rust, ระบบปฏิบัติการ, dependencies ที่ใช้งาน
-- **แนวทางแก้ไขที่เสนอ**: หากคุณมีข้อเสนอแนะในการแก้ไขปัญหานี้
+- **Description / คำอธิบาย**: Clear description of the vulnerability / อธิบายลักษณะของช่องโหว่ให้ชัดเจน
+- **Impact / ผลกระทบ**: Potential impact and severity / ผลกระทบที่อาจเกิดขึ้นและระดับความรุนแรง
+- **Steps to Reproduce / ขั้นตอนการเกิดปัญหา**: Detailed reproduction steps / รายละเอียดขั้นตอนการทำให้เกิดปัญหา
+- **Proof of Concept / การพิสูจน์แนวคิด**: Code or steps demonstrating the vulnerability / โค้ดหรือขั้นตอนที่แสดงให้เห็นถึงช่องโหว่
+- **Environment / สภาพแวดล้อม**: Rust version, OS, dependencies / เวอร์ชัน Rust, ระบบปฏิบัติการ, dependencies ที่ใช้งาน
+- **Suggested Fix / แนวทางแก้ไขที่เสนอ**: If you have suggestions for fixing the issue / หากคุณมีข้อเสนอแนะในการแก้ไขปัญหานี้
 
-### ระยะเวลาการตอบกลับ (Response Timeline)
+### Response Timeline / ระยะเวลาการตอบกลับ
+
+We will acknowledge your report within **48 hours** and provide a more detailed response within **7 days** indicating our next steps.
 
 เราจะตอบรับรายงานของคุณภายใน **48 ชั่วโมง** และจะให้การตอบกลับที่ละเอียดขึ้นภายใน **7 วัน** เพื่อระบุขั้นตอนถัดไปของเรา
 
+We will keep you informed about the progress throughout the vulnerability remediation process.
+
 เราจะแจ้งให้คุณทราบเกี่ยวกับความคืบหน้าตลอดกระบวนการแก้ไขช่องโหว่
 
-## ข้อควรพิจารณาด้านความปลอดภัย (Security Considerations)
+## Security Considerations / ข้อควรพิจารณาด้านความปลอดภัย
 
-### ความปลอดภัยของหน่วยความจำ (Memory Safety)
+### Memory Safety / ความปลอดภัยของหน่วยความจำ
+
+bl1z is built with Rust and benefits from Rust's memory safety guarantees:
 
 bl1z พัฒนาด้วยภาษา Rust และได้รับประโยชน์จากการรับประกันความปลอดภัยของหน่วยความจำของ Rust:
-- ไม่มีปัญหา Buffer overflows
-- ไม่มีปัญหา Use-after-free
-- ไม่มีปัญหา Null pointer dereferences
-- ความปลอดภัยในการทำงานแบบเธรด (Thread safety) เมื่อใช้งานอย่างถูกต้อง
 
-### การตรวจสอบข้อมูลนำเข้า (Input Validation)
+- No buffer overflows / ไม่มีปัญหา Buffer overflows
+- No use-after-free / ไม่มีปัญหา Use-after-free
+- No null pointer dereferences / ไม่มีปัญหา Null pointer dereferences
+- Thread safety when used correctly / ความปลอดภัยในการทำงานแบบเธรดเมื่อใช้งานอย่างถูกต้อง
 
-- ข้อมูลนำเข้าจากผู้ใช้ทั้งหมดจะได้รับการตรวจสอบความถูกต้อง
-- การแยกส่วนนิพจน์ (Expression parsing) รวมถึงการตรวจสอบขอบเขต (bounds checking)
-- การตรวจสอบระบบชนิดข้อมูลเพื่อป้องกันการดำเนินการที่ไม่ถูกต้อง
-- ข้อความแสดงข้อผิดพลาดหลีกเลี่ยงการเปิดเผยข้อมูลที่ละเอียดอ่อน
+### Input Validation / การตรวจสอบข้อมูลนำเข้า
 
-### การพึ่งพาภายนอก (Dependencies)
+- All user input is validated / ข้อมูลนำเข้าจากผู้ใช้ทั้งหมดจะได้รับการตรวจสอบความถูกต้อง
+- Expression parsing includes bounds checking / การแยกส่วนนิพจน์รวมถึงการตรวจสอบขอบเขต
+- Type system validation prevents invalid operations / การตรวจสอบระบบชนิดข้อมูลเพื่อป้องกันการดำเนินการที่ไม่ถูกต้อง
+- Error messages avoid exposing sensitive information / ข้อความแสดงข้อผิดพลาดหลีกเลี่ยงการเปิดเผยข้อมูลที่ละเอียดอ่อน
 
-- เราทำการตรวจสอบ dependencies อย่างสม่ำเสมอเพื่อหาช่องโหว่ที่ทราบ
-- Dependencies จะถูกปรับปรุงให้ทันสมัยอยู่เสมอ
-- เลือกใช้งานเฉพาะ dependencies ที่มีความจำเป็นและผ่านการตรวจสอบมาอย่างดี
+### Dependencies / การพึ่งพาภายนอก
 
-### แนวทางปฏิบัติที่ดีที่สุด (Best Practices)
+- We regularly audit dependencies for known vulnerabilities / เราทำการตรวจสอบ dependencies อย่างสม่ำเสมอเพื่อหาช่องโหว่ที่ทราบ
+- Dependencies are kept up to date / Dependencies จะถูกปรับปรุงให้ทันสมัยอยู่เสมอ
+- Only necessary and well-vetted dependencies are included / เลือกใช้งานเฉพาะ dependencies ที่มีความจำเป็นและผ่านการตรวจสอบมาอย่างดี
 
-เมื่อใช้งาน bl1z ในสภาพแวดล้อมจริง (production):
+### Best Practices / แนวทางปฏิบัติที่ดีที่สุด
 
-1. **ตรวจสอบข้อมูลนำเข้า**: ตรวจสอบความถูกต้องของสูตรนำเข้าก่อนการประเมินค่าเสมอ
-2. **จำกัดความซับซ้อน**: ตั้งค่าขีดจำกัดที่เหมาะสมสำหรับความซับซ้อนของนิพจน์
-3. **การรันในแซนด์บ็อกซ์**: รันในสภาพแวดล้อมที่แยกต่างหากหากประมวลผลสูตรที่ไม่น่าเชื่อถือ
-4. **เฝ้าดูประสิทธิภาพ**: ตรวจสอบรูปแบบประสิทธิภาพที่ผิดปกติ
-5. **ปรับปรุงให้ทันสมัย**: ใช้การอัปเดตด้านความปลอดภัยอย่างทันท่วงที
+When using bl1z in production:
 
-## คุณสมบัติด้านความปลอดภัย (Security Features)
+เมื่อใช้งาน bl1z ในสภาพแวดล้อมจริง:
 
-### การประเมินค่าอย่างปลอดภัย (Safe Evaluation)
+1. **Validate Input / ตรวจสอบข้อมูลนำเข้า**: Always validate formulas before evaluation / ตรวจสอบความถูกต้องของสูตรนำเข้าก่อนการประเมินค่าเสมอ
+2. **Limit Complexity / จำกัดความซับซ้อน**: Set appropriate limits on expression complexity / ตั้งค่าขีดจำกัดที่เหมาะสมสำหรับความซับซ้อนของนิพจน์
+3. **Sandbox Execution / การรันในแซนด์บ็อกซ์**: Run in isolated environments if processing untrusted formulas / รันในสภาพแวดล้อมที่แยกต่างหากหากประมวลผลสูตรที่ไม่น่าเชื่อถือ
+4. **Monitor Performance / เฝ้าดูประสิทธิภาพ**: Watch for unusual performance patterns / ตรวจสอบรูปแบบประสิทธิภาพที่ผิดปกติ
+5. **Stay Updated / ปรับปรุงให้ทันสมัย**: Apply security updates promptly / ใช้การอัปเดตด้านความปลอดภัยอย่างทันท่วงที
 
-- **ความปลอดภัยของชนิดข้อมูล (Type Safety)**: การตรวจสอบชนิดข้อมูลในขณะรันไทม์ช่วยป้องกันการดำเนินการที่ไม่ถูกต้อง
-- **การตรวจสอบขอบเขต (Bounds Checking)**: การดำเนินการกับอาร์เรย์และข้อความจะมีการตรวจสอบขอบเขตเสมอ
-- **ขีดจำกัดการเรียกซ้ำ (Recursion Limits)**: ป้องกันการโจมตีแบบเรียกซ้ำไม่สิ้นสุด
-- **ขีดจำกัดทรัพยากร (Resource Limits)**: ตั้งค่าขีดจำกัดความซับซ้อนของการประเมินค่าได้
+## Security Features / คุณสมบัติด้านความปลอดภัย
 
-### การจัดการข้อผิดพลาด (Error Handling)
+### Safe Evaluation / การประเมินค่าอย่างปลอดภัย
 
-- **ไม่มีการรั่วไหลของข้อมูล**: ข้อความแสดงข้อผิดพลาดจะไม่เปิดเผยสถานะภายในของระบบ
-- **การควบคุมผลลัพธ์**: ผลลัพธ์จากการประเมินค่าจะได้รับการตรวจสอบก่อนส่งกลับ
-- **การบันทึกเหตุการณ์ (Logging)**: เหตุการณ์ที่เกี่ยวข้องกับความปลอดภัยสามารถบันทึกเก็บไว้ได้
+- **Type Safety / ความปลอดภัยของชนิดข้อมูล**: Runtime type checking prevents invalid operations / การตรวจสอบชนิดข้อมูลในขณะรันไทม์ช่วยป้องกันการดำเนินการที่ไม่ถูกต้อง
+- **Bounds Checking / การตรวจสอบขอบเขต**: Array and string operations always check bounds / การดำเนินการกับอาร์เรย์และข้อความจะมีการตรวจสอบขอบเขตเสมอ
+- **Recursion Limits / ขีดจำกัดการเรียกซ้ำ**: Prevents infinite recursion attacks / ป้องกันการโจมตีแบบเรียกซ้ำไม่สิ้นสุด
+- **Resource Limits / ขีดจำกัดทรัพยากร**: Configurable limits on evaluation complexity / ตั้งค่าขีดจำกัดความซับซ้อนของการประเมินค่าได้
 
-### คุณภาพของโค้ด (Code Quality)
+### Error Handling / การจัดการข้อผิดพลาด
 
-- **ไม่มีโค้ดที่ไม่ปลอดภัย (No Unsafe Code)**: ไม่มีการใช้งานบล็อก unsafe ในซอร์สโค้ด
-- **การทดสอบที่ครอบคลุม**: ความครอบคลุมของการทดสอบสูง รวมถึงกรณีขอบเขตต่างๆ
-- **การวิเคราะห์แบบสถิต (Static Analysis)**: ใช้งาน Clippy และเครื่องมืออื่นเพื่อตรวจจับปัญหาที่อาจเกิดขึ้น
-- **การรีวิวโค้ด (Code Review)**: การเปลี่ยนแปลงทั้งหมดต้องผ่านการรีวิวในแง่ความปลอดภัย
+- **No Information Leakage / ไม่มีการรั่วไหลของข้อมูล**: Error messages don't expose internal state / ข้อความแสดงข้อผิดพลาดจะไม่เปิดเผยสถานะภายในของระบบ
+- **Result Validation / การควบคุมผลลัพธ์**: Evaluation results are validated before return / ผลลัพธ์จากการประเมินค่าจะได้รับการตรวจสอบก่อนส่งกลับ
+- **Logging / การบันทึกเหตุการณ์**: Security-relevant events can be logged / เหตุการณ์ที่เกี่ยวข้องกับความปลอดภัยสามารถบันทึกเก็บไว้ได้
 
-## ความปลอดภัยจากบุคคลที่สาม (Third-Party Security)
+### Code Quality / คุณภาพของโค้ด
 
-### การรายงาน Dependencies
+- **No Unsafe Code / ไม่มีโค้ดที่ไม่ปลอดภัย**: No unsafe blocks in source code / ไม่มีการใช้งานบล็อก unsafe ในซอร์สโค้ด
+- **Comprehensive Testing / การทดสอบที่ครอบคลุม**: High test coverage including edge cases / ความครอบคลุมของการทดสอบสูง รวมถึงกรณีขอบเขตต่างๆ
+- **Static Analysis / การวิเคราะห์แบบสถิต**: Clippy and other tools catch potential issues / ใช้งาน Clippy และเครื่องมืออื่นเพื่อตรวจจับปัญหาที่อาจเกิดขึ้น
+- **Code Review / การรีวิวโค้ด**: All changes undergo security review / การเปลี่ยนแปลงทั้งหมดต้องผ่านการรีวิวในแง่ความปลอดภัย
+
+## Third-Party Security / ความปลอดภัยจากบุคคลที่สาม
+
+### Dependency Reporting / การรายงาน Dependencies
+
+We monitor and address security issues in our dependencies:
 
 เราเฝ้าติดตามและแก้ไขปัญหาด้านความปลอดภัยใน dependencies ของเรา:
 
-- **jiff**: ไลบรารีจัดการวันที่และเวลา - ได้รับการดูแลอย่างต่อเนื่องพร้อมประวัติความปลอดภัยที่ดี
-- **ระบบนิเวศของ Rust (Rust Ecosystem)**: ได้รับประโยชน์จากการออกแบบที่เน้นความปลอดภัยของ Rust
+- **jiff**: Date and time library - actively maintained with good security track record / ไลบรารีจัดการวันที่และเวลา - ได้รับการดูแลอย่างต่อเนื่องพร้อมประวัติความปลอดภัยที่ดี
+- **Rust Ecosystem / ระบบนิเวศของ Rust**: Benefits from Rust's security-focused design / ได้รับประโยชน์จากการออกแบบที่เน้นความปลอดภัยของ Rust
 
-### ความปลอดภัยของห่วงโซ่อุปทาน (Supply Chain Security)
+### Supply Chain Security / ความปลอดภัยของห่วงโซ่อุปทาน
 
-- **Dependencies ขั้นต่ำ**: รวมเฉพาะ dependencies ที่จำเป็นเท่านั้น
-- **การล็อกเวอร์ชัน (Pinned Versions)**: Dependencies ถูกล็อกไว้ที่เวอร์ชันเฉพาะ
-- **การอัปเดตสม่ำเสมอ**: Dependencies จะได้รับการอัปเดตพร้อมแพตช์ความปลอดภัยอย่างสม่ำเสมอ
+- **Minimal Dependencies / Dependencies ขั้นต่ำ**: Only include necessary dependencies / รวมเฉพาะ dependencies ที่จำเป็นเท่านั้น
+- **Pinned Versions / การล็อกเวอร์ชัน**: Dependencies locked to specific versions / Dependencies ถูกล็อกไว้ที่เวอร์ชันเฉพาะ
+- **Regular Updates / การอัปเดตสม่ำเสมอ**: Dependencies regularly updated with security patches / Dependencies จะได้รับการอัปเดตพร้อมแพตช์ความปลอดภัยอย่างสม่ำเสมอ
 
-## การตอบสนองต่อเหตุการณ์ (Incident Response)
+## Incident Response / การตอบสนองต่อเหตุการณ์
+
+In the event of a confirmed security vulnerability:
 
 ในกรณีที่ยืนยันพบช่องโหว่ด้านความปลอดภัย:
 
-1. **การประเมินทันที**: ประเมินผลกระทบและระดับความรุนแรง
-2. **การพัฒนาการแก้ไข**: พัฒนาและทดสอบการแก้ไขด้านความปลอดภัย
-3. **การเปิดตัวที่มีการประสานงาน**: เปิดตัวการแก้ไขพร้อมรายละเอียดของช่องโหว่
-4. **การสื่อสาร**: แจ้งผู้ใช้ผ่านช่องทางที่เหมาะสม
+1. **Immediate Assessment / การประเมินทันที**: Assess impact and severity / ประเมินผลกระทบและระดับความรุนแรง
+2. **Develop Fix / การพัฒนาการแก้ไข**: Develop and test security fix / พัฒนาและทดสอบการแก้ไขด้านความปลอดภัย
+3. **Coordinated Release / การเปิดตัวที่มีการประสานงาน**: Release fix with vulnerability details / เปิดตัวการแก้ไขพร้อมรายละเอียดของช่องโหว่
+4. **Communication / การสื่อสาร**: Notify users through appropriate channels / แจ้งผู้ใช้ผ่านช่องทางที่เหมาะสม
 
-## ข้อมูลการติดต่อ (Contact Information)
+## Contact Information / ข้อมูลการติดต่อ
+
+For security-related questions or concerns:
 
 สำหรับคำถามหรือข้อกังวลที่เกี่ยวข้องกับความปลอดภัย:
-- **ประเด็นความปลอดภัย**: security@bl1z.dev
-- **การสนับสนุนทั่วไป**: support@bl1z.dev
-- **GitHub Issues**: สำหรับประเด็นที่ไม่เกี่ยวกับความปลอดภัยเท่านั้น
 
-## กิตติกรรมประกาศ (Acknowledgments)
+- **Security Issues / ประเด็นความปลอดภัย**: security@bl1z.dev
+- **General Support / การสนับสนุนทั่วไป**: support@bl1z.dev
+- **GitHub Issues**: For non-security issues only / สำหรับประเด็นที่ไม่เกี่ยวกับความปลอดภัยเท่านั้น
+
+## Acknowledgments / กิตติกรรมประกาศ
+
+We appreciate the security research community's help in keeping open source software secure. Responsible disclosure is valued and recognized by us.
 
 เราขอขอบคุณชุมชนการวิจัยด้านความปลอดภัยที่ช่วยรักษาความปลอดภัยให้กับซอฟต์แวร์โอเพนซอร์ส การเปิดเผยข้อมูลอย่างมีความรับผิดชอบนั้นมีค่าและได้รับการยอมรับจากเรา
