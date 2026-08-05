@@ -1,0 +1,20 @@
+{
+  "id": "obsidian_like",
+  "name": "Obsidian-Like Tools",
+  "version": "0.1.0",
+  "description": "Templater, Dataview, local date: placeholders, stats, system-timezone dates, weekday names",
+  "author": "bl1z team",
+  "minEngineVersion": "0.2.16",
+  "runner": "python3",
+  "script": "obsidian_like.py",
+  "functions": [
+    { "name": "iso_date", "params": ["dt"] },
+    { "name": "weekday_name", "params": ["dt"] },
+    { "name": "weekday_name_en", "params": ["dt"] },
+    { "name": "render", "params": ["template", "name", "value"] },
+    { "name": "median", "params": ["xs"] },
+    { "name": "percentile", "params": ["xs", "p"] },
+    { "name": "completion_rate", "params": ["tasks"] },
+    { "name": "today", "params": [] }
+  ]
+}

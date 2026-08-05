@@ -26,6 +26,8 @@ pub fn register_all(registry: &mut FunctionRegistry) {
     registry.register(string::split());
     registry.register(string::replace());
     registry.register(string::substring());
+    registry.register(string::to_string());
+    registry.register(string::pad());
 
     // ฟังก์ชัน math (min/max ถูกย้ายไป collection)
     registry.register(math::abs());
@@ -59,6 +61,7 @@ pub fn register_all(registry: &mut FunctionRegistry) {
     registry.register(date::year());
     registry.register(date::month());
     registry.register(date::day());
+    registry.register(date::weekday());
 
     // Phase 9: Lambda & Higher-Order Functions
     registry.register(higher_order::map_fn());

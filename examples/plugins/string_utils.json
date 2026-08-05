@@ -1,0 +1,16 @@
+{
+  "id": "string_utils",
+  "name": "String Utils",
+  "version": "0.1.0",
+  "description": "Regex-powered string helpers: slugify, camelCase, word count",
+  "author": "bl1z team",
+  "minEngineVersion": "0.2.16",
+  "runner": "python3",
+  "script": "string_utils.py",
+  "functions": [
+    { "name": "slugify", "params": ["s"] },
+    { "name": "camel_case", "params": ["s"] },
+    { "name": "count_words", "params": ["s"] },
+    { "name": "starts_with_vowel", "params": ["s"] }
+  ]
+}

@@ -137,6 +137,8 @@ pub use parser::parse_formula_with_config;
 pub use parser::parse_with_config;
 pub use parser::parse_with_recovery;
 pub use parser::RecoveryResult;
+#[cfg(feature = "serialization")]
+pub use plugins::{load_json_plugin, JsonPlugin};
 pub use plugins::{Plugin, PluginManager};
 pub use value::Value;
 

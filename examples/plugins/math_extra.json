@@ -1,0 +1,16 @@
+{
+  "id": "math_extra",
+  "name": "Math Extra",
+  "version": "0.1.0",
+  "description": "Number theory beyond the engine: modulo, gcd, primes",
+  "author": "bl1z team",
+  "minEngineVersion": "0.2.16",
+  "runner": "python3",
+  "script": "math_extra.py",
+  "functions": [
+    { "name": "mod", "params": ["a", "b"] },
+    { "name": "gcd", "params": ["a", "b"] },
+    { "name": "is_prime", "params": ["n"] },
+    { "name": "primes_up_to", "params": ["n"] }
+  ]
+}

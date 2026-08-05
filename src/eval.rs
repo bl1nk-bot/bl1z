@@ -390,7 +390,10 @@ fn evaluate_impl(
                 .map(|a| evaluate_impl(a, ctx, registry, depth + 1, config, start_time))
                 .collect::<Result<_, _>>()?;
             // เรียกฟังก์ชันที่ implement ด้วย FormulaError โดยตรง
-            (func_info.call)(&evaluated_args, registry)
+            match func_info.boxed {
+                Some(f) => f.call(&evaluated_args, registry),
+                None => (func_info.call)(&evaluated_args, registry),
+            }
         }
     }
 }

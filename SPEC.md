@@ -2,7 +2,7 @@
 
 Rust implementation for building a **formula/calculation library** that grows incrementally, suitable for Notion-like bl1z and POE SDK.
 
-Current status: **V2 Complete**
+Current status: **V2 + Phase 16 (plugin ecosystem) complete** — roadmap ต่ออยู่ใน [PLAN.md](PLAN.md)
 
 ---
 
@@ -297,84 +297,22 @@ pub enum ErrorKind {
 
 ---
 
-15) Future Phase 16-20 (Session 3+)
+15) Plugin Ecosystem (Phase 16 — shipped in 0.2.16)
 
-**Phase 16) JIT/Cranelift Compilation**
+Plugin SDK ขยายจาก trait-only (Phase 13) เป็น ecosystem ที่ใช้จริง: JSON
+plugins, CLI store, และ IDL เดียว. **Single source of truth:**
+`proto/bl1z_plugin.proto` → `python3 tools/gen_schema.py` สร้าง
+`plugin-manifest.schema.json`, `schema-store.schema.json`, และ
+`plugin-protocol.schema.json` (ห้ามแก้ schema ด้วยมือ).
 
-อ้างอิง: CapyScheme compilation pipeline
-
-**Pipeline:**
-```
-Formula AST
-    ↓
-Lowered IR (Postfix + optimized)
-    ↓
-Cranelift IR Generation
-    ↓
-Register Allocation (regalloc2)
-    ↓
-Machine Code (x86-64/ARM64/WASM)
-```
-
-**API:**
-```rust
-pub struct JITCompiler {
-    isa: isa::TargetIsa,
-}
-
-impl JITCompiler {
-    pub fn compile(&self, ast: &SpannedExpr) -> Result<CompiledFunction, CompileError> {
-        // Lower AST to Cranelift IR
-    }
-}
-```
-
-**Phase 17) WebAssembly Plugin Sandbox**
-
-อ้างอิง: Wasmtime fuel consumption
-
-```rust
-pub struct WasmPlugin {
-    engine: Engine,
-    module: Module,
-    store: Store<()>,
-    fuel: u64,
-}
-
-impl WasmPlugin {
-    pub fn new(wasm_bytes: &[u8], fuel_limit: u64) -> Result<Self, PluginError> {
-        config.consume_fuel(true);
-    }
-}
-```
-
-**Phase 18) Language Server Protocol (LSP)**
-
-อ้างอิง: tower-lsp
-
-- `textDocument/completion`, `textDocument/hover`, `textDocument/publishDiagnostics`
-- `textDocument/semanticTokens/full`, `textDocument/definition`, `textDocument/signatureHelp`
-
-**Phase 19) User-Defined Types**
-
-```
-type Person {
-    name: string,
-    age: number,
-    address: Address
-}
-```
-
-**Phase 20) Pattern Matching**
-
-```
-match x {
-    n if n > 100 => "big",
-    n => "small"
-}
-
-match arr {
-    [first, ..rest] => first,
-    [] => null
-}
-```
+- **Plugin manifest** (`plugin.json`): `id`, `name`, `version`, `description`,
+  `author`, `min_engine_version`, `runner`, `script`,
+  `functions[{ name, params }]`
+- **Plugin store** (`<store>/state.json`): map plugin id → `{ enabled, path }`;
+  CLI: `bl1z plugins install|link|list|enable|disable|reload|debug|fmt|fix`;
+  อยู่ที่ `~/.bl1z/plugins` (override ด้วย `BL1Z_PLUGINS_DIR`)
+- **Script protocol**: engine spawns `<runner> <script> <fn>`; args เป็น JSON
+  array ทาง stdin, result เป็น JSON value ทาง stdout (range encode เป็น
+  `{"range": [start, end, step]}`)
+- **CLI binary**: `bl1z eval|repl|functions|plugins`, exit codes 0/1/2
+  (cargo-style)
