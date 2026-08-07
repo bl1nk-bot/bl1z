@@ -44,7 +44,7 @@ jobs:
           error=0
           while IFS= read -r line; do
             if [ -z "$line" ]; then continue; fi
-            if [[ "$line" =~ ^Merge\  ]] || [[ "$line" =~ ^verify\ and\ skip ]] || [[ "$line" =~ ^Update\  ]]; then
+            if [[ "$line" =~ "^Merge " ]] || [[ "$line" =~ "^verify and skip" ]] || [[ "$line" =~ "^Update " ]]; then
               echo "⏭️ Skipping validation for: $line"
               continue
             fi
