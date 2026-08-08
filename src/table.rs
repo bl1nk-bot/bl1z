@@ -171,6 +171,7 @@ fn pad_to_width(s: &str, width: usize, align: Align) -> String {
 fn md_escape(s: &str) -> String {
     s.replace('\\', "\\\\")
         .replace('|', "\\|")
+        .replace('\r', " ")
         .replace('\n', " ")
 }
 
@@ -196,9 +197,9 @@ fn sanitize_cell_text(s: &str) -> String {
                 if let Some(next) = chars.next() {
                     match next {
                         '[' => {
-                            // CSI/SGR: consume until ASCII letter
+                            // CSI/SGR: consume until final byte (@-~)
                             for c in chars.by_ref() {
-                                if ('@'..='~').contains(&c) {
+                                if ('\x40'..='\x7e').contains(&c) {
                                     break;
                                 }
                             }
@@ -468,7 +469,8 @@ impl TableRenderer {
             let mut m = visible_width(col.title);
             for row in rows {
                 if let Some(cell) = row.cells.get(i) {
-                    m = m.max(visible_width(&cell.text));
+                    let clean = sanitize_cell_text(&cell.text);
+                    m = m.max(visible_width(&clean));
                 }
             }
             content.push(m.min(col.max_width));

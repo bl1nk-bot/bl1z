@@ -10,7 +10,6 @@ on:
 # Global permissions - Least Privilege
 permissions:
   contents: read
-  pull-requests: read
 
 env:
   CARGO_TERM_COLOR: always
@@ -37,7 +36,7 @@ jobs:
           set -u
 
           # Keep this synchronized with the repository's documented commit format.
-          PATTERN='^[a-z]+\(Phase [0-9]+\): .+$'
+          PATTERN='^[a-z]+(\([a-zA-Z0-9._-]+\))?: .+$'
           MAX_LENGTH=50
 
           merge_pr_re='^Merge pull request #[0-9]+ from [^[:space:]]+/.+'
@@ -122,7 +121,7 @@ jobs:
             if (( ${#subject} > MAX_LENGTH )) ||
                [[ ! "$subject" =~ $PATTERN ]]; then
               echo "❌ Invalid format: $subject"
-              echo "   Required format: type(Phase N): title (max 50 chars total)"
+              echo "   Required format: type(scope): title (max 50 chars total)"
               error=1
             fi
           done

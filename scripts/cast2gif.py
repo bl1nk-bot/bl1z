@@ -209,7 +209,7 @@ def main():
         sys.exit(f"error: cast header width/height must be integers, got {type(cols).__name__}/{type(rows).__name__}")
     if cols < 1 or rows < 1:
         sys.exit(f"error: cast header dimensions must be positive, got {cols}x{rows}")
-    MAX_DIM = 1000
+    MAX_DIM = 300
     if cols > MAX_DIM or rows > MAX_DIM:
         sys.exit(f"error: cast header dimensions exceed maximum ({MAX_DIM}), got {cols}x{rows}")
 

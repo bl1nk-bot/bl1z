@@ -58,7 +58,6 @@ When subtracting two dates, the result is a **Duration** type (not a number). Du
 ```yaml
 # CORRECT: Calculate days between dates (null-safe)
 "if(date(due_date) != null, (date(due_date) - today()).days, 0)"
-"if(date(due_date) != null, (date(due_date) - today()).days, 0)"
 
 # CORRECT: Round the numeric result if needed
 "if(date(due_date) != null, (date(due_date) - today()).days.round(0), 0)"

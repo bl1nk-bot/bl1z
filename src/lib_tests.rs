@@ -951,26 +951,26 @@ fn plugin_loads_valid_manifest() {
 #[test]
 fn prerelease_min_engine_version_is_rejected_when_behind() {
     use crate::plugins::load_json_plugin;
-    // Create a temp manifest requiring engine >= 0.2.17-alpha (parsed as 0.2.17)
-    // Current engine is 0.2.16, so this should be rejected
+    // Compute a version just above current engine so the test stays valid
+    let ver: Vec<u32> = env!("CARGO_PKG_VERSION")
+        .split('.')
+        .filter_map(|s| s.parse().ok())
+        .collect();
+    assert!(ver.len() >= 2, "CARGO_PKG_VERSION must be semver");
+    let req = format!("{}.{}.99-alpha", ver[0], ver[1] + 1);
     let tmp = std::env::temp_dir().join("bl1z_test_prerelease.json");
     std::fs::write(
         &tmp,
-        r#"{
-            "id": "prerelease_test",
-            "name": "Pretest",
-            "version": "0.1.0",
-            "runner": "python3",
-            "script": "noop.py",
-            "minEngineVersion": "0.2.17-alpha",
-            "functions": []
-        }"#,
+        format!(
+            r#"{{"id":"prerelease_test","name":"Pretest","version":"0.1.0","runner":"python3","script":"noop.py","minEngineVersion":"{}","functions":[]}}"#,
+            req
+        ),
     )
     .unwrap();
     let r = load_json_plugin(tmp.to_str().unwrap());
     match r {
         Err(e) => assert!(
-            e.message.contains("0.2.17"),
+            e.message.contains(&req),
             "error should mention version: {}",
             e.message
         ),

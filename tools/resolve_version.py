@@ -29,7 +29,11 @@ def main():
         print(f"error: phase must be an integer, got '{sys.argv[1]}'", file=sys.stderr)
         sys.exit(1)
     for span, template in cfg["phase_to_version"].items():
-        lo, hi = map(int, span.replace("Phase ", "").split("-"))
+        try:
+            lo, hi = map(int, span.replace("Phase ", "").split("-"))
+        except (ValueError, AttributeError) as e:
+            print(f"error: malformed span '{span}' in phase_to_version: {e}", file=sys.stderr)
+            sys.exit(1)
         if lo <= phase <= hi:
             print(template.format(phase=phase))
             return

@@ -268,8 +268,6 @@ fn install_from(manifest_path: &Path, source: &str) -> Result<String, FormulaErr
     let dest_dir = store_dir().join(sanitize_plugin_id(&plugin.id)?);
     fs::create_dir_all(&dest_dir).map_err(io_err("สร้าง plugin dir"))?;
     let dest = dest_dir.join("plugin.json");
-    fs::copy(manifest_path, &dest).map_err(io_err("คัดลอก plugin.json"))?;
-    let _ = fs::remove_file(manifest_path);
 
     // ช่องทางการโหลดจริง: manifest + runner script ต้องมาด้วยกัน ไม่งั้น
     // install แล้วรันไม่ได้ (script โหลดจาก URL เดียวกับ plugin.json)
@@ -308,6 +306,8 @@ fn install_from(manifest_path: &Path, source: &str) -> Result<String, FormulaErr
                 ));
             }
         }
+        // Download script BEFORE copying manifest — if download fails,
+        // the original manifest (if any) remains untouched.
         let ok = Command::new("curl")
             .args(["-fsSL", &script_url, "-o"])
             .arg(&script_dest)
@@ -315,10 +315,7 @@ fn install_from(manifest_path: &Path, source: &str) -> Result<String, FormulaErr
             .map(|s| s.success())
             .unwrap_or(false);
         if !ok {
-            // Only clean up files created by this install attempt, not the
-            // entire directory (which may contain a pre-existing installation).
-            let _ = fs::remove_file(&dest);
-            let _ = fs::remove_file(&script_dest);
+            let _ = fs::remove_dir_all(&dest_dir);
             return Err(FormulaError::new(
                 ErrorKind::PluginError,
                 "E803",
@@ -327,6 +324,11 @@ fn install_from(manifest_path: &Path, source: &str) -> Result<String, FormulaErr
             ));
         }
     }
+
+    // Copy manifest after script download succeeds (or if no script needed).
+    // This ensures original manifest is untouched on failure.
+    fs::copy(manifest_path, &dest).map_err(io_err("คัดลอก plugin.json"))?;
+    let _ = fs::remove_file(manifest_path);
 
     let mut state = load_state()?;
     state.insert(

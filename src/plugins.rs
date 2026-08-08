@@ -502,14 +502,36 @@ mod json {
             let stdout_thread = std::thread::spawn(move || {
                 let mut buf = Vec::new();
                 if let Some(mut out) = stdout_handle {
-                    let _ = std::io::Read::read_to_end(&mut out, &mut buf);
+                    let mut tmp = [0u8; 8192];
+                    loop {
+                        match std::io::Read::read(&mut out, &mut tmp) {
+                            Ok(0) | Err(_) => break,
+                            Ok(n) => {
+                                if buf.len() + n > 1_048_576 {
+                                    break; // 1MB cap
+                                }
+                                buf.extend_from_slice(&tmp[..n]);
+                            }
+                        }
+                    }
                 }
                 buf
             });
             let stderr_thread = std::thread::spawn(move || {
                 let mut buf = Vec::new();
                 if let Some(mut err) = stderr_handle {
-                    let _ = std::io::Read::read_to_end(&mut err, &mut buf);
+                    let mut tmp = [0u8; 8192];
+                    loop {
+                        match std::io::Read::read(&mut err, &mut tmp) {
+                            Ok(0) | Err(_) => break,
+                            Ok(n) => {
+                                if buf.len() + n > 1_048_576 {
+                                    break; // 1MB cap
+                                }
+                                buf.extend_from_slice(&tmp[..n]);
+                            }
+                        }
+                    }
                 }
                 buf
             });
