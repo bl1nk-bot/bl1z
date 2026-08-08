@@ -511,6 +511,19 @@ mod json {
                             }
                         }
                     }
+            serde_json::Value::Object(map) => {
+                if map.len() == 1 {
+                    if let Some(serde_json::Value::Array(items)) = map.get("range") {
+                        if items.len() == 3 {
+                            if let (Some(start), Some(end), Some(step)) = (
+                                items[0].as_i64(),
+                                items[1].as_i64(),
+                                items[2].as_i64(),
+                            ) {
+                                return Some(Value::Range { start, end, step });
+                            }
+                        }
+                    }
                 }
                 let mut out = std::collections::HashMap::new();
                 for (k, val) in map {
