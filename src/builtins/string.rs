@@ -91,10 +91,21 @@ pub fn pad() -> BuiltinFunction {
                     None,
                 ));
             };
+            let width = width as usize;
+            const MAX_PAD_WIDTH: usize = 10_000;
+            if width > MAX_PAD_WIDTH {
+                return Err(FormulaError::new(
+                    ErrorKind::FunctionError,
+                    "E502",
+                    &format!("pad width exceeds maximum allowed ({})", MAX_PAD_WIDTH),
+                    None,
+                ));
+            }
             Ok(Value::String(format!(
                 "{:0>width$}",
                 n as i64,
-                width = width as usize
+                width = width
+            )))
             )))
         },
     }
