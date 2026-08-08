@@ -8,14 +8,15 @@ use bl1z::context::Context;
 use bl1z::functions::FunctionRegistry;
 use bl1z::value::Value;
 use bl1z::{evaluate, parse, tokenize};
-use std::io::BufRead;
+use std::io::{BufRead, IsTerminal};
 
 mod plugins_cmd;
+mod table;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const MAIN_HELP: &str = concat!(
-    "bl1z ", env!("CARGO_PKG_VERSION"), "\nA high-performance, extensible formula evaluation engine for Rust\n\nUSAGE:\n    bl1z [OPTIONS] <COMMAND>\n\nCOMMANDS:\n    eval       Evaluate a formula and print the result\n    repl       Read formulas from standard input, one per line\n    functions  List all available built-in functions\n    plugins    Install, link, list and manage plugins\n    help       Print this message or the help of the given subcommand(s)\n\nOPTIONS:\n    -h, --help       Print help\n    -V, --version    Print version\n"
+    "bl1z ", env!("CARGO_PKG_VERSION"), "\nA high-performance, extensible formula evaluation engine for Rust\n\nUSAGE:\n    bl1z [OPTIONS] <COMMAND>\n\nCOMMANDS:\n    eval       Evaluate a formula and print the result\n    repl       Interactive calculator (open with: bl1z)\n    functions  List all available built-in functions\n    plugins    Install, link, list and manage plugins\n    help       Print this message or the help of the given subcommand(s)\n\nOPTIONS:\n    -h, --help       Print help\n    -V, --version    Print version\n"
 );
 
 const EVAL_HELP: &str = "\
@@ -39,7 +40,8 @@ EXAMPLES:
 ";
 
 const REPL_HELP: &str = "\
-Read formulas from standard input and evaluate line by line
+Interactive calculator — type a formula, get the answer. `bl1z` (no command)
+opens it directly.
 
 USAGE:
     bl1z repl [OPTIONS]
@@ -50,8 +52,9 @@ OPTIONS:
     -h, --help                Print help
 
 EXAMPLES:
-    echo '1 + 2' | bl1z repl
-    printf 'sqrt(144)\\n' | bl1z repl -v x=10
+    bl1z                      open the calculator
+    echo '1 + 2' | bl1z repl  evaluate piped lines (no prompt)
+    printf 'sqrt(144)\\\\n' | bl1z repl -v x=10
 ";
 
 const FUNCTIONS_HELP: &str = "\
@@ -67,8 +70,8 @@ OPTIONS:
 fn main() -> std::process::ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let Some(cmd) = args.first() else {
-        print!("{MAIN_HELP}");
-        return std::process::ExitCode::SUCCESS;
+        // `bl1z` เฉยๆ = เปิดเครื่องคิดเลข (เร็ว/ง่ายกว่าเครื่องคิดเลขแอป)
+        return cmd_repl(&[]);
     };
     match cmd.as_str() {
         "-h" | "--help" | "help" => {
@@ -84,7 +87,11 @@ fn main() -> std::process::ExitCode {
         "functions" => cmd_functions(&args[1..]),
         "plugins" => plugins_cmd::run_plugins(&args[1..]),
         other => {
-            eprintln!("error: unknown command `{other}`\n");
+            eprintln!("error: unknown command `{other}`");
+            if let Some(s) = suggest(other, &["eval", "repl", "functions", "plugins", "help"]) {
+                eprintln!("did you mean `{s}`?");
+            }
+            eprintln!();
             print!("{MAIN_HELP}");
             std::process::ExitCode::from(2)
         }
@@ -227,26 +234,48 @@ fn cmd_repl(args: &[String]) -> std::process::ExitCode {
                     return std::process::ExitCode::from(1);
                 }
             };
-            let stdin = std::io::stdin();
+            // โหมดโต้ตอบ = มี prompt + ผลลัพธ์แบบ `= value`; โหมด pipe = เงียบ
+            let interactive = std::io::stdin().is_terminal();
+            if interactive {
+                println!("bl1z {VERSION} — พิมพ์สูตรแล้วกด Enter (Ctrl-D หรือ `exit` เพื่อออก)");
+            }
+            let mut stdin = std::io::stdin().lock();
+            let mut buf = String::new();
             let mut exit = std::process::ExitCode::SUCCESS;
-            for line in stdin.lock().lines() {
-                let line = match line {
-                    Ok(line) => line,
-                    Err(e) => {
-                        eprintln!("error: อ่าน stdin ไม่สำเร็จ: {e}");
-                        exit = std::process::ExitCode::from(1);
-                        break;
-                    }
-                };
-                let trimmed = line.trim();
+            loop {
+                if interactive {
+                    use std::io::Write;
+                    print!("bl1z> ");
+                    let _ = std::io::stdout().flush();
+                }
+                buf.clear();
+                match stdin.read_line(&mut buf) {
+                    Ok(0) => break, // Ctrl-D / EOF
+                    Ok(_) => {}
+                    Err(_) => break,
+                }
+                let trimmed = buf.trim();
                 if trimmed.is_empty() {
                     continue;
                 }
+                if interactive && matches!(trimmed, "exit" | "quit" | ":q") {
+                    break;
+                }
                 match evaluate_line(trimmed, &registry, &ctx) {
-                    Ok(v) => println!("{v}"),
+                    Ok(v) => {
+                        if interactive {
+                            println!("= {v}");
+                        } else {
+                            println!("{v}");
+                        }
+                    }
                     Err(e) => {
-                        eprintln!("error: {e}");
-                        exit = std::process::ExitCode::from(1);
+                        if interactive {
+                            println!("error: {e}");
+                        } else {
+                            eprintln!("error: {e}");
+                            exit = std::process::ExitCode::from(1);
+                        }
                     }
                 }
             }
@@ -272,4 +301,34 @@ fn cmd_functions(args: &[String]) -> std::process::ExitCode {
         println!("{name}");
     }
     std::process::ExitCode::SUCCESS
+}
+
+/// Levenshtein distance — small, used only for command suggestions.
+pub(crate) fn edit_distance(a: &str, b: &str) -> usize {
+    let a: Vec<char> = a.chars().collect();
+    let b: Vec<char> = b.chars().collect();
+    let mut prev: Vec<usize> = (0..=b.len()).collect();
+    let mut cur = vec![0usize; b.len() + 1];
+    for (i, ca) in a.iter().enumerate() {
+        cur[0] = i + 1;
+        for (j, cb) in b.iter().enumerate() {
+            cur[j + 1] = (prev[j + 1] + 1)
+                .min(cur[j] + 1)
+                .min(prev[j] + usize::from(ca != cb));
+        }
+        std::mem::swap(&mut prev, &mut cur);
+    }
+    prev[b.len()]
+}
+
+/// Closest known command within edit distance 2, for "did you mean?".
+pub(crate) fn suggest(cmd: &str, known: &[&'static str]) -> Option<&'static str> {
+    let mut best: Option<(&str, usize)> = None;
+    for k in known {
+        let d = edit_distance(cmd, k);
+        if d <= 2 && best.is_none_or(|(_, bd)| d < bd) {
+            best = Some((k, d));
+        }
+    }
+    best.map(|(k, _)| k)
 }

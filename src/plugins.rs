@@ -257,6 +257,7 @@ mod json {
         pub version: String,
         pub description: String,
         pub author: String,
+        pub script: String,
         functions: Vec<Rc<dyn Function>>,
     }
 
@@ -321,11 +322,43 @@ mod json {
         }
         let script_path = {
             let base = Path::new(path).parent().unwrap_or_else(|| Path::new("."));
-            base.join(&file.script)
+            let raw = base.join(&file.script);
+            // security: ไม่อนุญาต path traversal ใน script path
+            if file.script.contains("..") || file.script.starts_with('/') {
+                return Err(FormulaError::new(
+                    ErrorKind::PluginError,
+                    "E805",
+                    &format!("เส้นทาง runner script ไม่ถูกต้อง: `{}`", file.script),
+                    None,
+                ));
+            }
+            raw
         };
         let runner = if file.runner.is_empty() {
             "python3".to_string()
         } else {
+            // security: allowlist of safe runners (no arbitrary commands)
+            const ALLOWED_RUNNERS: &[&str] = &[
+                "python3",
+                "python",
+                "python3.11",
+                "python3.12",
+                "python3.13",
+                "node",
+                "deno",
+                "bun",
+            ];
+            if !ALLOWED_RUNNERS.contains(&file.runner.as_str()) {
+                return Err(FormulaError::new(
+                    ErrorKind::PluginError,
+                    "E806",
+                    &format!(
+                        "runner '{}' ไม่อนุญาต (อนุญาต: python3, node, deno, bun)",
+                        file.runner
+                    ),
+                    None,
+                ));
+            }
             file.runner.clone()
         };
         let functions = file
@@ -346,6 +379,7 @@ mod json {
             version: file.version,
             description: file.description,
             author: file.author,
+            script: file.script,
             functions,
         })
     }

@@ -63,3 +63,4 @@ tests/snapshots/
 # Python
 __pycache__/
 *.pyc
+skills-log.json

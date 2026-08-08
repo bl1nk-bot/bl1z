@@ -44,6 +44,15 @@ bl1z = "0.2.16"
 bl1z = { path = "./path/to/bl1z" }
 ```
 
+ใช้เป็น CLI (โปรแกรมคำสั่ง):
+
+```bash
+# ติดตั้งจาก source ในเครื่อง
+./scripts/install.sh        # Termux: ลง $PREFIX/bin / อื่น ๆ: ลง ~/.cargo/bin
+# หรือติดตั้งเอง:
+# cargo install --path . --root "$HOME/.cargo" --force
+```
+
 ---
 
 ## 📖 วิธีใช้งาน

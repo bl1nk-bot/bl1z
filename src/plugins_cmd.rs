@@ -10,10 +10,28 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use crate::table;
 use serde::{Deserialize, Serialize};
 
 use bl1z::error::{ErrorKind, FormulaError};
 use bl1z::load_json_plugin;
+
+/// Sanitize plugin ID: only allow [A-Za-z0-9_-]+ (no path traversal).
+fn sanitize_plugin_id(id: &str) -> Result<String, FormulaError> {
+    if id.is_empty()
+        || !id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+    {
+        return Err(FormulaError::new(
+            ErrorKind::PluginError,
+            "E804",
+            &format!("รหัสปลั๊กอินไม่ถูกต้อง: `{id}` (อนุญาตเฉพาะ A-Z a-z 0-9 _ -)"),
+            None,
+        ));
+    }
+    Ok(id.to_string())
+}
 
 #[derive(Serialize, Deserialize)]
 struct PluginEntry {
@@ -126,7 +144,26 @@ pub fn run_plugins(args: &[String]) -> std::process::ExitCode {
         "fmt" => sub_fmt(&args[1..], false),
         "fix" => sub_fmt(&args[1..], true),
         other => {
-            eprintln!("error: unknown plugin command `{other}`\n\n{PLUGINS_HELP}");
+            eprintln!("error: unknown plugin command `{other}`");
+            if let Some(s) = crate::suggest(
+                other,
+                &[
+                    "install",
+                    "list",
+                    "uninstall",
+                    "enable",
+                    "disable",
+                    "link",
+                    "reload",
+                    "debug",
+                    "fmt",
+                    "fix",
+                ],
+            ) {
+                eprintln!("did you mean `{s}`?");
+            }
+            eprintln!();
+            eprintln!("{PLUGINS_HELP}");
             std::process::ExitCode::from(2)
         }
     }
@@ -181,15 +218,28 @@ fn sub_install(args: &[String]) -> std::process::ExitCode {
     }
 }
 
-/// Accepts a URL, `github:user/repo`, or bare `user/repo`.
+/// Accepts a URL, `github:user/repo[/subdir]`, or bare `user/repo[/subdir]`.
+/// A bare `user/repo` expects `plugin.json` at the repo root; with a subdir
+/// it reads `<subdir>/plugin.json` (runner scripts resolve next to it).
+/// Security: only HTTPS URLs allowed (no file://, no http://); GitHub shorthands
+/// resolve to raw.githubusercontent.com over HTTPS.
 fn resolve_source(src: &str) -> Result<String, String> {
-    if src.starts_with("http://") || src.starts_with("https://") || src.starts_with("file://") {
+    if src.starts_with("file://") {
+        return Err(format!("source `{src}`: โพรโทคอล file:// ห้ามใช้ (security)"));
+    }
+    if src.starts_with("http://") {
+        return Err(format!(
+            "source `{src}`: โพรโทคอล http:// ห้ามใช้ — ใช้ https://"
+        ));
+    }
+    if src.starts_with("https://") {
         return Ok(src.to_string());
     }
     let repo = src.strip_prefix("github:").unwrap_or(src);
-    if !repo.contains('/') {
+    let parts: Vec<&str> = repo.split('/').collect();
+    if parts.len() < 2 || parts[0].is_empty() || parts[1].is_empty() {
         return Err(format!(
-            "source `{src}` ไม่ใช่ URL หรือ GitHub repo (user/repo)"
+            "source `{src}` ไม่ใช่ URL หรือ GitHub repo (user/repo[/subdir])"
         ));
     }
     if Path::new(src).exists() {
@@ -197,18 +247,58 @@ fn resolve_source(src: &str) -> Result<String, String> {
             "`{src}` เป็นไฟล์ในเครื่อง — ใช้ `bl1z plugins link` แทน"
         ));
     }
+    let sub = if parts.len() > 2 {
+        format!("/{}", parts[2..].join("/"))
+    } else {
+        String::new()
+    };
     Ok(format!(
-        "https://raw.githubusercontent.com/{repo}/HEAD/plugin.json"
+        "https://raw.githubusercontent.com/{}/{}/HEAD{sub}/plugin.json",
+        parts[0], parts[1]
     ))
 }
 
 fn install_from(manifest_path: &Path, source: &str) -> Result<String, FormulaError> {
     let plugin = load_json_plugin(manifest_path.to_str().expect("path"))?;
-    let dest_dir = store_dir().join(&plugin.id);
+    let dest_dir = store_dir().join(sanitize_plugin_id(&plugin.id)?);
     fs::create_dir_all(&dest_dir).map_err(io_err("สร้าง plugin dir"))?;
     let dest = dest_dir.join("plugin.json");
     fs::copy(manifest_path, &dest).map_err(io_err("คัดลอก plugin.json"))?;
     let _ = fs::remove_file(manifest_path);
+
+    // ช่องทางการโหลดจริง: manifest + runner script ต้องมาด้วยกัน ไม่งั้น
+    // install แล้วรันไม่ได้ (script โหลดจาก URL เดียวกับ plugin.json)
+    if !plugin.script.is_empty() {
+        // script อยู่โฟลเดอร์เดียวกับ plugin.json — ตัด '/plugin.json' ออก
+        let base = source.trim_end_matches('/');
+        let dir = base.strip_suffix("/plugin.json").unwrap_or(base);
+        let script_url = format!("{dir}/{}", plugin.script);
+        // sanitize: ไม่อนุญาต path traversal ใน script path
+        if plugin.script.contains("..") || plugin.script.starts_with('/') {
+            return Err(FormulaError::new(
+                ErrorKind::PluginError,
+                "E805",
+                &format!("เส้นทาง runner script ไม่ถูกต้อง: `{}`", plugin.script),
+                None,
+            ));
+        }
+        let script_dest = dest_dir.join(&plugin.script);
+        let ok = Command::new("curl")
+            .args(["-fsSL", &script_url, "-o"])
+            .arg(&script_dest)
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false);
+        if !ok {
+            let _ = fs::remove_dir_all(&dest_dir);
+            return Err(FormulaError::new(
+                ErrorKind::PluginError,
+                "E803",
+                &format!("ดาวน์โหลด runner script '{script_url}' ไม่สำเร็จ"),
+                None,
+            ));
+        }
+    }
 
     let mut state = load_state()?;
     state.insert(
@@ -230,6 +320,7 @@ fn sub_list(args: &[String]) -> std::process::ExitCode {
         print!("{LIST_HELP}");
         return std::process::ExitCode::SUCCESS;
     }
+    let markdown = args.iter().any(|a| a == "--markdown");
     let state = match load_state() {
         Ok(s) => s,
         Err(e) => return report(&e),
@@ -240,19 +331,90 @@ fn sub_list(args: &[String]) -> std::process::ExitCode {
         );
         return std::process::ExitCode::SUCCESS;
     }
-    println!(
-        "{:<20} {:<24} {:<10} {:<10}",
-        "ID", "NAME", "VERSION", "STATUS"
-    );
-    for (id, entry) in &state {
-        let (name, version) = match load_json_plugin(&entry.path) {
-            Ok(p) => (p.name, p.version),
-            Err(_) => ("?".to_string(), "?".to_string()),
-        };
-        let status = if entry.enabled { "enabled" } else { "disabled" };
-        println!("{id:<20} {name:<24} {version:<10} {status}");
+    let schema = table::TableSchema {
+        left_pad: 1,
+        right_pad: 1,
+        columns: vec![
+            table::ColumnSpec {
+                title: "ID",
+                max_width: 20,
+                align: table::Align::Left,
+                color: Some(table::Color::BoldWhite),
+            },
+            table::ColumnSpec {
+                title: "NAME",
+                max_width: 24,
+                align: table::Align::Left,
+                color: Some(table::Color::BoldWhite),
+            },
+            table::ColumnSpec {
+                title: "SOURCE",
+                max_width: 12,
+                align: table::Align::Left,
+                color: Some(table::Color::BoldWhite),
+            },
+            table::ColumnSpec {
+                title: "STATUS",
+                max_width: 10,
+                align: table::Align::Left,
+                color: Some(table::Color::BoldWhite),
+            },
+            table::ColumnSpec {
+                title: "VERSION",
+                max_width: 10,
+                align: table::Align::Left,
+                color: Some(table::Color::BoldWhite),
+            },
+        ],
+    };
+    let renderer = table::TableRenderer::new(schema);
+    let rows: Vec<table::Row> = state
+        .iter()
+        .map(|(id, entry)| {
+            let (name, version, author) = match load_json_plugin(&entry.path) {
+                Ok(p) => (p.name, p.version, p.author),
+                Err(_) => ("?".to_string(), "?".to_string(), String::new()),
+            };
+            let status = if entry.enabled { "enabled" } else { "disabled" };
+            // official = ของ bl1z team; dev = ชื่อใน manifest; ไร้ชื่อ = local
+            let official =
+                author.eq_ignore_ascii_case("bl1z team") || author.eq_ignore_ascii_case("bl1z");
+            let source = if official {
+                "official".to_string()
+            } else if !author.is_empty() {
+                author
+            } else {
+                "local".to_string()
+            };
+            table::Row::new(vec![
+                table::Cell::colored(id, table::Color::Cyan),
+                table::Cell::new(name),
+                table::Cell::colored(
+                    source,
+                    if official {
+                        table::Color::BoldGreen
+                    } else {
+                        table::Color::Reset
+                    },
+                ),
+                table::Cell::colored(
+                    status,
+                    if entry.enabled {
+                        table::Color::BoldGreen
+                    } else {
+                        table::Color::BoldRed
+                    },
+                ),
+                table::Cell::new(version),
+            ])
+        })
+        .collect();
+    if markdown {
+        println!("{}", renderer.render_markdown(&rows));
+    } else {
+        println!("{}", renderer.render(&rows));
+        println!("\nstore: {}", store_dir().display());
     }
-    println!("\nstore: {}", store_dir().display());
     std::process::ExitCode::SUCCESS
 }
 
@@ -333,12 +495,17 @@ fn sub_link(args: &[String]) -> std::process::ExitCode {
         Ok(p) => p,
         Err(e) => return report(&e),
     };
+    // security: validate plugin ID (no path traversal)
+    let safe_id = match sanitize_plugin_id(&plugin.id) {
+        Ok(id) => id,
+        Err(e) => return report(&e),
+    };
     let mut state = match load_state() {
         Ok(s) => s,
         Err(e) => return report(&e),
     };
     state.insert(
-        plugin.id.clone(),
+        safe_id.clone(),
         PluginEntry {
             enabled: true,
             path: manifest.display().to_string(),
@@ -350,7 +517,7 @@ fn sub_link(args: &[String]) -> std::process::ExitCode {
                 "Linked {} v{} (id={}) ← {}",
                 plugin.name,
                 plugin.version,
-                plugin.id,
+                safe_id,
                 manifest.display()
             );
             std::process::ExitCode::SUCCESS
@@ -544,12 +711,13 @@ USAGE:
     bl1z plugins install <SOURCE>
 
 ARGS:
-    <SOURCE>    https://... URL, github:user/repo, or user/repo
+    <SOURCE>    URL ของ plugin.json, หรือ GitHub: user/repo[/subdir]
+                (subdir = โฟลเดอร์ปลั๊กอินใน repo ที่มี plugin.json)
 
 EXAMPLES:
     bl1z plugins install https://example.com/plugin.json
     bl1z plugins install github:bl1nk-bot/bl1z
-    bl1z plugins install bl1nk-bot/bl1z
+    bl1z plugins install bl1nk42/bl1z-plugins/math_extra
 ";
 
 const LIST_HELP: &str = "\
@@ -559,7 +727,8 @@ USAGE:
     bl1z plugins list [OPTIONS]
 
 OPTIONS:
-    -h, --help    Print help
+    -h, --help       Print help
+    --markdown       Output a GitHub-style markdown table (no ANSI colors)
 ";
 
 const UNINSTALL_HELP: &str = "\
