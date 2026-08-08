@@ -274,7 +274,7 @@ impl FunctionRegistry {
     ///             _ => Err(FormulaError::new(
     ///                 bl1z::error::ErrorKind::TypeError,
     ///                 "E401",
-    ///                 "Expected number",
+    ///                 "ต้องการตัวเลข",
     ///                 None
     ///             ))
     ///         }
