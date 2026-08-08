@@ -57,6 +57,8 @@ def median(xs):
 
 
 def percentile(xs, p):
+    if p != int(p):
+        raise ValueError(f"percentile p must be an integer, got {p}")
     p = int(p)
     if not 0 <= p <= 100:
         raise ValueError(f"percentile p must be between 0 and 100, got {p}")
