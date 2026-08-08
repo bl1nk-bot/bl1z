@@ -361,6 +361,7 @@ mod json {
             }
             file.runner.clone()
         };
+        let mut seen_names = std::collections::HashSet::new();
         let functions = file
             .functions
             .into_iter()
@@ -380,6 +381,14 @@ mod json {
                             "ชื่อฟังก์ชัน '{}' ไม่ถูกต้อง (อนุญาตเฉพาะ a-z A-Z 0-9 _ และขึ้นต้นด้วยตัวอักษรหรือ _)",
                             f.name
                         ),
+                        None,
+                    ));
+                }
+                if !seen_names.insert(f.name.clone()) {
+                    return Err(FormulaError::new(
+                        ErrorKind::PluginError,
+                        "E804",
+                        &format!("ชื่อฟังก์ชัน '{}' ซ้ำกันใน manifest เดียวกัน", f.name),
                         None,
                     ));
                 }
@@ -403,10 +412,19 @@ mod json {
     }
 
     /// True if the running engine is older than the requested version.
-    /// Loose numeric-tuple compare; unparseable versions pass (no check).
+    /// Strict numeric-tuple compare; rejects versions with non-numeric parts.
     fn engine_is_older_than(requested: &str) -> bool {
-        let parse = |s: &str| -> Vec<u32> { s.split('.').filter_map(|p| p.parse().ok()).collect() };
-        parse(env!("CARGO_PKG_VERSION")) < parse(requested)
+        let parse = |s: &str| -> Option<Vec<u32>> {
+            let parts: Vec<_> = s.split('.').collect();
+            if parts.is_empty() {
+                return None;
+            }
+            parts.iter().map(|p| p.parse::<u32>().ok()).collect()
+        };
+        match (parse(env!("CARGO_PKG_VERSION")), parse(requested)) {
+            (Some(current), Some(req)) => current < req,
+            _ => false, // unparseable requested version = don't block
+        }
     }
 
     /// A plugin function backed by an external script: spawn the runner
