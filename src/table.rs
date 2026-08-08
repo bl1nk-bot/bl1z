@@ -198,7 +198,7 @@ fn sanitize_cell_text(s: &str) -> String {
                         '[' => {
                             // CSI/SGR: consume until ASCII letter
                             for c in chars.by_ref() {
-                                if c.is_ascii_alphabetic() {
+                                if ('@'..='~').contains(&c) {
                                     break;
                                 }
                             }
