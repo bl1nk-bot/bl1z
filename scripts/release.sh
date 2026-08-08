@@ -31,6 +31,14 @@ else:
 else
     VERSION="0.2.$PHASE"
 fi
+
+# Security: validate VERSION contains only safe characters (digits and dots)
+# to prevent shell metacharacter injection via template output
+if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "error: invalid version format '$VERSION' (expected X.Y.Z)"
+    exit 1
+fi
+
 DATE=$(date +%Y-%m-%d)
 
 echo "📦 Preparing Release version $VERSION (Phase $PHASE)..."

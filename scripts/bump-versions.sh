@@ -46,6 +46,13 @@ else
     VERSION="$INPUT"
 fi
 
+# Security: validate VERSION contains only safe characters (digits and dots)
+# to prevent shell metacharacter injection via template output
+if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "error: invalid version format '$VERSION' (expected X.Y.Z)"
+    exit 1
+fi
+
 # Validate prerequisites before making any changes
 if [[ ! -f "$CONFIG_FILE" ]]; then
     echo "error: $CONFIG_FILE not found"

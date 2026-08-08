@@ -10,6 +10,7 @@ on:
 # Global permissions - Least Privilege
 permissions:
   contents: read
+  pull-requests: read
 
 env:
   CARGO_TERM_COLOR: always
@@ -25,37 +26,113 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check commit message format
+      - name: Validate commit messages
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          # Pattern enforcing type(scope): Title (Total length ~50 chars)
-          PATTERN="^(feat|fix|ci|docs|style|refactor|test|chore)(\([a-zA-Z0-9._ -]+\))?: .{1,50}$"
-          
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            commits=$(git log --format=%s origin/${{ github.base_ref }}..HEAD)
-          elif [ "${{ github.event_name }}" == "push" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
-            commits=$(git log --format=%s ${{ github.event.before }}..${{ github.sha }})
-          else
-            commits=$(git log -1 --format=%s)
-          fi
-          
-          echo "Checking commits:"
-          echo "$commits"
-          
-          error=0
-          while IFS= read -r line; do
-            if [ -z "$line" ]; then continue; fi
-            if [[ ! $line =~ $PATTERN ]]; then
-              echo "❌ Invalid format: $line"
-              echo "   Required format: type(Phase N): title (max 50 chars total)"
-              error=1
-            else
-              echo "✅ Valid format: $line"
-            fi
-          done <<< "$commits"
-          
-          if [ $error -eq 1 ]; then
+          set -u
+
+          # Keep this synchronized with the repository's documented commit format.
+          PATTERN='^[a-z]+\(Phase [0-9]+\): .+$'
+          MAX_LENGTH=50
+
+          merge_pr_re='^Merge pull request #[0-9]+ from [^[:space:]]+/.+'
+          merge_branch_re="^Merge branch '.+'( into .+)?$"
+
+          commits="$(git rev-list --reverse "${BASE_SHA}..${HEAD_SHA}")"
+
+          if [[ -z "$commits" ]]; then
+            echo "No commits found in PR range."
             exit 1
           fi
+
+          error=0
+
+          for sha in $commits; do
+            subject="$(git log --format=%s -n 1 "$sha")"
+
+            if [[ -z "$subject" ]]; then
+              continue
+            fi
+
+            # Allow only common Git-generated merge commit formats.
+            if [[ "$subject" =~ $merge_pr_re ||
+                  "$subject" =~ $merge_branch_re ]]; then
+              echo "⏭️ Skipping generated merge commit: $subject"
+              continue
+            fi
+
+            # Exact opt-in marker: it must be the final token.
+            if [[ "$subject" == "[skip-lint]" ||
+                  "$subject" == *" [skip-lint]" ]]; then
+              echo "⏭️ Skipping explicitly marked commit: $subject"
+              continue
+            fi
+
+            # Resolve the commit through GitHub so the raw author name/email is
+            # not trusted as a bot identity.
+            if ! commit_json="$(
+              gh api \
+                -H 'Accept: application/vnd.github+json' \
+                "repos/${GITHUB_REPOSITORY}/commits/${sha}"
+            )"; then
+              echo "❌ Could not resolve GitHub identity for commit: $sha"
+              error=1
+              continue
+            fi
+
+            author_type="$(jq -r '.author.type // ""' <<<"$commit_json")"
+            author_login="$(jq -r '.author.login // ""' <<<"$commit_json")"
+
+            bot_update=false
+
+            if [[ "$author_type" == "Bot" ]]; then
+              case "$author_login" in
+                'dependabot[bot]')
+                  if [[ "$subject" =~ ^Bump[[:space:]].+[[:space:]]from[[:space:]].+[[:space:]]to[[:space:]].+$ ]]; then
+                    bot_update=true
+                  fi
+                  ;;
+
+                'renovate[bot]')
+                  if [[ "$subject" =~ ^chore\(deps\):[[:space:]]update[[:space:]].+$ ]]; then
+                    bot_update=true
+                  fi
+                  ;;
+
+                'github-actions[bot]')
+                  # Keep this only if this repository actually uses this bot
+                  # to create dependency or workflow update commits.
+                  if [[ "$subject" =~ ^Update[[:space:]].+$ ]]; then
+                    bot_update=true
+                  fi
+                  ;;
+              esac
+            fi
+
+            if [[ "$bot_update" == true ]]; then
+              echo "⏭️ Skipping allowlisted bot update: $author_login: $subject"
+              continue
+            fi
+
+            if (( ${#subject} > MAX_LENGTH )) ||
+               [[ ! "$subject" =~ $PATTERN ]]; then
+              echo "❌ Invalid format: $subject"
+              echo "   Required format: type(Phase N): title (max 50 chars total)"
+              error=1
+            fi
+          done
+
+          if (( error != 0 )); then
+            echo "Commit message validation failed."
+            exit 1
+          fi
+
+          echo "Commit message validation passed."
 
   # 2. Primary CI job - comprehensive testing
   test:

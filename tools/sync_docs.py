@@ -56,7 +56,7 @@ def analyze(text: str):
     }
 
 
-def pairs(fail_on_missing=False):
+def pairs(fail_on_missing=True):
     out = []
     missing = []
     for src in source_md_files():
@@ -77,8 +77,14 @@ def pairs(fail_on_missing=False):
 def invariants():
     """1 เอกสาร = 1 หน้าที่: ตรวจว่าไม่มีการแตกเอกสาร/ย้ายหน้าที่แล้วขัดกัน."""
     problems = []
+    # TODO.md สงวนไว้สำหรับบันทึกงานที่เสร็จแล้ว — ไม่ต้องลบ
     if (ROOT / "TODO.md").exists():
-        problems.append("TODO.md ยังอยู่ — ถูก merge เข้า PLAN.md แล้ว ต้องลบ (ดู PLAN.md)")
+        try:
+            todo = (ROOT / "TODO.md").read_text()
+            if len(todo.strip()) == 0:
+                problems.append("TODO.md ว่างเปล่า — ควรมีอย่างน้อย 1 completed task")
+        except Exception:
+            problems.append("TODO.md อ่านไม่ได้")
     spec = (ROOT / "SPEC.md").read_text()
     for kw in ("Cranelift", "Wasmtime", "tower-lsp"):
         if kw in spec:

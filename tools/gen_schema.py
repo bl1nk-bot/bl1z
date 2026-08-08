@@ -124,7 +124,7 @@ def field_schema(field, defs):
     return base
 
 
-def message_schema(messages, name):
+def message_schema(messages, name, is_root=False):
     """Object schema for one message (no $defs — those live at top level)."""
     fields = messages[name]
     schema = {
@@ -139,9 +139,9 @@ def message_schema(messages, name):
             for f in fields
         },
     }
-    # Bare-map document: a root message whose only field is a map renders
-    # as the map itself (e.g. state.json is { "<id>": {...} }).
-    if len(fields) == 1 and fields[0].get("map"):
+    # Bare-map document: ONLY at root level, a root message whose only field
+    # is a map renders as the map itself (e.g. state.json is { "<id>": {...} }).
+    if is_root and len(fields) == 1 and fields[0].get("map"):
         del schema["required"]
         del schema["properties"]
         # The document IS the map: no map wrapper at the root.
@@ -184,7 +184,7 @@ def main():
             schema["$defs"] = {
                 n: message_schema(messages, n) for n in sorted(defs)
             }
-        body = message_schema(messages, name)
+        body = message_schema(messages, name, is_root=True)
         if "additionalProperties" in body:
             schema["additionalProperties"] = body.pop("additionalProperties")
         schema.update(body)  # required, then properties

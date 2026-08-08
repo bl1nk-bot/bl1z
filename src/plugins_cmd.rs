@@ -280,6 +280,7 @@ fn install_from(manifest_path: &Path, source: &str) -> Result<String, FormulaErr
         let script_url = format!("{dir}/{}", plugin.script);
         // sanitize: ไม่อนุญาต path traversal ใน script path
         if plugin.script.contains("..") || plugin.script.starts_with('/') {
+            let _ = fs::remove_dir_all(&dest_dir);
             return Err(FormulaError::new(
                 ErrorKind::PluginError,
                 "E805",
@@ -298,7 +299,10 @@ fn install_from(manifest_path: &Path, source: &str) -> Result<String, FormulaErr
             .map(|s| s.success())
             .unwrap_or(false);
         if !ok {
-            let _ = fs::remove_dir_all(&dest_dir);
+            // Only clean up files created by this install attempt, not the
+            // entire directory (which may contain a pre-existing installation).
+            let _ = fs::remove_file(&dest);
+            let _ = fs::remove_file(&script_dest);
             return Err(FormulaError::new(
                 ErrorKind::PluginError,
                 "E803",

@@ -166,11 +166,74 @@ fn pad_to_width(s: &str, width: usize, align: Align) -> String {
     }
 }
 
+/// Escape cell text for GFM markdown tables: backslash, pipe, and newline.
+/// Must be used consistently in both width calculation and rendering.
+fn md_escape(s: &str) -> String {
+    s.replace('\\', "\\\\")
+        .replace('|', "\\|")
+        .replace('\n', " ")
+}
+
 fn ansi_wrap(text: &str, color: Option<Color>) -> String {
     match color {
         Some(c) => format!("{}{}{}", c.ansi(), text, RESET),
         None => text.to_string(),
     }
+}
+
+/// Strip newlines and C0/C1 control sequences from cell text to prevent
+/// fake rows and terminal control injection in table output.
+fn sanitize_cell_text(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut chars = s.chars();
+    while let Some(ch) = chars.next() {
+        match ch {
+            '\n' | '\r' | '\t' => out.push(' '),
+            '\x1b' => {
+                // Skip ANSI escape: ESC ... (letter or ST)
+                // SGR: ESC [ ... m ; CSI: ESC [ ... letter
+                // OSC: ESC ] ... BEL or ESC ] ... ST (\x1b\\)
+                if let Some(next) = chars.next() {
+                    match next {
+                        '[' => {
+                            // CSI/SGR: consume until ASCII letter
+                            for c in chars.by_ref() {
+                                if c.is_ascii_alphabetic() {
+                                    break;
+                                }
+                            }
+                        }
+                        ']' => {
+                            // OSC: consume until BEL (\x07) or ST (\x1b\\)
+                            let mut prev = next;
+                            for c in chars.by_ref() {
+                                if c == '\x07' {
+                                    break;
+                                }
+                                if prev == '\x1b' && c == '\\' {
+                                    break;
+                                }
+                                prev = c;
+                            }
+                        }
+                        '(' | ')' | '#' | '%' => {
+                            // Charset/select sequences: consume one more char
+                            chars.next();
+                        }
+                        _ => {} // other ESC seqs: just drop the ESC + next
+                    }
+                }
+            }
+            c if c < '\x20' || c == '\x7f' => {
+                // Other C0 control chars: drop
+            }
+            c if ('\u{80}'..='\u{9f}').contains(&c) => {
+                // C1 control chars: drop
+            }
+            _ => out.push(ch),
+        }
+    }
+    out
 }
 
 fn make_border(
@@ -325,7 +388,7 @@ impl TableRenderer {
             let mut m = visible_width(col.title);
             for row in rows {
                 if let Some(cell) = row.cells.get(i) {
-                    let md = cell.text.replace('|', "\\|").replace('\n', " ");
+                    let md = md_escape(&cell.text);
                     m = m.max(visible_width(&md));
                 }
             }
@@ -382,7 +445,7 @@ impl TableRenderer {
         out.push('|');
         for (i, col) in self.schema.columns.iter().enumerate() {
             let cell = cells.get(i).map(|c| c.text.as_str()).unwrap_or("");
-            let md = cell.replace('|', "\\|").replace('\n', " ");
+            let md = md_escape(cell);
             let truncated = truncate_ellipsis(&md, col_w[i]);
             let padded = pad_to_width(&truncated, col_w[i], col.align);
             let _ = write!(out, " {padded} |");
@@ -448,7 +511,8 @@ impl TableRenderer {
         for (i, col) in self.schema.columns.iter().enumerate() {
             let cell = cells.get(i);
             let raw = cell.map(|c| c.text.as_str()).unwrap_or("");
-            let truncated = truncate_ellipsis(raw, widths[i]);
+            let clean = sanitize_cell_text(raw);
+            let truncated = truncate_ellipsis(&clean, widths[i]);
             let padded = pad_to_width(&truncated, widths[i], col.align);
 
             let color = cell.and_then(|c| c.color);

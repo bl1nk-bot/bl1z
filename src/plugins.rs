@@ -413,17 +413,20 @@ mod json {
     }
 
     /// True if the running engine is older than the requested version.
-    /// True if the running engine is older than the requested version.
-    /// Strict numeric-tuple compare; unparseable versions are treated as
-    /// not older (plugin allowed to load).
-    /// not older (plugin allowed to load).
+    /// Strict numeric-tuple compare after stripping pre-release suffixes
+    /// (e.g. "0.2.17-alpha" → [0, 2, 17]). Unparseable versions are
+    /// treated as not older (plugin allowed to load).
     fn engine_is_older_than(requested: &str) -> bool {
         let parse = |s: &str| -> Option<Vec<u32>> {
             let parts: Vec<_> = s.split('.').collect();
             if parts.is_empty() {
                 return None;
             }
-            parts.iter().map(|p| p.parse::<u32>().ok()).collect()
+            // Strip pre-release suffixes (e.g. "17-alpha" → "17")
+            parts
+                .iter()
+                .map(|p| p.split('-').next().unwrap_or(p).parse::<u32>().ok())
+                .collect()
         };
         match (parse(env!("CARGO_PKG_VERSION")), parse(requested)) {
             (Some(current), Some(req)) => current < req,
@@ -463,39 +466,53 @@ mod json {
                         None,
                     )
                 })?;
-            {
+
+            // Write stdin in a thread to avoid blocking before the deadline.
+            // The thread drops the handle after writing, closing the pipe (EOF).
+            let stdin_handle = child.stdin.take();
+            let payload = serde_json::to_vec(&args.iter().map(to_plain_json).collect::<Vec<_>>())
+                .unwrap_or_default();
+            let name_for_write = self.name.clone();
+            let write_thread = std::thread::spawn(move || {
                 use std::io::Write;
-                // Plain JSON on the wire (not the engine's tagged Value
-                // format) so scripts get real numbers/strings/arrays.
-                let payload =
-                    serde_json::to_vec(&args.iter().map(to_plain_json).collect::<Vec<_>>())
-                        .unwrap_or_default();
-                if let Some(mut stdin) = child.stdin.take() {
+                if let Some(mut stdin) = stdin_handle {
                     stdin.write_all(&payload).map_err(|e| {
                         FormulaError::new(
                             ErrorKind::PluginError,
                             "E805",
-                            &format!("ส่งข้อมูลเข้า script '{}' ไม่ได้: {}", self.name, e),
+                            &format!("ส่งข้อมูลเข้า script '{}' ไม่ได้: {}", name_for_write, e),
                             None,
                         )
                     })?;
                 }
-            }
-            // Run with 30s timeout to prevent stalls from hanging scripts
+                Ok::<(), FormulaError>(())
+            });
+
+            // Drain stdout and stderr in threads to prevent pipe-full deadlocks.
+            // If the child writes more than the pipe buffer (~64KB) and nobody
+            // reads, the child blocks — causing a false 30s timeout.
+            let stdout_handle = child.stdout.take();
+            let stderr_handle = child.stderr.take();
+            let stdout_thread = std::thread::spawn(move || {
+                let mut buf = Vec::new();
+                if let Some(mut out) = stdout_handle {
+                    let _ = std::io::Read::read_to_end(&mut out, &mut buf);
+                }
+                buf
+            });
+            let stderr_thread = std::thread::spawn(move || {
+                let mut buf = Vec::new();
+                if let Some(mut err) = stderr_handle {
+                    let _ = std::io::Read::read_to_end(&mut err, &mut buf);
+                }
+                buf
+            });
+
+            // Wait for process exit or timeout (drain threads keep pipes open)
             let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
-            let output = loop {
+            let status = loop {
                 match child.try_wait() {
-                    Ok(Some(_status)) => {
-                        // Process exited — drain remaining output
-                        break child.wait_with_output().map_err(|e| {
-                            FormulaError::new(
-                                ErrorKind::PluginError,
-                                "E805",
-                                &format!("รอ script '{}' ไม่ได้: {}", self.name, e),
-                                None,
-                            )
-                        })?;
-                    }
+                    Ok(Some(status)) => break status,
                     Ok(None) => {
                         if std::time::Instant::now() >= deadline {
                             let _ = child.kill();
@@ -519,8 +536,23 @@ mod json {
                     }
                 }
             };
-            if !output.status.success() {
-                let stderr = String::from_utf8_lossy(&output.stderr);
+
+            // Collect results from threads
+            let write_result = write_thread.join().unwrap_or_else(|_| {
+                Err(FormulaError::new(
+                    ErrorKind::PluginError,
+                    "E805",
+                    &format!("ส่งข้อมูลเข้า script '{}' ไม่ได้", self.name),
+                    None,
+                ))
+            });
+            write_result?;
+
+            let stdout_bytes = stdout_thread.join().unwrap_or_default();
+            let stderr_bytes = stderr_thread.join().unwrap_or_default();
+
+            if !status.success() {
+                let stderr = String::from_utf8_lossy(&stderr_bytes);
                 return Err(FormulaError::new(
                     ErrorKind::PluginError,
                     "E805",
@@ -528,7 +560,7 @@ mod json {
                     None,
                 ));
             }
-            let text = String::from_utf8_lossy(&output.stdout);
+            let text = String::from_utf8_lossy(&stdout_bytes);
             let plain: serde_json::Value = serde_json::from_str(text.trim()).map_err(|e| {
                 FormulaError::new(
                     ErrorKind::PluginError,

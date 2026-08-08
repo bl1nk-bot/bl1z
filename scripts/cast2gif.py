@@ -36,7 +36,9 @@ FG = (0xE5, 0xE5, 0xE5)
 
 SGR = re.compile(r"\x1b\[([0-9;]*)m")
 CSI = re.compile(r"\x1b\[([0-9;]*)([A-Za-z])")
-OTHER = re.compile(r"\x1b[^A-Za-z]*[A-Za-z]|[\x00-\x08\x0e-\x1f]")
+# OSC: ESC ] ... BEL (\x07) or ST (\x1b\\) — consume entire sequence
+OSC = re.compile(r"\x1b\][^\x07\x1b]*(?:\x1b\\|\x07)")
+OTHER = re.compile(r"\x1b[^A-Za-z\]]*[A-Za-z]|[\x00-\x08\x0e-\x1f]")
 
 
 class Cell:
@@ -115,6 +117,10 @@ class Screen:
                 m = SGR.match(data, i)
                 if m:
                     self.sgr(m.group(1))
+                    i = m.end()
+                    continue
+                m = OSC.match(data, i)
+                if m:
                     i = m.end()
                     continue
                 m = CSI.match(data, i)
@@ -198,6 +204,14 @@ def main():
             if kind == "o":
                 events.append((t, data))
     cols, rows = header["width"], header["height"]
+    # Validate header dimensions to prevent unbounded allocation
+    if not isinstance(cols, int) or not isinstance(rows, int):
+        sys.exit(f"error: cast header width/height must be integers, got {type(cols).__name__}/{type(rows).__name__}")
+    if cols < 1 or rows < 1:
+        sys.exit(f"error: cast header dimensions must be positive, got {cols}x{rows}")
+    MAX_DIM = 1000
+    if cols > MAX_DIM or rows > MAX_DIM:
+        sys.exit(f"error: cast header dimensions exceed maximum ({MAX_DIM}), got {cols}x{rows}")
 
     font = load_font(args.font, 18)
     cell_w = int(font.getlength("M")) + 1
