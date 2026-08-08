@@ -39,7 +39,12 @@ def median(xs):
 
 
 def percentile(xs, p):
-    return statistics.quantiles(xs, n=100, method="inclusive")[int(p) - 1]
+    p = int(p)
+    if not 1 <= p <= 99:
+        raise ValueError(f"percentile p must be between 1 and 99, got {p}")
+    if len(xs) < 2:
+        raise ValueError("percentile needs at least 2 data points")
+    return statistics.quantiles(xs, n=100, method="inclusive")[p - 1]
 
 
 def completion_rate(tasks):
