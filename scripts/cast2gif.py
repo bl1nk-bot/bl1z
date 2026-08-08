@@ -15,6 +15,14 @@ from PIL import Image, ImageDraw, ImageFont
 
 FONT = "/data/data/com.termux/files/usr/share/fonts/TTF/DejaVuSansMono.ttf"
 
+
+def load_font(path, size=18):
+    """Load truetype font, fall back to default if missing."""
+    try:
+        return ImageFont.truetype(path, size)
+    except (OSError, IOError):
+        return ImageFont.load_default()
+
 PALETTE = {
     30: (0x00, 0x00, 0x00), 31: (0xCD, 0x00, 0x00), 32: (0x00, 0xCD, 0x00),
     33: (0xCD, 0xCD, 0x00), 34: (0x00, 0x00, 0xEE), 35: (0xCD, 0x00, 0xCD),
@@ -140,7 +148,12 @@ class Screen:
                 i += 1
 
     def snapshot(self):
-        return tuple(tuple(cell.same for cell in row) for row in self.grid)
+        return (
+            tuple(
+                (cell.ch, cell.fg, cell.bg, cell.bold) for cell in row
+            )
+            for row in self.grid
+        ), self.r, self.c
 
 
 def render(screen, font, cell_w, cell_h, cursor=True):
@@ -171,6 +184,8 @@ def main():
     ap.add_argument("out")
     ap.add_argument("--fps", type=int, default=8)
     args = ap.parse_args()
+    if args.fps < 1:
+        ap.error("--fps must be greater than zero")
 
     events = []
     with open(args.cast, encoding="utf-8", errors="replace") as f:
@@ -181,21 +196,22 @@ def main():
                 events.append((t, data))
     cols, rows = header["width"], header["height"]
 
-    font = ImageFont.truetype(FONT, 18)
+    font = load_font(FONT, 18)
     cell_w = int(font.getlength("M")) + 1
     cell_h = 22
     screen = Screen(cols, rows)
 
-    frames, seen = [], set()
+    frames, last_sig = [], None
     last_t, next_t = 0.0, 1.0 / args.fps
     for t, data in events:
-        screen.feed(data)
+        # Capture samples BEFORE feeding new data (render pre-event state)
         while next_t <= t + 1e-9:
             sig = screen.snapshot()
-            if sig not in seen:
-                seen.add(sig)
+            if sig != last_sig:
+                last_sig = sig
                 frames.append((next_t, render(screen, font, cell_w, cell_h)))
             next_t += 1.0 / args.fps
+        screen.feed(data)
     if not frames:
         frames.append((0.0, render(screen, font, cell_w, cell_h)))
 

@@ -441,14 +441,43 @@ mod json {
                     })?;
                 }
             }
-            let output = child.wait_with_output().map_err(|e| {
-                FormulaError::new(
-                    ErrorKind::PluginError,
-                    "E805",
-                    &format!("รอ script '{}' ไม่ได้: {}", self.name, e),
-                    None,
-                )
-            })?;
+            // Run with 30s timeout to prevent stalls from hanging scripts
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+            let output = loop {
+                match child.try_wait() {
+                    Ok(Some(_status)) => {
+                        // Process exited — drain remaining output
+                        break child.wait_with_output().map_err(|e| {
+                            FormulaError::new(
+                                ErrorKind::PluginError,
+                                "E805",
+                                &format!("รอ script '{}' ไม่ได้: {}", self.name, e),
+                                None,
+                            )
+                        })?;
+                    }
+                    Ok(None) => {
+                        if std::time::Instant::now() >= deadline {
+                            let _ = child.kill();
+                            return Err(FormulaError::new(
+                                ErrorKind::PluginError,
+                                "E805",
+                                &format!("script '{}' timeout (30s)", self.name),
+                                None,
+                            ));
+                        }
+                        std::thread::sleep(std::time::Duration::from_millis(10));
+                    }
+                    Err(e) => {
+                        return Err(FormulaError::new(
+                            ErrorKind::PluginError,
+                            "E805",
+                            &format!("รอ script '{}' ไม่ได้: {}", self.name, e),
+                            None,
+                        ));
+                    }
+                }
+            };
             if !output.status.success() {
                 let stderr = String::from_utf8_lossy(&output.stderr);
                 return Err(FormulaError::new(

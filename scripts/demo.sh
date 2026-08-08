@@ -11,6 +11,7 @@ export COLUMNS="${COLUMNS:-80}"
 
 STORE="$HOME/.bl1z-demo-store"
 DEV_DIR="$HOME/.bl1z-demo-dev"
+export BL1Z_PLUGINS_DIR="$STORE"
 trap 'rm -rf "$STORE" "$DEV_DIR"' EXIT
 
 rm -rf "$STORE" "$DEV_DIR"

@@ -57,6 +57,8 @@ if command -v python3 >/dev/null 2>&1; then
     python3 tools/sync_docs.py version "$VERSION"
     # Changelog: marker `## [Unreleased]` -> `## [VERSION] - date` (EN + TH)
     python3 tools/sync_docs.py changelog "$VERSION"
+else
+    echo "warning: python3 not found — skipping doc sync and changelog"
 fi
 
 # Update .bump-version.json state (current/next)
