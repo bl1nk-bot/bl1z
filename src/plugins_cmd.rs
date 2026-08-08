@@ -493,12 +493,15 @@ fn format_manifest(path: &Path, fix: bool) -> Result<(), FormulaError> {
             None,
         )
     })?;
-    // เขียนก่อน แล้ว validate — ถ้าเสีย ให้คืนไฟล์เดิม (กันข้อมูลหาย)
-    fs::write(path, format!("{pretty}\n")).map_err(io_err("เขียน manifest"))?;
-    if let Err(e) = load_json_plugin(path.to_str().expect("path")) {
-        let _ = fs::write(path, original);
+    // validate ที่ไฟล์ชั่วคราวก่อน แล้วค่อย rename ทับ (atomic, กันข้อมูลหาย)
+    let tmp = path.with_extension("json.tmp");
+    fs::write(&tmp, format!("{pretty}\n")).map_err(io_err("เขียน manifest ชั่วคราว"))?;
+    if let Err(e) = load_json_plugin(tmp.to_str().expect("path")) {
+        let _ = fs::remove_file(&tmp);
         return Err(e);
     }
+    fs::rename(&tmp, path).map_err(io_err("แทนที่ manifest"))?;
+    let _ = original;
     Ok(())
 }
 
