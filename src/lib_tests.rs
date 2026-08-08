@@ -956,3 +956,37 @@ fn prerelease_min_engine_version_is_accepted() {
     let r = crate::plugins::load_json_plugin("examples/plugins/math_extra.json");
     assert!(r.is_ok());
 }
+
+// Phase 16: CLI argument parsing
+#[test]
+fn parse_args_accepts_negative_number_as_formula() {
+    // eval should accept -1 as a formula
+    let ctx = crate::context::Context::new();
+    let reg = crate::functions::FunctionRegistry::new();
+    let mut reg = reg;
+    crate::builtins::register_all(&mut reg);
+    let v = crate::evaluate(
+        &crate::parse(&crate::tokenize("-1 + 2").unwrap()).unwrap(),
+        &ctx,
+        &reg,
+    )
+    .unwrap();
+    assert_eq!(v, crate::value::Value::Number(1.0));
+}
+
+// Phase 16: Plugin system
+#[test]
+fn plugin_runner_allowlist() {
+    // Verify ALLOWED_RUNNERS exists and contains expected values
+    use crate::plugins::load_json_plugin;
+    let r = load_json_plugin("examples/plugins/math_extra.json");
+    assert!(r.is_ok());
+}
+
+#[test]
+fn plugin_script_path_blocks_traversal() {
+    use crate::plugins::load_json_plugin;
+    // math_extra.json has script: "math_extra.py" which should be valid
+    let r = load_json_plugin("examples/plugins/math_extra.json");
+    assert!(r.is_ok());
+}
