@@ -1026,10 +1026,28 @@ fn parse_args_accepts_negative_number_as_formula() {
 // Phase 16: Plugin system
 #[test]
 fn plugin_runner_allowlist() {
-    // Verify ALLOWED_RUNNERS exists and contains expected values
     use crate::plugins::load_json_plugin;
+    // Valid runner (python3) should load
     let r = load_json_plugin("examples/plugins/math_extra.json");
     assert!(r.is_ok());
+}
+
+#[test]
+fn plugin_runner_allowlist_rejects_disallowed() {
+    use crate::plugins::load_json_plugin;
+    // Disallowed runner should fail with E806
+    let tmp = std::env::temp_dir().join("bl1z_test_bad_runner.json");
+    std::fs::write(
+        &tmp,
+        r#"{"id":"test","name":"Test","version":"0.1.0","runner":"sh","script":"x.py","functions":[]}"#,
+    )
+    .unwrap();
+    let r = load_json_plugin(tmp.to_str().unwrap());
+    match r {
+        Err(e) => assert_eq!(e.code, "E806"),
+        Ok(_) => panic!("should reject disallowed runner 'sh'"),
+    }
+    let _ = std::fs::remove_file(&tmp);
 }
 
 #[test]
@@ -1038,4 +1056,22 @@ fn plugin_script_path_blocks_traversal() {
     // math_extra.json has script: "math_extra.py" which should be valid
     let r = load_json_plugin("examples/plugins/math_extra.json");
     assert!(r.is_ok());
+}
+
+#[test]
+fn plugin_script_path_rejects_traversal() {
+    use crate::plugins::load_json_plugin;
+    // Script with .. should fail with E805
+    let tmp = std::env::temp_dir().join("bl1z_test_traversal.json");
+    std::fs::write(
+        &tmp,
+        r#"{"id":"test","name":"Test","version":"0.1.0","runner":"python3","script":"../evil.py","functions":[]}"#,
+    )
+    .unwrap();
+    let r = load_json_plugin(tmp.to_str().unwrap());
+    match r {
+        Err(e) => assert_eq!(e.code, "E805"),
+        Ok(_) => panic!("should reject script with '..'"),
+    }
+    let _ = std::fs::remove_file(&tmp);
 }

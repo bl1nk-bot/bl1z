@@ -243,16 +243,18 @@ fn cmd_repl(args: &[String]) -> std::process::ExitCode {
                     return std::process::ExitCode::from(1);
                 }
             };
-            // โหมดโต้ตอบ = มี prompt + ผลลัพธ์แบบ `= value`; โหมด pipe = เงียบ
-            let interactive = std::io::stdin().is_terminal() && std::io::stdout().is_terminal();
-            if interactive {
+            // โหมดโต้ตอบ = stdin มี prompt; โหมด pipe = เงียบ
+            // stdout redirect ไม่เปลี่ยนโหมด — แค่ข้าม prompt/banner
+            let interactive = std::io::stdin().is_terminal();
+            let show_ui = interactive && std::io::stdout().is_terminal();
+            if show_ui {
                 println!("bl1z {VERSION} — พิมพ์สูตรแล้วกด Enter (Ctrl-D หรือ `exit` เพื่อออก)");
             }
             let mut stdin = std::io::stdin().lock();
             let mut buf = String::new();
             let mut exit = std::process::ExitCode::SUCCESS;
             loop {
-                if interactive {
+                if show_ui {
                     use std::io::Write;
                     print!("bl1z> ");
                     let _ = std::io::stdout().flush();
@@ -272,14 +274,14 @@ fn cmd_repl(args: &[String]) -> std::process::ExitCode {
                 }
                 match evaluate_line(trimmed, &registry, &ctx) {
                     Ok(v) => {
-                        if interactive {
+                        if show_ui {
                             println!("= {v}");
                         } else {
                             println!("{v}");
                         }
                     }
                     Err(e) => {
-                        if interactive {
+                        if show_ui {
                             println!("error: {e}");
                             exit = std::process::ExitCode::from(1);
                         } else {

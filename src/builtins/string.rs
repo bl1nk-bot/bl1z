@@ -95,7 +95,7 @@ pub fn pad() -> BuiltinFunction {
                 return Err(FormulaError::new(
                     ErrorKind::FunctionError,
                     "E501",
-&format!("pad width ต้องเป็นจำนวนเต็มไม่ลบ แต่ได้ {}", width),
+                    &format!("pad width ต้องเป็นจำนวนเต็มไม่ลบ แต่ได้ {}", width),
                     None,
                 ));
             }
