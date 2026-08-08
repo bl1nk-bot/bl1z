@@ -340,7 +340,6 @@ mod json {
             // security: allowlist of safe runners (no arbitrary commands)
             const ALLOWED_RUNNERS: &[&str] = &[
                 "python3",
-                "python",
                 "python3.11",
                 "python3.12",
                 "python3.13",
@@ -353,7 +352,7 @@ mod json {
                     ErrorKind::PluginError,
                     "E806",
                     &format!(
-                        "runner '{}' ไม่อนุญาต (อนุญาต: python3, node, deno, bun)",
+                        "runner '{}' ไม่อนุญาต (อนุญาต: python3, python3.11-13, node, deno, bun)",
                         file.runner
                     ),
                     None,
@@ -367,13 +366,20 @@ mod json {
             .into_iter()
             .map(|f| {
                 // Validate function name: must be a valid identifier [a-zA-Z_][a-zA-Z0-9_]*
+                if matches!(f.name.as_str(), "true" | "false" | "null" | "fn") {
+                    return Err(FormulaError::new(
+                        ErrorKind::PluginError,
+                        "E807",
+                        &format!("ชื่อฟังก์ชัน '{}' สงวนไว้ (reserved word) — เลือกชื่ออื่น", f.name),
+                        None,
+                    ));
+                }
                 if !f
                     .name
                     .chars()
                     .all(|c| c.is_ascii_alphanumeric() || c == '_')
                     || f.name.is_empty()
                     || f.name.starts_with(|c: char| c.is_ascii_digit())
-                    || matches!(f.name.as_str(), "true" | "false" | "null" | "fn")
                 {
                     return Err(FormulaError::new(
                         ErrorKind::PluginError,

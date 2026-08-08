@@ -16,25 +16,7 @@ fi
 
 CONFIG_FILE=".bump-version.json"
 if [[ -f "$CONFIG_FILE" ]]; then
-    VERSION=$(python3 -c "
-import json, sys
-try:
-    cfg = json.load(open('$CONFIG_FILE'))
-except (json.JSONDecodeError, OSError) as e:
-    print(f'error: cannot parse $CONFIG_FILE: {e}', file=sys.stderr)
-    sys.exit(1)
-if 'phase_to_version' not in cfg or not isinstance(cfg['phase_to_version'], dict):
-    print('error: $CONFIG_FILE missing or invalid phase_to_version', file=sys.stderr)
-    sys.exit(1)
-phase = int(sys.argv[1])
-for span, template in cfg['phase_to_version'].items():
-    lo, hi = map(int, span.replace('Phase ', '').split('-'))
-    if lo <= phase <= hi:
-        print(template.format(phase=phase))
-        break
-else:
-    sys.exit(1)
-" "$PHASE") || { echo "Phase $PHASE not found in phase_to_version in $CONFIG_FILE"; exit 1; }
+    VERSION=$(python3 tools/resolve_version.py "$PHASE") || { echo "Phase $PHASE not found in phase_to_version in $CONFIG_FILE"; exit 1; }
 else
     VERSION="0.2.$PHASE"
 fi

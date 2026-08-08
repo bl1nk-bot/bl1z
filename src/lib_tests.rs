@@ -947,14 +947,63 @@ fn plugin_loads_valid_manifest() {
     assert_eq!(p.name, "Math Extra");
 }
 
-// Plugin: strict version check
+// Plugin: prerelease minEngineVersion is parsed correctly (strips suffix)
 #[test]
-fn prerelease_min_engine_version_is_accepted() {
-    // engine_is_older_than is private, but we can test via load_json_plugin
-    // A plugin with minEngineVersion "0.2.17-alpha" should still load
-    // (unparseable version = don't block, per our implementation)
-    let r = crate::plugins::load_json_plugin("examples/plugins/math_extra.json");
-    assert!(r.is_ok());
+fn prerelease_min_engine_version_is_rejected_when_behind() {
+    use crate::plugins::load_json_plugin;
+    // Create a temp manifest requiring engine >= 0.2.17-alpha (parsed as 0.2.17)
+    // Current engine is 0.2.16, so this should be rejected
+    let tmp = std::env::temp_dir().join("bl1z_test_prerelease.json");
+    std::fs::write(
+        &tmp,
+        r#"{
+            "id": "prerelease_test",
+            "name": "Pretest",
+            "version": "0.1.0",
+            "runner": "python3",
+            "script": "noop.py",
+            "minEngineVersion": "0.2.17-alpha",
+            "functions": []
+        }"#,
+    )
+    .unwrap();
+    let r = load_json_plugin(tmp.to_str().unwrap());
+    match r {
+        Err(e) => assert!(
+            e.message.contains("0.2.17"),
+            "error should mention version: {}",
+            e.message
+        ),
+        Ok(_) => panic!("should reject plugin requiring newer engine"),
+    }
+    let _ = std::fs::remove_file(&tmp);
+}
+
+// Plugin: prerelease minEngineVersion accepted when engine is new enough
+#[test]
+fn prerelease_min_engine_version_is_accepted_when_current() {
+    use crate::plugins::load_json_plugin;
+    // Current engine is 0.2.16, plugin requires 0.2.15-beta (parsed as 0.2.15) — should load
+    let tmp = std::env::temp_dir().join("bl1z_test_prerelease_ok.json");
+    std::fs::write(
+        &tmp,
+        r#"{
+            "id": "prerelease_test",
+            "name": "Pretest",
+            "version": "0.1.0",
+            "runner": "python3",
+            "script": "noop.py",
+            "minEngineVersion": "0.2.15-beta",
+            "functions": []
+        }"#,
+    )
+    .unwrap();
+    let r = load_json_plugin(tmp.to_str().unwrap());
+    assert!(
+        r.is_ok(),
+        "should accept plugin with older prerelease requirement"
+    );
+    let _ = std::fs::remove_file(&tmp);
 }
 
 // Phase 16: CLI argument parsing

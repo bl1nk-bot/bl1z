@@ -25,18 +25,7 @@ CONFIG_FILE=".bump-version.json"
 # Determine version from input — phase mapping อ่านจาก config ไม่ hardcode
 if [[ "$INPUT" =~ ^[0-9]+$ ]]; then
     PHASE=$INPUT
-    VERSION=$(python3 -c "
-import json, sys
-cfg = json.load(open('$CONFIG_FILE'))
-phase = int(sys.argv[1])
-for span, template in cfg['phase_to_version'].items():
-    lo, hi = map(int, span.replace('Phase ', '').split('-'))
-    if lo <= phase <= hi:
-        print(template.format(phase=phase))
-        break
-else:
-    sys.exit(1)
-" "$PHASE") || { echo "Phase $PHASE ไม่อยู่ในช่วง phase_to_version ใน $CONFIG_FILE"; exit 1; }
+    VERSION=$(python3 tools/resolve_version.py "$PHASE") || { echo "Phase $PHASE ไม่อยู่ในช่วง phase_to_version ใน $CONFIG_FILE"; exit 1; }
 else
     # Input is semver
     if [[ ! "$INPUT" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then

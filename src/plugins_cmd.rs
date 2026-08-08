@@ -289,8 +289,24 @@ fn install_from(manifest_path: &Path, source: &str) -> Result<String, FormulaErr
             ));
         }
         let script_dest = dest_dir.join(&plugin.script);
+        // Security: verify the resolved path stays within dest_dir
+        // (catches absolute-path escapes on any platform)
+        if !script_dest.starts_with(&dest_dir) {
+            let _ = fs::remove_dir_all(&dest_dir);
+            return Err(FormulaError::new(
+                ErrorKind::PluginError,
+                "E805",
+                &format!("เส้นทาง runner script อยู่นอกปลั๊กอิน: `{}`", plugin.script),
+                None,
+            ));
+        }
         if let Some(parent) = script_dest.parent() {
-            fs::create_dir_all(parent).map_err(io_err("สร้างโฟลเดอร์ runner script"))?;
+            if let Err(e) = fs::create_dir_all(parent) {
+                let _ = fs::remove_dir_all(&dest_dir);
+                return Err(io_err("สร้างโฟลเดอร์ runner script")(
+                    e,
+                ));
+            }
         }
         let ok = Command::new("curl")
             .args(["-fsSL", &script_url, "-o"])
