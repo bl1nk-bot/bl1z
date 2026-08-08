@@ -58,10 +58,16 @@ def analyze(text: str):
 
 def pairs():
     out = []
+    missing = []
     for src in source_md_files():
         m = mirror_for(src)
         if m.exists():
             out.append((src, m))
+        else:
+            missing.append(str(src.relative_to(ROOT)))
+    if missing:
+        import sys as _sys
+        print(f"warning: {len(missing)} source file(s) without .th.md mirror: {', '.join(missing)}", file=_sys.stderr)
     return out
 
 
@@ -119,8 +125,11 @@ def sync_version(v: str | None = None):
 def changelog_entry(v: str):
     """Rename marker `## [Unreleased]` -> `## [V] - date` in EN+TH changelog,
     then insert a fresh `## [Unreleased]` above it. Marker must exist exactly once."""
+    import re as _re
     from datetime import date
 
+    if not _re.match(r"^\d+\.\d+\.\d+$", v):
+        sys.exit(f"changelog: version format must be X.Y.Z, got `{v}`")
     today = date.today().isoformat()
     header = f"## [{v}] - {today}"
     changed = []
