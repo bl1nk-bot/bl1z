@@ -25,7 +25,7 @@ for p in (g.ROOT / "examples" / "plugins").glob("*.json"):
     print(f"  manifest ok: {p.name}")
 
 # 2. Store state: a bare map of PluginEntry (real state.json shape).
-store = g.message_schema(msgs, "PluginStoreState")
+store = g.message_schema(msgs, "PluginStoreState", is_root=True)
 store["$defs"] = {n: g.message_schema(msgs, n) for n in g.referenced_from(msgs, "PluginStoreState")}
 jsonschema.validate(
     {"math_extra": {"enabled": True, "path": "/home/u/.bl1z/plugins/math_extra/plugin.json"}},

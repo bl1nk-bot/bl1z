@@ -1,9 +1,10 @@
 //! JSON plugin example for bl1z
 //!
-//! Demonstrates loading plugin functions from a plugin.json file — no Rust
-//! code, no compile step. The function body is a bl1z expression, so the
-//! plugin language is the formula language.
+//! Loads and runs an external Python plugin (math_extra.py) via python3.
+//! Plugin functions are implemented as Python scripts; bl1z spawns the
+//! interpreter, passes args as JSON on stdin, and reads results from stdout.
 //!
+//! Requires: python3 on PATH.
 //! Run with: cargo run --example plugin_json --features serialization
 
 use bl1z::builtins;

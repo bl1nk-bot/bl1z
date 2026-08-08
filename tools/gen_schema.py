@@ -127,6 +127,7 @@ def field_schema(field, defs):
 def message_schema(messages, name, is_root=False):
     """Object schema for one message (no $defs — those live at top level)."""
     fields = messages[name]
+    defs = referenced_from(messages, name)
     schema = {
         "type": "object",
         "required": [
@@ -135,8 +136,7 @@ def message_schema(messages, name, is_root=False):
             if not f.get("optional") and not f.get("repeated") and not f.get("map")
         ],
         "properties": {
-            camel(f["name"]): field_schema(f, referenced_from(messages, name))
-            for f in fields
+            camel(f["name"]): field_schema(f, defs) for f in fields
         },
     }
     # Bare-map document: ONLY at root level, a root message whose only field
@@ -145,7 +145,7 @@ def message_schema(messages, name, is_root=False):
         del schema["required"]
         del schema["properties"]
         # The document IS the map: no map wrapper at the root.
-        schema["additionalProperties"] = base_schema(fields[0], referenced_from(messages, name))
+        schema["additionalProperties"] = base_schema(fields[0], defs)
     return schema
 
 
