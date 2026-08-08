@@ -365,14 +365,32 @@ mod json {
             .functions
             .into_iter()
             .map(|f| {
-                Rc::new(ScriptFunction {
+                // Validate function name: must be a valid identifier [a-zA-Z_][a-zA-Z0-9_]*
+                if !f
+                    .name
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || c == '_')
+                    || f.name.is_empty()
+                    || f.name.starts_with(|c: char| c.is_ascii_digit())
+                {
+                    return Err(FormulaError::new(
+                        ErrorKind::PluginError,
+                        "E804",
+                        &format!(
+                            "ชื่อฟังก์ชัน '{}' ไม่ถูกต้อง (อนุญาตเฉพาะ a-z A-Z 0-9 _ และขึ้นต้นด้วยตัวอักษรหรือ _)",
+                            f.name
+                        ),
+                        None,
+                    ));
+                }
+                Ok(Rc::new(ScriptFunction {
                     name: f.name,
                     params: f.params,
                     runner: runner.clone(),
                     script_path: script_path.clone(),
-                }) as Rc<dyn Function>
+                }) as Rc<dyn Function>)
             })
-            .collect();
+            .collect::<Result<Vec<_>, _>>()?;
         Ok(JsonPlugin {
             id: file.id.unwrap_or_else(|| file.name.clone()),
             name: file.name,

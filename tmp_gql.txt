@@ -1,0 +1,1 @@
+{ repository(owner: "bl1nk-bot", name: "bl1z") { pullRequest(number: 51) { reviewThreads(first: 100) { nodes { id isResolved comments(first: 1) { nodes { id path body } } } } } }
