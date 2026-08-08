@@ -46,6 +46,16 @@ else
     VERSION="$INPUT"
 fi
 
+# Validate prerequisites before making any changes
+if [[ ! -f "$CONFIG_FILE" ]]; then
+    echo "error: $CONFIG_FILE not found"
+    exit 1
+fi
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "error: python3 required for doc sync and changelog"
+    exit 1
+fi
+
 # Update Cargo.toml
 if [ -f "Cargo.toml" ]; then
     sed -i "s/^version = \"[^\"]*\"$/version = \"${VERSION}\"/" Cargo.toml
@@ -53,13 +63,9 @@ if [ -f "Cargo.toml" ]; then
 fi
 
 # Sync doc version refs (README + docs/th/README.th.md) — กลไก, ไม่ต้องมือแก้
-if command -v python3 >/dev/null 2>&1; then
-    python3 tools/sync_docs.py version "$VERSION"
-    # Changelog: marker `## [Unreleased]` -> `## [VERSION] - date` (EN + TH)
-    python3 tools/sync_docs.py changelog "$VERSION"
-else
-    echo "warning: python3 not found — skipping doc sync and changelog"
-fi
+python3 tools/sync_docs.py version "$VERSION"
+# Changelog: marker `## [Unreleased]` -> `## [VERSION] - date` (EN + TH)
+python3 tools/sync_docs.py changelog "$VERSION"
 
 # Update .bump-version.json state (current/next)
 if [ -f "$CONFIG_FILE" ]; then
