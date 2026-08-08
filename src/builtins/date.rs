@@ -252,7 +252,7 @@ pub fn date_add() -> BuiltinFunction {
                 _ => {
                     return Err(FormulaError::new(
                         ErrorKind::FunctionError,
-                        "E301",
+                        "E503",
                         &format!(
                             "หน่วย '{}' ไม่ถูกต้อง — ใช้ได้ 'days', 'hours', 'months', หรือ 'years'",
                             unit_str
@@ -264,7 +264,7 @@ pub fn date_add() -> BuiltinFunction {
             .map_err(|_| {
                 FormulaError::new(
                     ErrorKind::FunctionError,
-                    "E301",
+                    "E503",
                     &format!("ไม่สามารถเพิ่ม {} {} จากวันที่ {} ได้", n, unit_str, ts),
                     None,
                 )

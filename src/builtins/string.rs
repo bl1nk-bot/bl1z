@@ -91,6 +91,14 @@ pub fn pad() -> BuiltinFunction {
                     None,
                 ));
             };
+            if !width.is_finite() || width.fract() != 0.0 || width < 0.0 {
+                return Err(FormulaError::new(
+                    ErrorKind::FunctionError,
+                    "E501",
+                    &format!("pad width ต้องเป็นจำนวนเต็มบวก แต่ได้ {}", width),
+                    None,
+                ));
+            }
             let width = width as usize;
             const MAX_PAD_WIDTH: usize = 10_000;
             if width > MAX_PAD_WIDTH {
@@ -103,7 +111,7 @@ pub fn pad() -> BuiltinFunction {
             }
             Ok(Value::String(format!(
                 "{:0>width$}",
-                n as i64,
+                n.abs() as i64,
                 width = width
             )))
         },
