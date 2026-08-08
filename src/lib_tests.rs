@@ -949,7 +949,7 @@ fn plugin_loads_valid_manifest() {
 
 // Plugin: strict version check
 #[test]
-fn strict_version_rejects_prerelease() {
+fn prerelease_min_engine_version_is_accepted() {
     // engine_is_older_than is private, but we can test via load_json_plugin
     // A plugin with minEngineVersion "0.2.17-alpha" should still load
     // (unparseable version = don't block, per our implementation)
