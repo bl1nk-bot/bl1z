@@ -44,7 +44,12 @@ def weekday_name_en(dt):
 
 def render(template, name, value):
     import re as _re
-    return _re.sub(r"\{\{(\w+)\}\}", lambda m: str(name) if m.group(1) == "name" else str(value), template)
+    replacements = {"name": str(name), "value": str(value)}
+    return _re.sub(
+        r"\{\{(\w+)\}\}",
+        lambda m: replacements.get(m.group(1), m.group(0)),
+        template,
+    )
 
 
 def median(xs):
