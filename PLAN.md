@@ -180,7 +180,7 @@
 - [x] 16.5 Auto-load ปลั๊กอินที่ enabled ใน eval/repl (`enabled_plugin_paths`)
 - [x] 16.6 IDL: `proto/bl1z_plugin.proto` → `tools/gen_schema.py` → 3 schemas (manifest/store/protocol)
 - [x] 16.7 ตัวอย่างปลั๊กอิน: math_extra, string_utils, obsidian_like (Python scripts)
-- [x] 16.8 ลบโค้ดซ้ำ: value_main.rs, value_pr26.rs, higher_order_original.rs, acp.ymal
+- [x] 16.8 ลบโค้ดซ้ำ: value_main.rs, value_pr26.rs, higher_order_original.rs, acp.yaml
 
 **Files:** `main.rs`, `plugins.rs`, `plugins_cmd.rs`, `proto/`, `tools/gen_schema.py`
 
