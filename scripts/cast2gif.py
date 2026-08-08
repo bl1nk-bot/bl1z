@@ -215,6 +215,10 @@ def main():
                 frames.append((next_t, render(screen, font, cell_w, cell_h)))
             next_t += 1.0 / args.fps
         screen.feed(data)
+    if events:
+        sig = screen.snapshot()
+        if sig != last_sig:
+            frames.append((next_t, render(screen, font, cell_w, cell_h)))
     if not frames:
         frames.append((0.0, render(screen, font, cell_w, cell_h)))
 
