@@ -11,7 +11,7 @@ import sys
 
 def slugify(s):
     s = s.lower().strip()
-    s = re.sub(r"[^\w]+", "-", s, flags=re.UNICODE)
+    s = re.sub(r"[\W_]+", "-", s, flags=re.UNICODE)
     s = re.sub(r"-+", "-", s)
     return s.strip("-")
 
