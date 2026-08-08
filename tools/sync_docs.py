@@ -65,9 +65,12 @@ def pairs(fail_on_missing=False):
             out.append((src, m))
         else:
             missing.append(str(src.relative_to(ROOT)))
-    if missing and fail_on_missing:
+    if missing:
         import sys as _sys
-        _sys.exit(f"error: {len(missing)} source file(s) without .th.md mirror: {', '.join(missing)}")
+        message = f"{len(missing)} source file(s) without .th.md mirror: {', '.join(missing)}"
+        if fail_on_missing:
+            _sys.exit(f"error: {message}")
+        print(f"warning: {message}", file=_sys.stderr)
     return out
 
 
