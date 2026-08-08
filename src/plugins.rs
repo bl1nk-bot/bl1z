@@ -501,13 +501,23 @@ mod json {
                 Some(Value::Array(out))
             }
             serde_json::Value::Object(map) => {
+                if map.len() == 1 {
+                    if let Some(serde_json::Value::Array(values)) = map.get("range") {
+                        if let [start, end, step] = values.as_slice() {
+                            if let (Some(start), Some(end), Some(step)) =
+                                (start.as_i64(), end.as_i64(), step.as_i64())
+                            {
+                                return Some(Value::Range { start, end, step });
+                            }
+                        }
+                    }
+                }
                 let mut out = std::collections::HashMap::new();
                 for (k, val) in map {
                     out.insert(k.clone(), from_plain_json(val)?);
                 }
                 Some(Value::Map(out))
             }
-        }
     }
 
     impl Function for ScriptFunction {
