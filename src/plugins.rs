@@ -377,7 +377,7 @@ mod json {
                 {
                     return Err(FormulaError::new(
                         ErrorKind::PluginError,
-                        "E804",
+                        "E807",
                         &format!(
                             "ชื่อฟังก์ชัน '{}' ไม่ถูกต้อง (อนุญาตเฉพาะ a-z A-Z 0-9 _ และขึ้นต้นด้วยตัวอักษรหรือ _)",
                             f.name
