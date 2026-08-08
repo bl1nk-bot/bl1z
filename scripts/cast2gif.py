@@ -150,10 +150,12 @@ class Screen:
     def snapshot(self):
         return (
             tuple(
-                (cell.ch, cell.fg, cell.bg, cell.bold) for cell in row
-            )
-            for row in self.grid
-        ), self.r, self.c
+                tuple((cell.ch, cell.fg, cell.bg, cell.bold) for cell in row)
+                for row in self.grid
+            ),
+            self.r,
+            self.c,
+        )
 
 
 def render(screen, font, cell_w, cell_h, cursor=True):
