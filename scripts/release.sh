@@ -1,17 +1,36 @@
 #!/bin/bash
 # scripts/release.sh - Version and Changelog updater
 # Usage: ./scripts/release.sh <phase_number> "<summary>"
+# Uses .bump-version.json phase_to_version mapping (same as bump-versions.sh)
+
+set -e
 
 PHASE=$1
 SUMMARY=$2
 
 if [[ -z "$PHASE" ]] || [[ -z "$SUMMARY" ]]; then
     echo "Usage: ./scripts/release.sh <phase_number> \"<summary>\""
-    echo "Example: ./scripts/release.sh 8 \"Implement access chaining support\""
+    echo "Example: ./scripts/release.sh 16 \"Implement plugin ecosystem\""
     exit 1
 fi
 
-VERSION="0.2.$PHASE"
+CONFIG_FILE=".bump-version.json"
+if [[ -f "$CONFIG_FILE" ]]; then
+    VERSION=$(python3 -c "
+import json, sys
+cfg = json.load(open('$CONFIG_FILE'))
+phase = int(sys.argv[1])
+for span, template in cfg['phase_to_version'].items():
+    lo, hi = map(int, span.replace('Phase ', '').split('-'))
+    if lo <= phase <= hi:
+        print(template.format(phase=phase))
+        break
+else:
+    sys.exit(1)
+" "$PHASE") || { echo "Phase $PHASE not found in phase_to_version in $CONFIG_FILE"; exit 1; }
+else
+    VERSION="0.2.$PHASE"
+fi
 DATE=$(date +%Y-%m-%d)
 
 echo "📦 Preparing Release version $VERSION (Phase $PHASE)..."
