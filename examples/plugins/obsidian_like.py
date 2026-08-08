@@ -16,22 +16,35 @@ WEEKDAYS_EN = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday
 
 def iso_date(dt):
     # dt is a string like "2026-08-04" or an ISO timestamp
-    d = datetime.date.fromisoformat(dt[:10])
+    import datetime as _dt
+    if len(dt) > 10 and ("T" in dt or "Z" in dt):
+        ts = _dt.datetime.fromisoformat(dt.replace("Z", "+00:00"))
+        return ts.astimezone().date().isoformat()
+    d = _dt.date.fromisoformat(dt[:10])
     return d.isoformat()
 
 
 def weekday_name(dt):
-    d = datetime.date.fromisoformat(dt[:10])
+    import datetime as _dt
+    if len(dt) > 10 and ("T" in dt or "Z" in dt):
+        ts = _dt.datetime.fromisoformat(dt.replace("Z", "+00:00"))
+        return WEEKDAYS_TH[ts.astimezone().weekday()]
+    d = _dt.date.fromisoformat(dt[:10])
     return WEEKDAYS_TH[d.weekday()]
 
 
 def weekday_name_en(dt):
-    d = datetime.date.fromisoformat(dt[:10])
+    import datetime as _dt
+    if len(dt) > 10 and ("T" in dt or "Z" in dt):
+        ts = _dt.datetime.fromisoformat(dt.replace("Z", "+00:00"))
+        return WEEKDAYS_EN[ts.astimezone().weekday()]
+    d = _dt.date.fromisoformat(dt[:10])
     return WEEKDAYS_EN[d.weekday()]
 
 
 def render(template, name, value):
-    return template.replace("{{name}}", str(name)).replace("{{value}}", str(value))
+    import re as _re
+    return _re.sub(r"\{\{(\w+)\}\}", lambda m: str(name) if m.group(1) == "name" else str(value), template)
 
 
 def median(xs):
@@ -75,7 +88,11 @@ def main():
     if fn not in FUNCS:
         print(json.dumps({"error": f"unknown function: {fn}"}), file=sys.stderr)
         sys.exit(1)
-    print(json.dumps(FUNCS[fn](*args)))
+    try:
+        print(json.dumps(FUNCS[fn](*args)))
+    except (ValueError, TypeError) as e:
+        print(json.dumps({"error": f"{fn}: {e}"}), file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

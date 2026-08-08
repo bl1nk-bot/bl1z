@@ -19,6 +19,9 @@ def gcd(a, b):
 
 
 def is_prime(n):
+    n = int(n)
+    if n < 0 or n > 10_000_000:
+        raise ValueError(f"is_prime: n must be 0..10_000_000, got {n}")
     if n < 2:
         return False
     for i in range(2, int(math.sqrt(n)) + 1):
@@ -28,7 +31,10 @@ def is_prime(n):
 
 
 def primes_up_to(n):
-    return [i for i in range(2, int(n) + 1) if is_prime(i)]
+    n = int(n)
+    if n < 0 or n > 1_000_000:
+        raise ValueError(f"primes_up_to: n must be 0..1_000_000, got {n}")
+    return [i for i in range(2, n + 1) if is_prime(i)]
 
 
 FUNCS = {
@@ -45,7 +51,11 @@ def main():
     if fn not in FUNCS:
         print(json.dumps({"error": f"unknown function: {fn}"}), file=sys.stderr)
         sys.exit(1)
-    print(json.dumps(FUNCS[fn](*args)))
+    try:
+        print(json.dumps(FUNCS[fn](*args)))
+    except (ValueError, TypeError) as e:
+        print(json.dumps({"error": f"{fn}: {e}"}), file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -106,7 +106,6 @@ pub fn pad() -> BuiltinFunction {
                 n as i64,
                 width = width
             )))
-            )))
         },
     }
 }

@@ -536,24 +536,11 @@ mod json {
             }
             serde_json::Value::Object(map) => {
                 if map.len() == 1 {
-                    if let Some(serde_json::Value::Array(values)) = map.get("range") {
-                        if let [start, end, step] = values.as_slice() {
-                            if let (Some(start), Some(end), Some(step)) =
-                                (start.as_i64(), end.as_i64(), step.as_i64())
-                            {
-                                return Some(Value::Range { start, end, step });
-                            }
-                        }
-                    }
-            serde_json::Value::Object(map) => {
-                if map.len() == 1 {
                     if let Some(serde_json::Value::Array(items)) = map.get("range") {
                         if items.len() == 3 {
-                            if let (Some(start), Some(end), Some(step)) = (
-                                items[0].as_i64(),
-                                items[1].as_i64(),
-                                items[2].as_i64(),
-                            ) {
+                            if let (Some(start), Some(end), Some(step)) =
+                                (items[0].as_i64(), items[1].as_i64(), items[2].as_i64())
+                            {
                                 return Some(Value::Range { start, end, step });
                             }
                         }
@@ -565,6 +552,7 @@ mod json {
                 }
                 Some(Value::Map(out))
             }
+        }
     }
 
     impl Function for ScriptFunction {

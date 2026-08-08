@@ -15,7 +15,6 @@
 - **Plugin Store**: จัดการปลั๊กอินที่ติดตั้งผ่าน CLI (`~/.bl1z/plugins` หรือตั้งค่า `BL1Z_PLUGINS_DIR`) — `install`, `link`, `list`, `enable`, `disable`
 - **Plugin Contract**: `proto/bl1z_plugin.proto` เป็นแหล่งอ้างอิงเดียว; `tools/gen_schema.py` สร้าง `plugin-manifest.schema.json`, `schema-store.schema.json` และ `plugin-protocol.schema.json` จากไฟล์นั้น (ครอบคลุมทุกอินเตอร์เฟซของระบบปลั๊กอิน)
 - **ตัวอย่างปลั๊กอิน**: `math_extra`, `string_utils` และ `obsidian_like` พร้อมฟังก์ชันสคริปต์ Python ใน `examples/plugins/`
-- **Error Recovery (Phase 15)**: `parse_with_recovery` คืน AST บางส่วนพร้อมกับข้อผิดพลาดในการ parse สำหรับเครื่องมือแบบโต้ตอบ
 
 ### เปลี่ยนแปลง (Changed)
 - **เอกสาร**: ย้ายเอกสารภาษาไทยไปที่ `docs/th/`; เก็บถาวรบทเรียนที่เรียนรู้

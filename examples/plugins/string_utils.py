@@ -12,11 +12,12 @@ import sys
 def slugify(s):
     s = s.lower().strip()
     s = re.sub(r"[^\w]+", "-", s, flags=re.UNICODE)
+    s = re.sub(r"-+", "-", s)
     return s.strip("-")
 
 
 def camel_case(s):
-    parts = [p for p in re.split(r"[^\w]+", s.lower(), flags=re.UNICODE) if p]
+    parts = [p for p in re.split(r"[\W_]+", s.lower(), flags=re.UNICODE) if p]
     if not parts:
         return ""
     return parts[0] + "".join(p.capitalize() for p in parts[1:])
@@ -44,7 +45,11 @@ def main():
     if fn not in FUNCS:
         print(json.dumps({"error": f"unknown function: {fn}"}), file=sys.stderr)
         sys.exit(1)
-    print(json.dumps(FUNCS[fn](*args)))
+    try:
+        print(json.dumps(FUNCS[fn](*args)))
+    except (ValueError, TypeError) as e:
+        print(json.dumps({"error": f"{fn}: {e}"}), file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

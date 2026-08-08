@@ -16,7 +16,7 @@ mod table;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const MAIN_HELP: &str = concat!(
-    "bl1z ", env!("CARGO_PKG_VERSION"), "\nA high-performance, extensible formula evaluation engine for Rust\n\nUSAGE:\n    bl1z [OPTIONS] <COMMAND>\n\nCOMMANDS:\n    eval       Evaluate a formula and print the result\n    repl       Interactive calculator (open with: bl1z)\n    functions  List all available built-in functions\n    plugins    Install, link, list and manage plugins\n    help       Print this message or the help of the given subcommand(s)\n\nOPTIONS:\n    -h, --help       Print help\n    -V, --version    Print version\n"
+    "bl1z ", env!("CARGO_PKG_VERSION"), "\nA high-performance, extensible formula evaluation engine for Rust\n\nUSAGE:\n    bl1z [OPTIONS] <COMMAND>\n\nCOMMANDS:\n    eval       Evaluate a formula and print the result\n    repl       Interactive calculator (open with: bl1z)\n    functions  List all available built-in functions\n    plugins    Install, link, list and manage plugins\n    help       Print this message\n\nOPTIONS:\n    -h, --help       Print help\n    -V, --version    Print version\n"
 );
 
 const EVAL_HELP: &str = "\
@@ -36,7 +36,7 @@ OPTIONS:
 EXAMPLES:
     bl1z eval 'sum([1, 2, 3]) > 5'
     bl1z eval -v rate=0.2 '1000 * (1 - rate)'
-    bl1z eval -p examples/plugins/math_extra.json 'square(5)'
+    bl1z eval -p examples/plugins/math_extra.json 'mod(10, 3)'
 ";
 
 const REPL_HELP: &str = "\

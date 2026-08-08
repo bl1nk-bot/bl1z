@@ -15,7 +15,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Plugin Store**: CLI management of installed plugins (`~/.bl1z/plugins`, overridable with `BL1Z_PLUGINS_DIR`) — `install`, `link`, `list`, `enable`, `disable`.
 - **Plugin Contract**: `proto/bl1z_plugin.proto` as the single source of truth; `tools/gen_schema.py` generates `plugin-manifest.schema.json`, `schema-store.schema.json`, and `plugin-protocol.schema.json` from it (all plugin-system interfaces).
 - **Plugin Examples**: `math_extra`, `string_utils`, and `obsidian_like` manifests with Python script functions under `examples/plugins/`.
-- **Error Recovery (Phase 15)**: `parse_with_recovery` returns a partial AST alongside parse errors, for interactive tooling.
 
 ### Changed
 - **Docs**: Thai documentation reorganized into `docs/th/`; learnings archived.
