@@ -109,11 +109,12 @@ pub fn pad() -> BuiltinFunction {
                     None,
                 ));
             }
-            Ok(Value::String(format!(
-                "{:0>width$}",
-                n.abs() as i64,
-                width = width
-            )))
+            let formatted = if n < 0.0 {
+                format!("-{:0>width$}", (-n) as i64, width = width - 1)
+            } else {
+                format!("{:0>width$}", n as i64, width = width)
+            };
+            Ok(Value::String(formatted))
         },
     }
 }

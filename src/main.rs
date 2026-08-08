@@ -129,7 +129,9 @@ fn parse_args(args: &[String], allow_formula: bool) -> Result<ParseOutcome, Stri
                 plugins.push(path.clone());
             }
             "--" => positional_only = true,
-            s if positional_only || (!s.starts_with('-') || s.len() == 1) => {
+            s if positional_only
+                || (!s.starts_with('-') || s.len() == 1 || s.parse::<f64>().is_ok()) =>
+            {
                 if formula.is_some() {
                     return Err(format!("unexpected argument `{s}`"));
                 }
@@ -140,6 +142,13 @@ fn parse_args(args: &[String], allow_formula: bool) -> Result<ParseOutcome, Stri
     }
     if allow_formula && formula.is_none() && !help {
         return Err("missing required argument `<FORMULA>`".to_string());
+    }
+    if !allow_formula {
+        if let Some(ref f) = formula {
+            return Err(format!(
+                "unexpected positional argument `{f}` — use `bl1z eval` for formulas"
+            ));
+        }
     }
     Ok((vars, plugins, formula, help))
 }
@@ -285,15 +294,17 @@ fn cmd_repl(args: &[String]) -> std::process::ExitCode {
 }
 
 fn cmd_functions(args: &[String]) -> std::process::ExitCode {
-    for a in args {
-        if a == "-h" || a == "--help" {
-            print!("{FUNCTIONS_HELP}");
-            return std::process::ExitCode::SUCCESS;
-        }
+    if args.iter().any(|a| a == "-h" || a == "--help") {
+        print!("{FUNCTIONS_HELP}");
+        return std::process::ExitCode::SUCCESS;
+    }
+    if let Some(a) = args.first() {
         if a.starts_with('-') {
             eprintln!("error: unknown option `{a}`\n\n{FUNCTIONS_HELP}");
-            return std::process::ExitCode::from(2);
+        } else {
+            eprintln!("error: unexpected argument `{a}`\n\n{FUNCTIONS_HELP}");
         }
+        return std::process::ExitCode::from(2);
     }
     let mut registry = FunctionRegistry::new();
     builtins::register_all(&mut registry);

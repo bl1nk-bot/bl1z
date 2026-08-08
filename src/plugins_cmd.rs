@@ -187,7 +187,7 @@ fn sub_install(args: &[String]) -> std::process::ExitCode {
     };
     // ponytail: shelling out to curl (present on Termux/most Unix); swap to
     // ureq/reqwest when Windows support or sandboxing matters
-    let tmp = store_dir().join(".download.json");
+    let tmp = store_dir().join(format!(".download.{}.json", std::process::id()));
     if let Err(e) = fs::create_dir_all(store_dir()) {
         return report(&io_err("สร้าง plugin store")(e));
     }
@@ -431,6 +431,11 @@ fn sub_uninstall(args: &[String]) -> std::process::ExitCode {
         eprintln!("error: ไม่มีปลั๊กอิน '{id}'");
         return std::process::ExitCode::from(1);
     };
+    // บันทึก state ก่อนลบไฟล์ — ถ้าลบไม่สำเร็จ state ยังสอดคล้อง
+    match save_state(&state) {
+        Ok(()) => {}
+        Err(e) => return report(&e),
+    }
     // ลบไฟล์ใน store เท่านั้น — linked path ภายนอกไม่แตะ
     let entry_path = PathBuf::from(&entry.path);
     if entry_path.starts_with(store_dir()) {
@@ -438,13 +443,8 @@ fn sub_uninstall(args: &[String]) -> std::process::ExitCode {
             let _ = fs::remove_dir_all(parent);
         }
     }
-    match save_state(&state) {
-        Ok(()) => {
-            println!("Uninstalled {id}");
-            std::process::ExitCode::SUCCESS
-        }
-        Err(e) => report(&e),
-    }
+    println!("Uninstalled {id}");
+    std::process::ExitCode::SUCCESS
 }
 
 fn sub_set_enabled(args: &[String], enabled: bool) -> std::process::ExitCode {
@@ -536,15 +536,22 @@ fn sub_reload(args: &[String]) -> std::process::ExitCode {
         Err(e) => return report(&e),
     };
     // รับ plugin ที่อยู่ใน store แต่ยังไม่ลง state
+    let mut scan_broken = 0;
     if let Ok(entries) = fs::read_dir(store_dir()) {
         for dir in entries.flatten() {
             let manifest = dir.path().join("plugin.json");
             if manifest.is_file() {
-                if let Ok(p) = load_json_plugin(manifest.to_str().expect("path")) {
-                    state.entry(p.id.clone()).or_insert(PluginEntry {
-                        enabled: true,
-                        path: manifest.display().to_string(),
-                    });
+                match load_json_plugin(manifest.to_str().expect("path")) {
+                    Ok(p) => {
+                        state.entry(p.id.clone()).or_insert(PluginEntry {
+                            enabled: true,
+                            path: manifest.display().to_string(),
+                        });
+                    }
+                    Err(e) => {
+                        eprintln!("  scan: {} BROKEN: {e}", manifest.display());
+                        scan_broken += 1;
+                    }
                 }
             }
         }
@@ -566,8 +573,12 @@ fn sub_reload(args: &[String]) -> std::process::ExitCode {
             }
         }
     }
-    println!("Reloaded: {ok} ok, {broken} broken");
-    std::process::ExitCode::SUCCESS
+    println!("Reloaded: {ok} ok, {broken} broken, {scan_broken} scan-broken");
+    if broken > 0 || scan_broken > 0 {
+        std::process::ExitCode::from(1)
+    } else {
+        std::process::ExitCode::SUCCESS
+    }
 }
 
 fn sub_debug(args: &[String]) -> std::process::ExitCode {
