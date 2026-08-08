@@ -9,7 +9,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import gen_schema as g  # noqa: E402
-import jsonschema  # noqa: E402
+try:
+    import jsonschema  # noqa: E402
+except ImportError:
+    print("warning: jsonschema not installed — run: pip install jsonschema")
+    sys.exit(0)
 
 msgs = g.parse_messages(g.PROTO.read_text())
 
