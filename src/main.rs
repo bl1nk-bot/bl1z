@@ -54,7 +54,7 @@ OPTIONS:
 EXAMPLES:
     bl1z                      open the calculator
     echo '1 + 2' | bl1z repl  evaluate piped lines (no prompt)
-    printf 'sqrt(144)\\\\n' | bl1z repl -v x=10
+    printf 'sqrt(144)\\n' | bl1z repl -v x=10
 ";
 
 const FUNCTIONS_HELP: &str = "\
