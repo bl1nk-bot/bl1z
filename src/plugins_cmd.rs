@@ -123,6 +123,11 @@ fn get<'a>(
 
 // ── subcommands ───────────────────────────────────────────────────────────
 
+/// Route `bl1z plugins <subcommand>` to the appropriate handler.
+///
+/// Subcommands: `install`, `list`, `uninstall`, `enable`, `disable`,
+/// `link`, `reload`, `debug`, `fmt`, `fix`. Returns cargo-style exit
+/// codes: 0 = success, 1 = error, 2 = usage error.
 pub fn run_plugins(args: &[String]) -> std::process::ExitCode {
     let Some(cmd) = args.first() else {
         print!("{PLUGINS_HELP}");
