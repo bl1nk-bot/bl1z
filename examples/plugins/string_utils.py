@@ -11,12 +11,14 @@ import sys
 
 def slugify(s):
     s = s.lower().strip()
-    s = re.sub(r"[^a-z0-9]+", "-", s)
+    s = re.sub(r"[^\w]+", "-", s, flags=re.UNICODE)
     return s.strip("-")
 
 
 def camel_case(s):
-    parts = re.split(r"[^a-z0-9]+", s.lower())
+    parts = [p for p in re.split(r"[^\w]+", s.lower(), flags=re.UNICODE) if p]
+    if not parts:
+        return ""
     return parts[0] + "".join(p.capitalize() for p in parts[1:])
 
 
