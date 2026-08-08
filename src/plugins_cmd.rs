@@ -288,6 +288,9 @@ fn install_from(manifest_path: &Path, source: &str) -> Result<String, FormulaErr
             ));
         }
         let script_dest = dest_dir.join(&plugin.script);
+        if let Some(parent) = script_dest.parent() {
+            fs::create_dir_all(parent).map_err(io_err("สร้างโฟลเดอร์ runner script"))?;
+        }
         let ok = Command::new("curl")
             .args(["-fsSL", &script_url, "-o"])
             .arg(&script_dest)
