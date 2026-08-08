@@ -110,7 +110,7 @@ pub fn pad() -> BuiltinFunction {
                 ));
             }
             let formatted = if n < 0.0 {
-                format!("-{:0>width$}", (-n) as i64, width = width - 1)
+                format!("-{:0>width$}", (-n) as i64, width = width.saturating_sub(1))
             } else {
                 format!("{:0>width$}", n as i64, width = width)
             };
