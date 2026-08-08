@@ -453,7 +453,7 @@ mod json {
                 if n.fract() == 0.0
                     && n.is_finite()
                     && *n >= i64::MIN as f64
-                    && *n <= i64::MAX as f64 =>
+                    && *n < 2_f64.powi(63) =>
             {
                 serde_json::json!(*n as i64)
             }
