@@ -416,6 +416,7 @@ mod json {
     /// True if the running engine is older than the requested version.
     /// Strict numeric-tuple compare; unparseable versions are treated as
     /// not older (plugin allowed to load).
+    /// not older (plugin allowed to load).
     fn engine_is_older_than(requested: &str) -> bool {
         let parse = |s: &str| -> Option<Vec<u32>> {
             let parts: Vec<_> = s.split('.').collect();
