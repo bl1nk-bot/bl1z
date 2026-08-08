@@ -314,5 +314,9 @@ plugins, CLI store, และ IDL เดียว. **Single source of truth:**
 - **Script protocol**: engine spawns `<runner> <script> <fn>`; args เป็น JSON
   array ทาง stdin, result เป็น JSON value ทาง stdout (range encode เป็น
   `{"range": [start, end, step]}`)
+- **Plugin security**: runner จำกัดเฉพาะ allowlist (`python3`, `node`,
+  `deno`, `bun`); script path ห้าม `..` หรือ absolute path; plugin ID
+  จำกัด `[A-Za-z0-9_-]` เท่านั้น; source ห้าม `file://`/`http://`
+  (HTTPS เท่านั้น); script มี timeout 30 วินาที
 - **CLI binary**: `bl1z eval|repl|functions|plugins`, exit codes 0/1/2
   (cargo-style)
