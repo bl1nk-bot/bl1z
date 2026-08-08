@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dependencies**: `jiff` and the rust-dependencies group updated (dependabot #44–#48).
 
 ### Removed
-- Stale duplicate sources: `src/value_main.rs`, `src/value_pr26.rs`, `src/builtins/higher_order_original.rs`, `acp.ymal`.
+- Stale duplicate sources: `src/value_main.rs`, `src/value_pr26.rs`, `src/builtins/higher_order_original.rs`, `acp.yaml`.
 
 ## [0.2.15] - 2026-06-17
 

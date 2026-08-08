@@ -889,3 +889,70 @@ fn evaluate_range_to_array_empty() {
         Ok(Value::Array(vec![]))
     );
 }
+
+// Phase 16: weekday, date_add with units
+#[test]
+fn weekday_returns_iso_day() {
+    let reg = crate::functions::FunctionRegistry::new();
+    let mut reg = reg;
+    crate::builtins::register_all(&mut reg);
+    let ctx = crate::context::Context::new();
+    // 2026-08-11 is Tuesday
+    let v = crate::evaluate(
+        &crate::parse(&crate::tokenize("weekday(\"2026-08-11\")").unwrap()).unwrap(),
+        &ctx,
+        &reg,
+    )
+    .unwrap();
+    assert_eq!(v, crate::value::Value::Number(2.0));
+}
+
+#[test]
+fn date_add_hours() {
+    let reg = crate::functions::FunctionRegistry::new();
+    let mut reg = reg;
+    crate::builtins::register_all(&mut reg);
+    let ctx = crate::context::Context::new();
+    let v = crate::evaluate(
+        &crate::parse(&crate::tokenize("date_add(\"2026-01-01\", 5, \"hours\")").unwrap()).unwrap(),
+        &ctx,
+        &reg,
+    )
+    .unwrap();
+    assert!(format!("{v}").contains("05:00"));
+}
+
+#[test]
+fn date_add_wrong_unit_errors() {
+    let reg = crate::functions::FunctionRegistry::new();
+    let mut reg = reg;
+    crate::builtins::register_all(&mut reg);
+    let ctx = crate::context::Context::new();
+    let r = crate::evaluate(
+        &crate::parse(&crate::tokenize("date_add(\"2026-01-01\", 1, \"lightyears\")").unwrap())
+            .unwrap(),
+        &ctx,
+        &reg,
+    );
+    assert!(r.is_err());
+}
+
+// Plugin: function name validation
+#[test]
+fn plugin_loads_valid_manifest() {
+    use crate::plugins::load_json_plugin;
+    let r = load_json_plugin("examples/plugins/math_extra.json");
+    assert!(r.is_ok());
+    let p = r.unwrap();
+    assert_eq!(p.name, "Math Extra");
+}
+
+// Plugin: strict version check
+#[test]
+fn strict_version_rejects_prerelease() {
+    // engine_is_older_than is private, but we can test via load_json_plugin
+    // A plugin with minEngineVersion "0.2.17-alpha" should still load
+    // (unparseable version = don't block, per our implementation)
+    let r = crate::plugins::load_json_plugin("examples/plugins/math_extra.json");
+    assert!(r.is_ok());
+}

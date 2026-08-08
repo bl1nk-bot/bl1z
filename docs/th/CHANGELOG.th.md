@@ -22,7 +22,7 @@
 - **Dependencies**: อัปเดต `jiff` และกลุ่ม rust-dependencies (dependabot #44–#48)
 
 ### ลบออก (Removed)
-- แหล่งโค้ดซ้ำที่ล้าสมัย: `src/value_main.rs`, `src/value_pr26.rs`, `src/builtins/higher_order_original.rs`, `acp.ymal`
+- แหล่งโค้ดซ้ำที่ล้าสมัย: `src/value_main.rs`, `src/value_pr26.rs`, `src/builtins/higher_order_original.rs`, `acp.yaml`
 
 ## [0.2.15] - 2026-06-17
 
