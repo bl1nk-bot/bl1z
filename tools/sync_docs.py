@@ -82,7 +82,7 @@ def sync():
     for src, m in pairs():
         a = analyze(src.read_text())
         b = analyze(m.read_text())
-        if a["checkboxes"] != b["checkboxes"] or a["versions"] != b["versions"]:
+        if a["headings"] != b["headings"] or a["checkboxes"] != b["checkboxes"] or a["versions"] != b["versions"]:
             sys.exit(f"{m}: drift กับต้นฉบับ — รัน `check` ก่อน (checkbox {a['checkboxes']} vs {b['checkboxes']}, versions {a['versions']} vs {b['versions']})")
         # สถานะ checkbox: คัดจากต้นฉบับตามลำดับ
         states = iter(a["checkboxes"])
