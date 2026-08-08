@@ -183,6 +183,7 @@ def main():
     ap.add_argument("cast")
     ap.add_argument("out")
     ap.add_argument("--fps", type=int, default=8)
+    ap.add_argument("--font", default=FONT, help="Path to TTF font file")
     args = ap.parse_args()
     if args.fps < 1:
         ap.error("--fps must be greater than zero")
@@ -196,7 +197,7 @@ def main():
                 events.append((t, data))
     cols, rows = header["width"], header["height"]
 
-    font = load_font(FONT, 18)
+    font = load_font(args.font, 18)
     cell_w = int(font.getlength("M")) + 1
     cell_h = 22
     screen = Screen(cols, rows)
