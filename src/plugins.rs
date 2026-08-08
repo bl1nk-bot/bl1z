@@ -373,6 +373,7 @@ mod json {
                     .all(|c| c.is_ascii_alphanumeric() || c == '_')
                     || f.name.is_empty()
                     || f.name.starts_with(|c: char| c.is_ascii_digit())
+                    || matches!(f.name.as_str(), "true" | "false" | "null" | "fn")
                 {
                     return Err(FormulaError::new(
                         ErrorKind::PluginError,
