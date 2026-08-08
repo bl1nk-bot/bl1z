@@ -216,6 +216,14 @@ pub fn date_add() -> BuiltinFunction {
             }
             let ts = require_datetime_or_string(&args[0])?;
             let n = require_number(&args[1])?;
+            if !n.is_finite() || n.fract() != 0.0 {
+                return Err(FormulaError::new(
+                    ErrorKind::TypeError,
+                    "E501",
+                    "date_add ต้องการจำนวนเต็มเป็นอาร์กิวเมนต์ที่สอง",
+                    None,
+                ));
+            }
 
             let unit_str = if args.len() == 3 {
                 require_string(&args[2])?
