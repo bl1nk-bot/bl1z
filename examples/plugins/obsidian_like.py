@@ -53,10 +53,16 @@ def median(xs):
 
 def percentile(xs, p):
     p = int(p)
-    if not 1 <= p <= 99:
-        raise ValueError(f"percentile p must be between 1 and 99, got {p}")
+    if not 0 <= p <= 100:
+        raise ValueError(f"percentile p must be between 0 and 100, got {p}")
+    if len(xs) < 1:
+        raise ValueError("percentile needs at least 1 data point")
+    if p == 0:
+        return min(xs)
+    if p == 100:
+        return max(xs)
     if len(xs) < 2:
-        raise ValueError("percentile needs at least 2 data points")
+        raise ValueError("percentile needs at least 2 data points for p=1..99")
     return statistics.quantiles(xs, n=100, method="inclusive")[p - 1]
 
 
