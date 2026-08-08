@@ -281,6 +281,7 @@ fn cmd_repl(args: &[String]) -> std::process::ExitCode {
                     Err(e) => {
                         if interactive {
                             println!("error: {e}");
+                            exit = std::process::ExitCode::from(1);
                         } else {
                             eprintln!("error: {e}");
                             exit = std::process::ExitCode::from(1);
