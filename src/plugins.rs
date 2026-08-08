@@ -503,7 +503,7 @@ mod json {
                             return Err(FormulaError::new(
                                 ErrorKind::PluginError,
                                 "E805",
-                                &format!("script '{}' timeout (30s)", self.name),
+                                &format!("สคริปต์ '{}' หมดเวลา (30 วินาที)", self.name),
                                 None,
                             ));
                         }
