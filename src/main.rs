@@ -230,7 +230,14 @@ fn cmd_repl(args: &[String]) -> std::process::ExitCode {
             let stdin = std::io::stdin();
             let mut exit = std::process::ExitCode::SUCCESS;
             for line in stdin.lock().lines() {
-                let line = line.unwrap_or_default();
+                let line = match line {
+                    Ok(line) => line,
+                    Err(e) => {
+                        eprintln!("error: อ่าน stdin ไม่สำเร็จ: {e}");
+                        exit = std::process::ExitCode::from(1);
+                        break;
+                    }
+                };
                 let trimmed = line.trim();
                 if trimmed.is_empty() {
                     continue;
