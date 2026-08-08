@@ -143,7 +143,7 @@ fn parse_args(args: &[String], allow_formula: bool) -> Result<ParseOutcome, Stri
     if allow_formula && formula.is_none() && !help {
         return Err("missing required argument `<FORMULA>`".to_string());
     }
-    if !allow_formula {
+    if !allow_formula && !help {
         if let Some(ref f) = formula {
             return Err(format!(
                 "unexpected positional argument `{f}` — use `bl1z eval` for formulas"
