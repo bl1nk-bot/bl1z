@@ -244,7 +244,7 @@ fn cmd_repl(args: &[String]) -> std::process::ExitCode {
                 }
             };
             // โหมดโต้ตอบ = มี prompt + ผลลัพธ์แบบ `= value`; โหมด pipe = เงียบ
-            let interactive = std::io::stdin().is_terminal();
+            let interactive = std::io::stdin().is_terminal() && std::io::stdout().is_terminal();
             if interactive {
                 println!("bl1z {VERSION} — พิมพ์สูตรแล้วกด Enter (Ctrl-D หรือ `exit` เพื่อออก)");
             }
