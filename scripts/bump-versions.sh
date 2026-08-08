@@ -69,12 +69,25 @@ python3 tools/sync_docs.py changelog "$VERSION"
 
 # Update .bump-version.json state (current/next)
 if [ -f "$CONFIG_FILE" ]; then
-    python3 - "$VERSION" <<'PY'
+    python3 - "$VERSION" "$INPUT" <<'PY'
 import json, sys
 cfg = json.load(open(".bump-version.json"))
 major, minor, patch = map(int, sys.argv[1].split("."))
 cfg["current_version"] = sys.argv[1]
-cfg["next_version"] = f"{major}.{minor}.{patch + 1}"
+# Derive next version from phase_to_version mapping
+phase_input = sys.argv[2]
+if phase_input.isdigit():
+    phase = int(phase_input) + 1
+    for span, template in cfg["phase_to_version"].items():
+        lo, hi = map(int, span.replace("Phase ", "").split("-"))
+        if lo <= phase <= hi:
+            cfg["next_version"] = template.format(phase=phase)
+            cfg["current_phase"] = phase
+            break
+    else:
+        cfg["next_version"] = f"{major}.{minor}.{patch + 1}"
+else:
+    cfg["next_version"] = f"{major}.{minor}.{patch + 1}"
 json.dump(cfg, open(".bump-version.json", "w"), indent=2, ensure_ascii=False)
 print(f"Updated .bump-version.json: current={sys.argv[1]}, next={cfg['next_version']}")
 PY

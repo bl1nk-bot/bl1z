@@ -9,12 +9,10 @@ set -e
 cd "$(dirname "$0")/.."
 export COLUMNS="${COLUMNS:-80}"
 
-STORE="$HOME/.bl1z-demo-store"
-DEV_DIR="$HOME/.bl1z-demo-dev"
+STORE="$(mktemp -d "${TMPDIR:-/tmp}/bl1z-demo-store.XXXXXX")"
+DEV_DIR="$(mktemp -d "${TMPDIR:-/tmp}/bl1z-demo-dev.XXXXXX")"
 export BL1Z_PLUGINS_DIR="$STORE"
 trap 'rm -rf "$STORE" "$DEV_DIR"' EXIT
-
-rm -rf "$STORE" "$DEV_DIR"
 mkdir -p "$DEV_DIR/dev_pack"
 cat > "$DEV_DIR/dev_pack/plugin.json" <<'EOF'
 {"id":"dev_pack","name":"Dev Pack","version":"0.3.0","author":"somchai_dev","runner":"python3","script":"dev.py","functions":[{"name":"sha","params":["s"]}]}

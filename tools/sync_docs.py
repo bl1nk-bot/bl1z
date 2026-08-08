@@ -56,7 +56,7 @@ def analyze(text: str):
     }
 
 
-def pairs():
+def pairs(fail_on_missing=False):
     out = []
     missing = []
     for src in source_md_files():
@@ -65,9 +65,9 @@ def pairs():
             out.append((src, m))
         else:
             missing.append(str(src.relative_to(ROOT)))
-    if missing:
+    if missing and fail_on_missing:
         import sys as _sys
-        print(f"warning: {len(missing)} source file(s) without .th.md mirror: {', '.join(missing)}", file=_sys.stderr)
+        _sys.exit(f"error: {len(missing)} source file(s) without .th.md mirror: {', '.join(missing)}")
     return out
 
 
@@ -132,13 +132,20 @@ def changelog_entry(v: str):
         sys.exit(f"changelog: version format must be X.Y.Z, got `{v}`")
     today = date.today().isoformat()
     header = f"## [{v}] - {today}"
-    changed = []
-    for f in (ROOT / "CHANGELOG.md", TH / "CHANGELOG.th.md"):
+    files = (ROOT / "CHANGELOG.md", TH / "CHANGELOG.th.md")
+    # Validate both files before writing either
+    originals = {}
+    for f in files:
         t = f.read_text()
         if f"## [{v}]" in t:
             sys.exit(f"{f}: entry `## [{v}]` มีอยู่แล้ว — เลือกเวอร์ชันอื่น")
         if t.count("## [Unreleased]") != 1:
             sys.exit(f"{f}: ต้องมี marker `## [Unreleased]` 1 จุด (เป็นตำแหน่งแทรก) — เพิ่มก่อนรัน")
+        originals[f] = t
+    # Write both
+    changed = []
+    for f in files:
+        t = originals[f]
         n = t.replace("## [Unreleased]", header, 1)
         n = n.replace(header, "## [Unreleased]\n\n" + header, 1)
         if n != t:
@@ -171,7 +178,7 @@ def main():
         for p in invariants():
             print("INVARIANT:", p)
             ok = False
-        for src, m in pairs():
+        for src, m in pairs(fail_on_missing=True):
             a, b = analyze(src.read_text()), analyze(m.read_text())
             if a == b:
                 print(f"ok: {m.relative_to(ROOT)}")
