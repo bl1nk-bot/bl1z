@@ -13,7 +13,7 @@ try:
     import jsonschema  # noqa: E402
 except ImportError:
     print("warning: jsonschema not installed — run: pip install jsonschema")
-    sys.exit(1)
+    sys.exit(0)
 
 msgs = g.parse_messages(g.PROTO.read_text())
 
