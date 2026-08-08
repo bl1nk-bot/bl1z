@@ -31,15 +31,15 @@ SCALARS = {
     "string": "string",
     "bool": "boolean",
     "int32": "integer",
-    "int64": "integer",
+    "int64": "string",
     "uint32": "integer",
-    "uint64": "integer",
+    "uint64": "string",
     "sint32": "integer",
-    "sint64": "integer",
+    "sint64": "string",
     "fixed32": "integer",
-    "fixed64": "integer",
+    "fixed64": "string",
     "sfixed32": "integer",
-    "sfixed64": "integer",
+    "sfixed64": "string",
     "double": "number",
     "float": "number",
 }
@@ -151,12 +151,11 @@ def message_schema(messages, name):
 
 def main():
     messages = parse_messages(PROTO.read_text())
-    referenced_anywhere = {
-        f["type"]
-        for fields in messages.values()
-        for f in fields
-        if f["type"] in messages
-    }
+    referenced_anywhere = set()
+    for msg_name, fields in messages.items():
+        for f in fields:
+            if f["type"] in messages and f["type"] != msg_name:
+                referenced_anywhere.add(f["type"])
     roots = [n for n in messages if n not in referenced_anywhere]
     unknown = [r for r in roots if r not in OUTPUTS]
     if unknown:
