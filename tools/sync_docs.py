@@ -52,7 +52,7 @@ def analyze(text: str):
     return {
         "headings": len(HEADING_RE.findall(text)),
         "checkboxes": CHECKBOX_RE.findall(text),
-        "versions": sorted(set(VERSION_RE.findall(text))),
+        "versions": VERSION_RE.findall(text),
     }
 
 
