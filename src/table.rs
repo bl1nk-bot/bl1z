@@ -163,7 +163,7 @@ fn pad_to_width(s: &str, width: usize, align: Align) -> String {
 /// Escape cell text for GFM markdown tables: backslash, pipe, and newline.
 /// Must be used consistently in both width calculation and rendering.
 fn md_escape(s: &str) -> String {
-    s.replace('\\', "\\\\").replace('|', "\\|").replace('\r', " ").replace('\n', " ")
+    s.replace('\\', "\\\\").replace('|', "\\|").replace(['\r', '\n'], " ")
 }
 
 fn ansi_wrap(text: &str, color: Option<Color>) -> String {
@@ -250,12 +250,11 @@ fn make_border(
 static STTY_WIDTH: OnceLock<usize> = OnceLock::new();
 
 fn terminal_width() -> usize {
-    if let Ok(c) = std::env::var("COLUMNS") {
-        if let Ok(n) = c.trim().parse::<usize>() {
-            if n > 0 {
-                return n;
-            }
-        }
+    if let Ok(c) = std::env::var("COLUMNS")
+        && let Ok(n) = c.trim().parse::<usize>()
+        && n > 0
+    {
+        return n;
     }
     *STTY_WIDTH.get_or_init(|| {
         std::process::Command::new("stty")
@@ -309,10 +308,11 @@ fn parse_md_max_line_length(text: &str) -> Option<usize> {
             section = &line[1..line.len() - 1];
             continue;
         }
-        if let Some((k, v)) = line.split_once('=') {
-            if k.trim() == "max_line_length" && (section == "*" || section == "*.md") {
-                value = v.trim().parse().ok(); // "off" fails to parse => no cap
-            }
+        if let Some((k, v)) = line.split_once('=')
+            && k.trim() == "max_line_length"
+            && (section == "*" || section == "*.md")
+        {
+            value = v.trim().parse().ok(); // "off" fails to parse => no cap
         }
     }
     value

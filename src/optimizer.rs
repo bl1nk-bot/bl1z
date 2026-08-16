@@ -23,12 +23,11 @@ pub fn optimize(expr: SpannedExpr) -> SpannedExpr {
             let right = optimize(*right);
 
             // Constant fold: both sides are literals
-            if let Expr::Literal(ref lv) = left.expr {
-                if let Expr::Literal(ref rv) = right.expr {
-                    if let Some(result) = fold_binary(lv, &op, rv) {
-                        return lit(result, span);
-                    }
-                }
+            if let Expr::Literal(ref lv) = left.expr
+                && let Expr::Literal(ref rv) = right.expr
+                && let Some(result) = fold_binary(lv, &op, rv)
+            {
+                return lit(result, span);
             }
 
             // Algebraic identities
@@ -94,10 +93,10 @@ pub fn optimize(expr: SpannedExpr) -> SpannedExpr {
             let inner = optimize(*expr);
 
             // Constant fold
-            if let Expr::Literal(ref v) = inner.expr {
-                if let Some(result) = fold_unary(&op, v) {
-                    return lit(result, span);
-                }
+            if let Expr::Literal(ref v) = inner.expr
+                && let Some(result) = fold_unary(&op, v)
+            {
+                return lit(result, span);
             }
 
             // Double negation: --x → x, !!x → x

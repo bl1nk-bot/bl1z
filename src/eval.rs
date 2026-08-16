@@ -76,15 +76,16 @@ fn evaluate_impl(
     }
 
     // Check timeout every 1000 steps (approximate via depth)
-    if let (Some(max_ms), Some(start)) = (config.max_time_ms, start_time) {
-        if depth.is_multiple_of(1000) && start.elapsed().as_millis() as u64 > max_ms {
-            return Err(FormulaError::new(
-                ErrorKind::EvalError,
-                "E304",
-                &format!("หมดเวลาประมวลผล ({}ms timeout exceeded)", max_ms),
-                Some(expr.meta.span),
-            ));
-        }
+    if let (Some(max_ms), Some(start)) = (config.max_time_ms, start_time)
+        && depth.is_multiple_of(1000)
+        && start.elapsed().as_millis() as u64 > max_ms
+    {
+        return Err(FormulaError::new(
+            ErrorKind::EvalError,
+            "E304",
+            &format!("หมดเวลาประมวลผล ({}ms timeout exceeded)", max_ms),
+            Some(expr.meta.span),
+        ));
     }
     let span = expr.meta.span;
     match &expr.expr {

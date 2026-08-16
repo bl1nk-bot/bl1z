@@ -144,12 +144,11 @@ fn parse_args(args: &[String], allow_formula: bool) -> Result<ParseOutcome, Stri
     if allow_formula && formula.is_none() && !help {
         return Err("missing required argument `<FORMULA>`".to_string());
     }
-    if !allow_formula && !help {
-        if let Some(ref f) = formula {
-            return Err(format!(
-                "unexpected positional argument `{f}` — use `bl1z eval` for formulas"
-            ));
-        }
+    if !allow_formula
+        && !help
+        && let Some(ref f) = formula
+    {
+        return Err(format!("unexpected positional argument `{f}` — use `bl1z eval` for formulas"));
     }
     Ok((vars, plugins, formula, help))
 }
@@ -296,7 +295,11 @@ fn cmd_repl(args: &[String]) -> std::process::ExitCode {
 
 fn cmd_functions(args: &[String]) -> std::process::ExitCode {
     if args.is_empty() {
-        print!("{FUNCTIONS_HELP}");
+        let mut registry = FunctionRegistry::new();
+        builtins::register_all(&mut registry);
+        for name in registry.names() {
+            println!("{name}");
+        }
         return std::process::ExitCode::SUCCESS;
     }
     if args.len() == 1 && matches!(args[0].as_str(), "-h" | "--help") {

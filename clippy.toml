@@ -6,4 +6,4 @@ cognitive-complexity-threshold = 30
 type-complexity-threshold = 500
 too-many-arguments-threshold = 10
 
-# See: https://doc.rust-lang.org/clippy/development/proposals/syntax.html#configuration
+# See: https://doc.rust-lang.org/clippy/configuration.html
