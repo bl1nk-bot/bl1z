@@ -64,6 +64,9 @@ message PluginEntry {
   // Absolute path to its plugin.json (may point outside the store for
   // `link`ed plugins).
   string path = 2;
+  // True only when this entry was copied into the managed store. Omitted for
+  // legacy state entries and links, so uninstall never removes an unknown path.
+  optional bool managed = 3;
 }
 
 // Script wire protocol: how bl1z and a plugin script exchange data. The

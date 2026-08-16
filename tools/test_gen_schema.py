@@ -28,9 +28,16 @@ for p in (g.ROOT / "examples" / "plugins").glob("*.json"):
 store = g.message_schema(msgs, "PluginStoreState", is_root=True)
 store["$defs"] = {n: g.message_schema(msgs, n) for n in g.referenced_from(msgs, "PluginStoreState")}
 jsonschema.validate(
-    {"math_extra": {"enabled": True, "path": "/home/u/.bl1z/plugins/math_extra/plugin.json"}},
+    {
+        "math_extra": {
+            "enabled": True,
+            "path": "/home/u/.bl1z/plugins/math_extra/plugin.json",
+            "managed": True,
+        }
+    },
     store,
 )
+assert "managed" in store["$defs"]["PluginEntry"]["properties"]
 try:
     jsonschema.validate({"a": {"enabled": "yes", "path": 1}}, store)
     raise SystemExit("store schema accepted an invalid PluginEntry")
