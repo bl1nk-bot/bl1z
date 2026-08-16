@@ -34,10 +34,24 @@ struct PluginEntry {
     #[serde(default = "default_true")]
     enabled: bool,
     path: String,
+    #[serde(default)]
+    managed: bool,
 }
 
 fn default_true() -> bool {
     true
+}
+
+fn is_managed_install(entry: &PluginEntry, store: &Path, id: &str) -> bool {
+    entry.managed && Path::new(&entry.path) == store.join(id).join("plugin.json")
+}
+
+fn is_transient_store_dir(path: &Path) -> bool {
+    path.file_name().is_some_and(|name| name.to_string_lossy().starts_with('.'))
+}
+
+fn cleanup_staging(path: &Path) {
+    let _ = fs::remove_dir_all(path);
 }
 
 /// Store root. `BL1Z_PLUGINS_DIR` overrides `~/.bl1z/plugins`.
@@ -243,8 +257,10 @@ fn resolve_source(src: &str) -> Result<String, String> {
 
 fn install_from(manifest_path: &Path, source: &str) -> Result<String, FormulaError> {
     let plugin = load_json_plugin(manifest_path.to_str().expect("path"))?;
-    let dest_dir = store_dir().join(sanitize_plugin_id(&plugin.id)?);
-    fs::create_dir_all(store_dir()).map_err(io_err("สร้าง plugin store"))?;
+    let store = store_dir();
+    let dest_dir = store.join(sanitize_plugin_id(&plugin.id)?);
+    let state = load_state()?;
+    fs::create_dir_all(&store).map_err(io_err("สร้าง plugin store"))?;
     let nonce = format!(
         "{}.{}",
         std::process::id(),
@@ -253,9 +269,8 @@ fn install_from(manifest_path: &Path, source: &str) -> Result<String, FormulaErr
             .unwrap_or_default()
             .as_nanos()
     );
-    let staging_dir = store_dir().join(format!(".{}.install.{nonce}", plugin.id));
+    let staging_dir = store.join(format!(".{}.install.{nonce}", plugin.id));
     fs::create_dir(&staging_dir).map_err(io_err("สร้าง staging plugin dir"))?;
-    let state = load_state()?;
 
     let staged = (|| {
         // script อยู่โฟลเดอร์เดียวกับ plugin.json — ตัด '/plugin.json' ออก
@@ -309,26 +324,32 @@ fn install_from(manifest_path: &Path, source: &str) -> Result<String, FormulaErr
         Ok(())
     })();
     if let Err(e) = staged {
-        let _ = fs::remove_dir_all(&staging_dir);
+        cleanup_staging(&staging_dir);
         return Err(e);
     }
 
-    let backup_dir = store_dir().join(format!(".{}.backup.{nonce}", plugin.id));
+    let backup_dir = store.join(format!(".{}.backup.{nonce}", plugin.id));
     let had_existing = dest_dir.exists();
-    if had_existing {
-        fs::rename(&dest_dir, &backup_dir).map_err(io_err("ย้ายปลั๊กอินเดิม"))?;
+    if had_existing && let Err(e) = fs::rename(&dest_dir, &backup_dir) {
+        cleanup_staging(&staging_dir);
+        return Err(io_err("ย้ายปลั๊กอินเดิม")(e));
     }
     if let Err(e) = fs::rename(&staging_dir, &dest_dir) {
         if had_existing {
             let _ = fs::rename(&backup_dir, &dest_dir);
         }
+        cleanup_staging(&staging_dir);
         return Err(io_err("ติดตั้งปลั๊กอิน")(e));
     }
 
     let mut state = state;
     state.insert(
         plugin.id.clone(),
-        PluginEntry { enabled: true, path: dest_dir.join("plugin.json").display().to_string() },
+        PluginEntry {
+            enabled: true,
+            path: dest_dir.join("plugin.json").display().to_string(),
+            managed: true,
+        },
     );
     if let Err(e) = save_state(&state) {
         let _ = fs::remove_dir_all(&dest_dir);
@@ -453,16 +474,13 @@ fn sub_uninstall(args: &[String]) -> std::process::ExitCode {
         return std::process::ExitCode::from(1);
     };
     // ลบเฉพาะ path ที่ install จัดการเอง — linked path ไม่แตะ แม้อยู่ใต้ store
-    let entry_path = PathBuf::from(&entry.path);
-    let managed_dir = store_dir().join(id);
-    let managed_manifest = managed_dir.join("plugin.json");
+    let store = store_dir();
+    let is_managed = is_managed_install(entry, &store, id);
     state.remove(id);
     if let Err(e) = save_state(&state) {
         return report(&e);
     }
-    if entry_path == managed_manifest
-        && let Err(e) = fs::remove_dir_all(managed_dir)
-    {
+    if is_managed && let Err(e) = fs::remove_dir_all(store.join(id)) {
         return report(&io_err("ลบโฟลเดอร์ปลั๊กอิน")(e));
     }
     println!("Uninstalled {id}");
@@ -524,7 +542,7 @@ fn sub_link(args: &[String]) -> std::process::ExitCode {
     };
     state.insert(
         safe_id.clone(),
-        PluginEntry { enabled: true, path: manifest.display().to_string() },
+        PluginEntry { enabled: true, path: manifest.display().to_string(), managed: false },
     );
     match save_state(&state) {
         Ok(()) => {
@@ -554,6 +572,9 @@ fn sub_reload(args: &[String]) -> std::process::ExitCode {
     let mut scan_broken = 0;
     if let Ok(entries) = fs::read_dir(store_dir()) {
         for dir in entries.flatten() {
+            if is_transient_store_dir(&dir.path()) {
+                continue;
+            }
             let manifest = dir.path().join("plugin.json");
             if manifest.is_file() {
                 match load_json_plugin(manifest.to_str().expect("path")) {
@@ -561,6 +582,7 @@ fn sub_reload(args: &[String]) -> std::process::ExitCode {
                         state.entry(p.id.clone()).or_insert(PluginEntry {
                             enabled: true,
                             path: manifest.display().to_string(),
+                            managed: false,
                         });
                     }
                     Err(e) => {
@@ -779,3 +801,35 @@ USAGE:
 ARGS:
     <ID>    Plugin id (see `bl1z plugins list`)
 ";
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn transient_directories_are_not_plugins() {
+        assert!(is_transient_store_dir(Path::new(".demo.install.1")));
+        assert!(is_transient_store_dir(Path::new(".demo.backup.1")));
+        assert!(!is_transient_store_dir(Path::new("demo")));
+    }
+
+    #[test]
+    fn linked_entries_are_never_managed_installs() {
+        let store = Path::new("/tmp/bl1z-store");
+        let path = store.join("demo").join("plugin.json");
+        let managed =
+            PluginEntry { enabled: true, path: path.display().to_string(), managed: true };
+        assert!(is_managed_install(&managed, store, "demo"));
+        let linked = PluginEntry { managed: false, ..managed };
+        assert!(!is_managed_install(&linked, store, "demo"));
+    }
+
+    #[test]
+    fn cleanup_staging_removes_manifest() {
+        let path = std::env::temp_dir().join(format!(".bl1z-staging-test-{}", std::process::id()));
+        fs::create_dir_all(&path).unwrap();
+        fs::write(path.join("plugin.json"), "{}").unwrap();
+        cleanup_staging(&path);
+        assert!(!path.exists());
+    }
+}

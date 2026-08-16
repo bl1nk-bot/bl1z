@@ -45,7 +45,7 @@ for span, template in mapping.items():
         raise SystemExit(f"error: invalid version template for {span!r}")
     try:
         version = template.format(phase=int(match[1]))
-    except (KeyError, ValueError):
+    except (KeyError, ValueError, IndexError, TypeError, AttributeError):
         raise SystemExit(f"error: invalid version template for {span!r}")
     if not re.fullmatch(r"\d+\.\d+\.\d+", version):
         raise SystemExit(f"error: version template for {span!r} must produce X.Y.Z")
