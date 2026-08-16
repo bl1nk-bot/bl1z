@@ -18,11 +18,7 @@ use bl1z::load_json_plugin;
 
 /// Sanitize plugin ID: only allow [A-Za-z0-9_-]+ (no path traversal).
 fn sanitize_plugin_id(id: &str) -> Result<String, FormulaError> {
-    if id.is_empty()
-        || !id
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
-    {
+    if id.is_empty() || !id.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-') {
         return Err(FormulaError::new(
             ErrorKind::PluginError,
             "E804",
@@ -88,23 +84,12 @@ fn save_state(state: &BTreeMap<String, PluginEntry>) -> Result<(), FormulaError>
 }
 
 fn io_err(what: &str) -> impl Fn(std::io::Error) -> FormulaError + '_ {
-    move |e| {
-        FormulaError::new(
-            ErrorKind::PluginError,
-            "E805",
-            &format!("{what}: {e}"),
-            None,
-        )
-    }
+    move |e| FormulaError::new(ErrorKind::PluginError, "E805", &format!("{what}: {e}"), None)
 }
 
 /// Manifest paths of all enabled plugins — used by eval/repl auto-load.
 pub fn enabled_plugin_paths() -> Result<Vec<String>, FormulaError> {
-    Ok(load_state()?
-        .into_iter()
-        .filter(|(_, e)| e.enabled)
-        .map(|(_, e)| e.path)
-        .collect())
+    Ok(load_state()?.into_iter().filter(|(_, e)| e.enabled).map(|(_, e)| e.path).collect())
 }
 
 fn get<'a>(
@@ -196,10 +181,7 @@ fn sub_install(args: &[String]) -> std::process::ExitCode {
     if let Err(e) = fs::create_dir_all(store_dir()) {
         return report(&io_err("สร้าง plugin store")(e));
     }
-    let status = Command::new("curl")
-        .args(["-fsSL", &url, "-o"])
-        .arg(&tmp)
-        .status();
+    let status = Command::new("curl").args(["-fsSL", &url, "-o"]).arg(&tmp).status();
     match status {
         Ok(s) if s.success() => {}
         Ok(_) => {
@@ -233,9 +215,7 @@ fn resolve_source(src: &str) -> Result<String, String> {
         return Err(format!("source `{src}`: โพรโทคอล file:// ห้ามใช้ (security)"));
     }
     if src.starts_with("http://") {
-        return Err(format!(
-            "source `{src}`: โพรโทคอล http:// ห้ามใช้ — ใช้ https://"
-        ));
+        return Err(format!("source `{src}`: โพรโทคอล http:// ห้ามใช้ — ใช้ https://"));
     }
     if src.starts_with("https://") {
         return Ok(src.to_string());
@@ -243,24 +223,13 @@ fn resolve_source(src: &str) -> Result<String, String> {
     let repo = src.strip_prefix("github:").unwrap_or(src);
     let parts: Vec<&str> = repo.split('/').collect();
     if parts.len() < 2 || parts[0].is_empty() || parts[1].is_empty() {
-        return Err(format!(
-            "source `{src}` ไม่ใช่ URL หรือ GitHub repo (user/repo[/subdir])"
-        ));
+        return Err(format!("source `{src}` ไม่ใช่ URL หรือ GitHub repo (user/repo[/subdir])"));
     }
     if Path::new(src).exists() {
-        return Err(format!(
-            "`{src}` เป็นไฟล์ในเครื่อง — ใช้ `bl1z plugins link` แทน"
-        ));
+        return Err(format!("`{src}` เป็นไฟล์ในเครื่อง — ใช้ `bl1z plugins link` แทน"));
     }
-    let sub = if parts.len() > 2 {
-        format!("/{}", parts[2..].join("/"))
-    } else {
-        String::new()
-    };
-    Ok(format!(
-        "https://raw.githubusercontent.com/{}/{}/HEAD{sub}/plugin.json",
-        parts[0], parts[1]
-    ))
+    let sub = if parts.len() > 2 { format!("/{}", parts[2..].join("/")) } else { String::new() };
+    Ok(format!("https://raw.githubusercontent.com/{}/{}/HEAD{sub}/plugin.json", parts[0], parts[1]))
 }
 
 fn install_from(manifest_path: &Path, source: &str) -> Result<String, FormulaError> {
@@ -275,7 +244,6 @@ fn install_from(manifest_path: &Path, source: &str) -> Result<String, FormulaErr
         // script อยู่โฟลเดอร์เดียวกับ plugin.json — ตัด '/plugin.json' ออก
         let base = source.trim_end_matches('/');
         let dir = base.strip_suffix("/plugin.json").unwrap_or(base);
-        let script_url = format!("{dir}/{}", plugin.script);
         // sanitize: ไม่อนุญาต path traversal ใน script path
         if plugin.script.contains("..") || plugin.script.starts_with('/') {
             let _ = fs::remove_dir_all(&dest_dir);
@@ -286,42 +254,53 @@ fn install_from(manifest_path: &Path, source: &str) -> Result<String, FormulaErr
                 None,
             ));
         }
-        let script_dest = dest_dir.join(&plugin.script);
+        let files = std::iter::once(&plugin.script).chain(plugin.files.iter());
         // Security: verify the resolved path stays within dest_dir
         // (catches absolute-path escapes on any platform)
-        if !script_dest.starts_with(&dest_dir) {
-            let _ = fs::remove_dir_all(&dest_dir);
-            return Err(FormulaError::new(
-                ErrorKind::PluginError,
-                "E805",
-                &format!("เส้นทาง runner script อยู่นอกปลั๊กอิน: `{}`", plugin.script),
-                None,
-            ));
-        }
-        if let Some(parent) = script_dest.parent() {
-            if let Err(e) = fs::create_dir_all(parent) {
+        for file in files {
+            if file.contains("..") || file.starts_with('/') {
                 let _ = fs::remove_dir_all(&dest_dir);
-                return Err(io_err("สร้างโฟลเดอร์ runner script")(
-                    e,
+                return Err(FormulaError::new(
+                    ErrorKind::PluginError,
+                    "E805",
+                    &format!("เส้นทางไฟล์ปลั๊กอินไม่ถูกต้อง: `{file}`"),
+                    None,
                 ));
             }
-        }
-        // Download script BEFORE copying manifest — if download fails,
-        // the original manifest (if any) remains untouched.
-        let ok = Command::new("curl")
-            .args(["-fsSL", &script_url, "-o"])
-            .arg(&script_dest)
-            .status()
-            .map(|s| s.success())
-            .unwrap_or(false);
-        if !ok {
-            let _ = fs::remove_dir_all(&dest_dir);
-            return Err(FormulaError::new(
-                ErrorKind::PluginError,
-                "E803",
-                &format!("ดาวน์โหลด runner script '{script_url}' ไม่สำเร็จ"),
-                None,
-            ));
+            let file_dest = dest_dir.join(file);
+            if !file_dest.starts_with(&dest_dir) {
+                let _ = fs::remove_dir_all(&dest_dir);
+                return Err(FormulaError::new(
+                    ErrorKind::PluginError,
+                    "E805",
+                    &format!("เส้นทางไฟล์ปลั๊กอินอยู่นอกปลั๊กอิน: `{file}`"),
+                    None,
+                ));
+            }
+            if let Some(parent) = file_dest.parent() {
+                if let Err(e) = fs::create_dir_all(parent) {
+                    let _ = fs::remove_dir_all(&dest_dir);
+                    return Err(io_err("สร้างโฟลเดอร์ไฟล์ปลั๊กอิน")(
+                        e,
+                    ));
+                }
+            }
+            let url = format!("{dir}/{file}");
+            let ok = Command::new("curl")
+                .args(["-fsSL", &url, "-o"])
+                .arg(&file_dest)
+                .status()
+                .map(|s| s.success())
+                .unwrap_or(false);
+            if !ok {
+                let _ = fs::remove_dir_all(&dest_dir);
+                return Err(FormulaError::new(
+                    ErrorKind::PluginError,
+                    "E803",
+                    &format!("ดาวน์โหลดไฟล์ปลั๊กอิน '{url}' ไม่สำเร็จ"),
+                    None,
+                ));
+            }
         }
     }
 
@@ -331,18 +310,10 @@ fn install_from(manifest_path: &Path, source: &str) -> Result<String, FormulaErr
     let _ = fs::remove_file(manifest_path);
 
     let mut state = load_state()?;
-    state.insert(
-        plugin.id.clone(),
-        PluginEntry {
-            enabled: true,
-            path: dest.display().to_string(),
-        },
-    );
+    state
+        .insert(plugin.id.clone(), PluginEntry { enabled: true, path: dest.display().to_string() });
     save_state(&state)?;
-    Ok(format!(
-        "Installed {} v{} (id={}) จาก {source}",
-        plugin.name, plugin.version, plugin.id
-    ))
+    Ok(format!("Installed {} v{} (id={}) จาก {source}", plugin.name, plugin.version, plugin.id))
 }
 
 fn sub_list(args: &[String]) -> std::process::ExitCode {
@@ -421,19 +392,11 @@ fn sub_list(args: &[String]) -> std::process::ExitCode {
                 table::Cell::new(name),
                 table::Cell::colored(
                     source,
-                    if official {
-                        table::Color::BoldGreen
-                    } else {
-                        table::Color::Reset
-                    },
+                    if official { table::Color::BoldGreen } else { table::Color::Reset },
                 ),
                 table::Cell::colored(
                     status,
-                    if entry.enabled {
-                        table::Color::BoldGreen
-                    } else {
-                        table::Color::BoldRed
-                    },
+                    if entry.enabled { table::Color::BoldGreen } else { table::Color::BoldRed },
                 ),
                 table::Cell::new(version),
             ])
@@ -457,21 +420,24 @@ fn sub_uninstall(args: &[String]) -> std::process::ExitCode {
         Ok(s) => s,
         Err(e) => return report(&e),
     };
-    let Some(entry) = state.remove(id) else {
+    let Some(entry) = state.get(id) else {
         eprintln!("error: ไม่มีปลั๊กอิน '{id}'");
         return std::process::ExitCode::from(1);
     };
-    // บันทึก state ก่อนลบไฟล์ — ถ้าลบไม่สำเร็จ state ยังสอดคล้อง
-    match save_state(&state) {
-        Ok(()) => {}
-        Err(e) => return report(&e),
-    }
     // ลบไฟล์ใน store เท่านั้น — linked path ภายนอกไม่แตะ
     let entry_path = PathBuf::from(&entry.path);
     if entry_path.starts_with(store_dir()) {
         if let Some(parent) = entry_path.parent() {
-            let _ = fs::remove_dir_all(parent);
+            if let Err(e) = fs::remove_dir_all(parent) {
+                return report(&io_err("ลบโฟลเดอร์ปลั๊กอิน")(
+                    e,
+                ));
+            }
         }
+    }
+    state.remove(id);
+    if let Err(e) = save_state(&state) {
+        return report(&e);
     }
     println!("Uninstalled {id}");
     std::process::ExitCode::SUCCESS
@@ -516,11 +482,7 @@ fn sub_link(args: &[String]) -> std::process::ExitCode {
             return std::process::ExitCode::from(1);
         }
     };
-    let manifest = if abs.is_dir() {
-        abs.join("plugin.json")
-    } else {
-        abs.clone()
-    };
+    let manifest = if abs.is_dir() { abs.join("plugin.json") } else { abs.clone() };
     let plugin = match load_json_plugin(manifest.to_str().expect("path")) {
         Ok(p) => p,
         Err(e) => return report(&e),
@@ -536,10 +498,7 @@ fn sub_link(args: &[String]) -> std::process::ExitCode {
     };
     state.insert(
         safe_id.clone(),
-        PluginEntry {
-            enabled: true,
-            path: manifest.display().to_string(),
-        },
+        PluginEntry { enabled: true, path: manifest.display().to_string() },
     );
     match save_state(&state) {
         Ok(()) => {
@@ -663,22 +622,13 @@ fn sub_fmt(args: &[String], fix: bool) -> std::process::ExitCode {
             }
         }
     }
-    if all_ok {
-        std::process::ExitCode::SUCCESS
-    } else {
-        std::process::ExitCode::from(1)
-    }
+    if all_ok { std::process::ExitCode::SUCCESS } else { std::process::ExitCode::from(1) }
 }
 
 fn format_manifest(path: &Path, fix: bool) -> Result<(), FormulaError> {
     let original = fs::read_to_string(path).map_err(io_err("อ่าน manifest"))?;
     let mut value: serde_json::Value = serde_json::from_str(&original).map_err(|e| {
-        FormulaError::new(
-            ErrorKind::PluginError,
-            "E802",
-            &format!("JSON ไม่ถูกต้อง: {e}"),
-            None,
-        )
+        FormulaError::new(ErrorKind::PluginError, "E802", &format!("JSON ไม่ถูกต้อง: {e}"), None)
     })?;
     if fix {
         if let serde_json::Value::Object(m) = &mut value {
@@ -689,17 +639,11 @@ fn format_manifest(path: &Path, fix: bool) -> Result<(), FormulaError> {
             }
             m.entry(String::from("description"))
                 .or_insert(serde_json::Value::String(String::new()));
-            m.entry(String::from("author"))
-                .or_insert(serde_json::Value::String(String::new()));
+            m.entry(String::from("author")).or_insert(serde_json::Value::String(String::new()));
         }
     }
     let pretty = serde_json::to_string_pretty(&value).map_err(|e| {
-        FormulaError::new(
-            ErrorKind::PluginError,
-            "E802",
-            &format!("serialize ไม่ได้: {e}"),
-            None,
-        )
+        FormulaError::new(ErrorKind::PluginError, "E802", &format!("serialize ไม่ได้: {e}"), None)
     })?;
     // validate ที่ไฟล์ชั่วคราวก่อน แล้วค่อย rename ทับ (atomic, กันข้อมูลหาย)
     let tmp = path.with_extension("json.tmp");

@@ -86,14 +86,7 @@ pub fn optimize(expr: SpannedExpr) -> SpannedExpr {
                 _ => {}
             }
 
-            wrap(
-                Expr::BinaryExpr {
-                    left: Box::new(left),
-                    op,
-                    right: Box::new(right),
-                },
-                span,
-            )
+            wrap(Expr::BinaryExpr { left: Box::new(left), op, right: Box::new(right) }, span)
         }
 
         // ── Unary expressions ─────────────────────────────────────────
@@ -109,32 +102,16 @@ pub fn optimize(expr: SpannedExpr) -> SpannedExpr {
 
             // Double negation: --x → x, !!x → x
             match (&op, &inner.expr) {
-                (
-                    UnaryOp::Neg,
-                    Expr::UnaryExpr {
-                        op: UnaryOp::Neg, ..
-                    },
-                ) => {
+                (UnaryOp::Neg, Expr::UnaryExpr { op: UnaryOp::Neg, .. }) => {
                     return inner;
                 }
-                (
-                    UnaryOp::Not,
-                    Expr::UnaryExpr {
-                        op: UnaryOp::Not, ..
-                    },
-                ) => {
+                (UnaryOp::Not, Expr::UnaryExpr { op: UnaryOp::Not, .. }) => {
                     return inner;
                 }
                 _ => {}
             }
 
-            wrap(
-                Expr::UnaryExpr {
-                    op,
-                    expr: Box::new(inner),
-                },
-                span,
-            )
+            wrap(Expr::UnaryExpr { op, expr: Box::new(inner) }, span)
         }
 
         // ── Grouping ──────────────────────────────────────────────────
@@ -154,21 +131,12 @@ pub fn optimize(expr: SpannedExpr) -> SpannedExpr {
         }
 
         // ── Lambda / FunctionDef — recurse into body ──────────────────
-        Expr::Lambda { params, body } => wrap(
-            Expr::Lambda {
-                params,
-                body: Box::new(optimize(*body)),
-            },
-            span,
-        ),
-        Expr::FunctionDef { name, params, body } => wrap(
-            Expr::FunctionDef {
-                name,
-                params,
-                body: Box::new(optimize(*body)),
-            },
-            span,
-        ),
+        Expr::Lambda { params, body } => {
+            wrap(Expr::Lambda { params, body: Box::new(optimize(*body)) }, span)
+        }
+        Expr::FunctionDef { name, params, body } => {
+            wrap(Expr::FunctionDef { name, params, body: Box::new(optimize(*body)) }, span)
+        }
 
         // ── Sequence ──────────────────────────────────────────────────
         Expr::Sequence(exprs) => {
@@ -179,23 +147,13 @@ pub fn optimize(expr: SpannedExpr) -> SpannedExpr {
         // ── FunctionCall — recurse into args ──────────────────────────
         Expr::FunctionCall { name, args } => {
             let optimized: Vec<SpannedExpr> = args.into_iter().map(optimize).collect();
-            wrap(
-                Expr::FunctionCall {
-                    name,
-                    args: optimized,
-                },
-                span,
-            )
+            wrap(Expr::FunctionCall { name, args: optimized }, span)
         }
 
         // ── PropertyAccess / IndexAccess — recurse into children ──────
-        Expr::PropertyAccess { object, property } => wrap(
-            Expr::PropertyAccess {
-                object: Box::new(optimize(*object)),
-                property,
-            },
-            span,
-        ),
+        Expr::PropertyAccess { object, property } => {
+            wrap(Expr::PropertyAccess { object: Box::new(optimize(*object)), property }, span)
+        }
         Expr::IndexAccess { object, index } => wrap(
             Expr::IndexAccess {
                 object: Box::new(optimize(*object)),
@@ -397,13 +355,7 @@ mod tests {
     fn identity_double_neg() {
         let e = optimized("--x");
         // Removes one negation: --x → -x
-        assert!(matches!(
-            &e.expr,
-            Expr::UnaryExpr {
-                op: UnaryOp::Neg,
-                ..
-            }
-        ));
+        assert!(matches!(&e.expr, Expr::UnaryExpr { op: UnaryOp::Neg, .. }));
     }
 
     #[test]

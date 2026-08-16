@@ -54,6 +54,12 @@
     "script": {
       "type": "string"
     },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "functions": {
       "type": "array",
       "items": {

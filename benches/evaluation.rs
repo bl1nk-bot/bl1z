@@ -1,6 +1,6 @@
 use bl1z::builtins;
-use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry};
-use criterion::{criterion_group, criterion_main, Criterion};
+use bl1z::{Context, FunctionRegistry, evaluate, parse, tokenize};
+use criterion::{Criterion, criterion_group, criterion_main};
 
 /// Benchmark basic arithmetic expressions
 fn bench_basic_arithmetic(c: &mut Criterion) {
@@ -42,13 +42,8 @@ fn bench_large_array(c: &mut Criterion) {
     let ctx = Context::new();
 
     // Create a large array sum expression
-    let large_expr = format!(
-        "sum([{}])",
-        (1..=100)
-            .map(|n| n.to_string())
-            .collect::<Vec<_>>()
-            .join(",")
-    );
+    let large_expr =
+        format!("sum([{}])", (1..=100).map(|n| n.to_string()).collect::<Vec<_>>().join(","));
 
     c.bench_function("large_array_sum", |b| {
         b.iter(|| {
@@ -67,10 +62,9 @@ fn bench_nested_functions(c: &mut Criterion) {
 
     c.bench_function("nested_functions", |b| {
         b.iter(|| {
-            let tokens = tokenize(std::hint::black_box(
-                "upper(join([\"hello\", lower(\"world\")], \" \"))",
-            ))
-            .unwrap();
+            let tokens =
+                tokenize(std::hint::black_box("upper(join([\"hello\", lower(\"world\")], \" \"))"))
+                    .unwrap();
             let ast = parse(&tokens).unwrap();
             let _result = evaluate(&ast, &ctx, &registry).unwrap();
         })

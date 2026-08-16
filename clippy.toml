@@ -1,4 +1,4 @@
-# ─── Clippy configuration for BAMS workspace ─────────────
+# ─── Clippy configuration for bl1z workspace ─────────────
 # Run: cargo clippy --all-targets --all-features
 
 # Thresholds
@@ -6,5 +6,4 @@ cognitive-complexity-threshold = 30
 type-complexity-threshold = 500
 too-many-arguments-threshold = 10
 
-# Lints to allow/deny (applied via -D warnings in Makefile)
-# See: https://doc.rust-lang.org/clippy/lint_settings.html
+# See: https://doc.rust-lang.org/clippy/development/proposals/syntax.html#configuration

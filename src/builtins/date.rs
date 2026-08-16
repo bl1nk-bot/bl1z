@@ -225,11 +225,8 @@ pub fn date_add() -> BuiltinFunction {
                 ));
             }
 
-            let unit_str = if args.len() == 3 {
-                require_string(&args[2])?
-            } else {
-                "days".to_string()
-            };
+            let unit_str =
+                if args.len() == 3 { require_string(&args[2])? } else { "days".to_string() };
 
             let zdt = ts.to_zoned(jiff::tz::TimeZone::UTC);
             let new_zdt = match unit_str.to_lowercase().as_str() {
@@ -305,10 +302,7 @@ pub fn date_diff() -> BuiltinFunction {
                     FormulaError::new(
                         ErrorKind::FunctionError,
                         "E301",
-                        &format!(
-                            "ไม่สามารถคำนวณผลต่างเป็นจำนวนชั่วโมงระหว่าง {} และ {} ได้",
-                            ts1, ts2
-                        ),
+                        &format!("ไม่สามารถคำนวณผลต่างเป็นจำนวนชั่วโมงระหว่าง {} และ {} ได้", ts1, ts2),
                         None,
                     )
                 })?,
@@ -326,10 +320,7 @@ pub fn date_diff() -> BuiltinFunction {
                         FormulaError::new(
                             ErrorKind::FunctionError,
                             "E301",
-                            &format!(
-                                "ไม่สามารถคำนวณผลต่างเป็นจำนวนเดือนระหว่าง {} และ {} ได้",
-                                ts1, ts2
-                            ),
+                            &format!("ไม่สามารถคำนวณผลต่างเป็นจำนวนเดือนระหว่าง {} และ {} ได้", ts1, ts2),
                             None,
                         )
                     })?
@@ -389,15 +380,9 @@ mod tests {
 
     #[test]
     fn test_date_returns_datetime() {
-        let result = call_fn(
-            date(),
-            vec![
-                Value::Number(2025.0),
-                Value::Number(6.0),
-                Value::Number(15.0),
-            ],
-        )
-        .unwrap();
+        let result =
+            call_fn(date(), vec![Value::Number(2025.0), Value::Number(6.0), Value::Number(15.0)])
+                .unwrap();
         match result {
             Value::DateTime(ts) => {
                 let zdt = ts.to_zoned(jiff::tz::TimeZone::UTC);
@@ -411,14 +396,8 @@ mod tests {
 
     #[test]
     fn test_date_invalid_values() {
-        let result = call_fn(
-            date(),
-            vec![
-                Value::Number(2025.0),
-                Value::Number(13.0),
-                Value::Number(1.0),
-            ],
-        );
+        let result =
+            call_fn(date(), vec![Value::Number(2025.0), Value::Number(13.0), Value::Number(1.0)]);
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert!(err.message.contains("ไม่สามารถสร้างวันที่"));
@@ -482,11 +461,9 @@ mod tests {
 
     #[test]
     fn test_date_add_with_string() {
-        let result = call_fn(
-            date_add(),
-            vec![Value::String("2023-01-01".to_string()), Value::Number(10.0)],
-        )
-        .unwrap();
+        let result =
+            call_fn(date_add(), vec![Value::String("2023-01-01".to_string()), Value::Number(10.0)])
+                .unwrap();
         match result {
             Value::DateTime(ts) => {
                 let zdt = ts.to_zoned(jiff::tz::TimeZone::UTC);
@@ -543,11 +520,7 @@ mod tests {
         let ts2 = jiff::Timestamp::from_str("2023-01-05T00:00:00Z").unwrap();
         let result = call_fn(
             date_diff(),
-            vec![
-                Value::DateTime(ts1),
-                Value::DateTime(ts2),
-                Value::String("days".to_string()),
-            ],
+            vec![Value::DateTime(ts1), Value::DateTime(ts2), Value::String("days".to_string())],
         )
         .unwrap();
         assert_eq!(result, Value::Number(4.0));
@@ -559,11 +532,7 @@ mod tests {
         let ts2 = jiff::Timestamp::from_str("2023-01-01T06:30:00Z").unwrap();
         let result = call_fn(
             date_diff(),
-            vec![
-                Value::DateTime(ts1),
-                Value::DateTime(ts2),
-                Value::String("hours".to_string()),
-            ],
+            vec![Value::DateTime(ts1), Value::DateTime(ts2), Value::String("hours".to_string())],
         )
         .unwrap();
         assert_eq!(result, Value::Number(6.5));
@@ -575,11 +544,7 @@ mod tests {
         let ts2 = jiff::Timestamp::from_str("2023-01-01T01:30:00Z").unwrap();
         let result = call_fn(
             date_diff(),
-            vec![
-                Value::DateTime(ts1),
-                Value::DateTime(ts2),
-                Value::String("minutes".to_string()),
-            ],
+            vec![Value::DateTime(ts1), Value::DateTime(ts2), Value::String("minutes".to_string())],
         )
         .unwrap();
         assert_eq!(result, Value::Number(90.0));
@@ -591,11 +556,7 @@ mod tests {
         let ts2 = jiff::Timestamp::from_str("2023-06-15T00:00:00Z").unwrap();
         let result = call_fn(
             date_diff(),
-            vec![
-                Value::DateTime(ts1),
-                Value::DateTime(ts2),
-                Value::String("months".to_string()),
-            ],
+            vec![Value::DateTime(ts1), Value::DateTime(ts2), Value::String("months".to_string())],
         )
         .unwrap();
         // ~5.5 months
@@ -611,11 +572,7 @@ mod tests {
         let ts2 = jiff::Timestamp::from_str("2025-01-01T00:00:00Z").unwrap();
         let result = call_fn(
             date_diff(),
-            vec![
-                Value::DateTime(ts1),
-                Value::DateTime(ts2),
-                Value::String("years".to_string()),
-            ],
+            vec![Value::DateTime(ts1), Value::DateTime(ts2), Value::String("years".to_string())],
         )
         .unwrap();
         assert_eq!(result, Value::Number(2.0));

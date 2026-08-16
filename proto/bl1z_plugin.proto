@@ -36,6 +36,8 @@ message Plugin {
   // Path to the script file, relative to this manifest. Read as JSON args
   // from stdin, write a JSON value to stdout.
   string script = 8;
+  // Additional files the script needs at runtime, relative to this manifest.
+  repeated string files = 10;
   // Function registry: names/params this plugin exposes to formulas.
   repeated FunctionDef functions = 9;
 }

@@ -105,9 +105,7 @@ pub struct PluginManager {
 impl PluginManager {
     /// สร้าง PluginManager ใหม่
     pub fn new() -> Self {
-        Self {
-            plugins: Vec::new(),
-        }
+        Self { plugins: Vec::new() }
     }
 
     /// ลงทะเบียนปลั๊กอินใหม่
@@ -240,6 +238,8 @@ mod json {
         runner: String,
         script: String,
         #[serde(default)]
+        files: Vec<String>,
+        #[serde(default)]
         functions: Vec<FunctionDef>,
     }
 
@@ -258,6 +258,7 @@ mod json {
         pub description: String,
         pub author: String,
         pub script: String,
+        pub files: Vec<String>,
         functions: Vec<Rc<dyn Function>>,
     }
 
@@ -338,15 +339,8 @@ mod json {
             "python3".to_string()
         } else {
             // security: allowlist of safe runners (no arbitrary commands)
-            const ALLOWED_RUNNERS: &[&str] = &[
-                "python3",
-                "python3.11",
-                "python3.12",
-                "python3.13",
-                "node",
-                "deno",
-                "bun",
-            ];
+            const ALLOWED_RUNNERS: &[&str] =
+                &["python3", "python3.11", "python3.12", "python3.13", "node", "deno", "bun"];
             if !ALLOWED_RUNNERS.contains(&file.runner.as_str()) {
                 return Err(FormulaError::new(
                     ErrorKind::PluginError,
@@ -374,10 +368,7 @@ mod json {
                         None,
                     ));
                 }
-                if !f
-                    .name
-                    .chars()
-                    .all(|c| c.is_ascii_alphanumeric() || c == '_')
+                if !f.name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
                     || f.name.is_empty()
                     || f.name.starts_with(|c: char| c.is_ascii_digit())
                 {
@@ -414,6 +405,7 @@ mod json {
             description: file.description,
             author: file.author,
             script: file.script,
+            files: file.files,
             functions,
         })
     }
@@ -429,10 +421,7 @@ mod json {
                 return None;
             }
             // Strip pre-release suffixes (e.g. "17-alpha" → "17")
-            parts
-                .iter()
-                .map(|p| p.split('-').next().unwrap_or(p).parse::<u32>().ok())
-                .collect()
+            parts.iter().map(|p| p.split('-').next().unwrap_or(p).parse::<u32>().ok()).collect()
         };
         match (parse(env!("CARGO_PKG_VERSION")), parse(requested)) {
             (Some(current), Some(req)) => current < req,
@@ -705,7 +694,7 @@ mod json {
 }
 
 #[cfg(feature = "serialization")]
-pub use json::{load_json_plugin, JsonPlugin};
+pub use json::{JsonPlugin, load_json_plugin};
 
 #[cfg(test)]
 mod tests {
@@ -731,12 +720,7 @@ mod tests {
                     if let Value::Number(n) = &args[0] {
                         Ok(Value::Number(n * n))
                     } else {
-                        Err(FormulaError::new(
-                            ErrorKind::TypeError,
-                            "E401",
-                            "ต้องการตัวเลข",
-                            None,
-                        ))
+                        Err(FormulaError::new(ErrorKind::TypeError, "E401", "ต้องการตัวเลข", None))
                     }
                 },
             }]
@@ -809,12 +793,7 @@ mod tests {
                 if let Value::Number(n) = &args[0] {
                     Ok(Value::Number(n * 3.0))
                 } else {
-                    Err(FormulaError::new(
-                        ErrorKind::TypeError,
-                        "E401",
-                        "ต้องการตัวเลข",
-                        None,
-                    ))
+                    Err(FormulaError::new(ErrorKind::TypeError, "E401", "ต้องการตัวเลข", None))
                 }
             }
             fn name(&self) -> &str {

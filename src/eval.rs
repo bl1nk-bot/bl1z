@@ -27,11 +27,7 @@ pub fn evaluate_with_config(
     registry: &FunctionRegistry,
     config: &EngineConfig,
 ) -> Result<Value, FormulaError> {
-    let start = if config.max_time_ms.is_some() {
-        Some(std::time::Instant::now())
-    } else {
-        None
-    };
+    let start = if config.max_time_ms.is_some() { Some(std::time::Instant::now()) } else { None };
     let mut ctx_clone = ctx.clone();
     evaluate_impl(expr, &mut ctx_clone, registry, 0, config, start)
 }
@@ -236,11 +232,8 @@ fn evaluate_impl(
         }
         Expr::Lambda { params, body } => {
             // Capture current scope for closure
-            let captured: std::collections::BTreeMap<String, Value> = ctx
-                .get_all()
-                .into_iter()
-                .map(|(k, v)| (k, (*v).clone()))
-                .collect();
+            let captured: std::collections::BTreeMap<String, Value> =
+                ctx.get_all().into_iter().map(|(k, v)| (k, (*v).clone())).collect();
             Ok(Value::Lambda(
                 Rc::new((**body).clone()),
                 params.clone(),
@@ -423,11 +416,7 @@ fn apply_lambda_impl(
                 return Err(FormulaError::new(
                     ErrorKind::FunctionError,
                     "E503",
-                    &format!(
-                        "lambda ต้องการ {} อาร์กิวเมนต์ แต่ได้ {}",
-                        params.len(),
-                        args.len()
-                    ),
+                    &format!("lambda ต้องการ {} อาร์กิวเมนต์ แต่ได้ {}", params.len(), args.len()),
                     None,
                 ));
             }
@@ -447,14 +436,7 @@ fn apply_lambda_impl(
             }
 
             // Evaluate body with the lambda context
-            evaluate_impl(
-                body_expr,
-                &mut lambda_ctx,
-                registry,
-                depth + 1,
-                config,
-                start_time,
-            )
+            evaluate_impl(body_expr, &mut lambda_ctx, registry, depth + 1, config, start_time)
         }
         _ => Err(FormulaError::new(
             ErrorKind::TypeError,
@@ -484,12 +466,7 @@ fn sub_values(l: Value, r: Value, span: Span) -> Result<Value, FormulaError> {
     if let (Value::Number(a), Value::Number(b)) = (&l, &r) {
         Ok(Value::Number(a - b))
     } else {
-        Err(FormulaError::new(
-            ErrorKind::TypeError,
-            "E401",
-            "การลบใช้ได้กับตัวเลขเท่านั้น",
-            Some(span),
-        ))
+        Err(FormulaError::new(ErrorKind::TypeError, "E401", "การลบใช้ได้กับตัวเลขเท่านั้น", Some(span)))
     }
 }
 
@@ -497,34 +474,19 @@ fn mul_values(l: Value, r: Value, span: Span) -> Result<Value, FormulaError> {
     if let (Value::Number(a), Value::Number(b)) = (&l, &r) {
         Ok(Value::Number(a * b))
     } else {
-        Err(FormulaError::new(
-            ErrorKind::TypeError,
-            "E401",
-            "ใช้กับตัวเลข",
-            Some(span),
-        ))
+        Err(FormulaError::new(ErrorKind::TypeError, "E401", "ใช้กับตัวเลข", Some(span)))
     }
 }
 
 fn div_values(l: Value, r: Value, span: Span) -> Result<Value, FormulaError> {
     if let (Value::Number(a), Value::Number(b)) = (&l, &r) {
         if *b == 0.0 {
-            Err(FormulaError::new(
-                ErrorKind::EvalError,
-                "E301",
-                "หารด้วยศูนย์",
-                Some(span),
-            ))
+            Err(FormulaError::new(ErrorKind::EvalError, "E301", "หารด้วยศูนย์", Some(span)))
         } else {
             Ok(Value::Number(a / b))
         }
     } else {
-        Err(FormulaError::new(
-            ErrorKind::TypeError,
-            "E401",
-            "ใช้กับตัวเลข",
-            Some(span),
-        ))
+        Err(FormulaError::new(ErrorKind::TypeError, "E401", "ใช้กับตัวเลข", Some(span)))
     }
 }
 
@@ -540,10 +502,7 @@ fn compare_values(l: Value, r: Value, span: Span, op: BinaryOp) -> Result<Value,
             return Err(FormulaError::new(
                 ErrorKind::TypeError,
                 "E401",
-                &format!(
-                    "การเปรียบเทียบใช้ได้กับประเภทเดียวกันเท่านั้น (ได้รับ {:?} และ {:?})",
-                    l, r
-                ),
+                &format!("การเปรียบเทียบใช้ได้กับประเภทเดียวกันเท่านั้น (ได้รับ {:?} และ {:?})", l, r),
                 Some(span),
             ));
         }
@@ -568,12 +527,7 @@ fn logic_and(l: Value, r: Value, span: Span) -> Result<Value, FormulaError> {
     if let (Value::Bool(a), Value::Bool(b)) = (&l, &r) {
         Ok(Value::Bool(*a && *b))
     } else {
-        Err(FormulaError::new(
-            ErrorKind::TypeError,
-            "E401",
-            "AND ใช้ได้กับ boolean เท่านั้น",
-            Some(span),
-        ))
+        Err(FormulaError::new(ErrorKind::TypeError, "E401", "AND ใช้ได้กับ boolean เท่านั้น", Some(span)))
     }
 }
 
@@ -581,11 +535,6 @@ fn logic_or(l: Value, r: Value, span: Span) -> Result<Value, FormulaError> {
     if let (Value::Bool(a), Value::Bool(b)) = (&l, &r) {
         Ok(Value::Bool(*a || *b))
     } else {
-        Err(FormulaError::new(
-            ErrorKind::TypeError,
-            "E401",
-            "OR ใช้ได้กับ boolean เท่านั้น",
-            Some(span),
-        ))
+        Err(FormulaError::new(ErrorKind::TypeError, "E401", "OR ใช้ได้กับ boolean เท่านั้น", Some(span)))
     }
 }

@@ -3,8 +3,8 @@
 use bl1z::builtins;
 use bl1z::config::EngineConfig;
 use bl1z::eval::evaluate_with_config;
-use bl1z::parser::{parse_formula_with_config, parse_with_recovery, RecoveryResult};
-use bl1z::{parse, tokenize, Context, FunctionRegistry, Value};
+use bl1z::parser::{RecoveryResult, parse_formula_with_config, parse_with_recovery};
+use bl1z::{Context, FunctionRegistry, Value, parse, tokenize};
 
 fn make_registry() -> FunctionRegistry {
     let mut r = FunctionRegistry::new();
@@ -22,10 +22,7 @@ fn recovery_result(src: &str) -> RecoveryResult {
 #[test]
 fn recovery_collects_multiple_errors() {
     let result = recovery_result("1 + ; ; 3 / + 4");
-    assert!(
-        !result.errors.is_empty(),
-        "expected at least 1 recovery error"
-    );
+    assert!(!result.errors.is_empty(), "expected at least 1 recovery error");
 }
 
 #[test]
@@ -52,11 +49,7 @@ fn config_default() {
 
 #[test]
 fn config_custom() {
-    let config = EngineConfig {
-        max_formula_length: 500,
-        max_depth: 10,
-        max_time_ms: Some(100),
-    };
+    let config = EngineConfig { max_formula_length: 500, max_depth: 10, max_time_ms: Some(100) };
     assert_eq!(config.max_formula_length, 500);
     assert_eq!(config.max_depth, 10);
     assert_eq!(config.max_time_ms, Some(100));
@@ -64,11 +57,7 @@ fn config_custom() {
 
 #[test]
 fn config_clone() {
-    let config = EngineConfig {
-        max_formula_length: 500,
-        max_depth: 10,
-        max_time_ms: Some(100),
-    };
+    let config = EngineConfig { max_formula_length: 500, max_depth: 10, max_time_ms: Some(100) };
     let cloned = config.clone();
     assert_eq!(config.max_formula_length, cloned.max_formula_length);
     assert_eq!(config.max_depth, cloned.max_depth);
@@ -78,25 +67,14 @@ fn config_clone() {
 #[test]
 fn config_max_formula_length_rejects_long() {
     let long_formula = "1 + ".repeat(3000); // 12000 chars
-    let config = EngineConfig {
-        max_formula_length: 100,
-        max_depth: 100,
-        max_time_ms: None,
-    };
+    let config = EngineConfig { max_formula_length: 100, max_depth: 100, max_time_ms: None };
     let result = parse_formula_with_config(&long_formula, &config);
-    assert!(
-        result.is_err(),
-        "should reject formula exceeding max length"
-    );
+    assert!(result.is_err(), "should reject formula exceeding max length");
 }
 
 #[test]
 fn config_max_formula_length_allows_short() {
-    let config = EngineConfig {
-        max_formula_length: 10_000,
-        max_depth: 100,
-        max_time_ms: None,
-    };
+    let config = EngineConfig { max_formula_length: 10_000, max_depth: 100, max_time_ms: None };
     let result = parse_formula_with_config("1 + 2", &config);
     assert!(result.is_ok());
 }
@@ -105,11 +83,7 @@ fn config_max_formula_length_allows_short() {
 fn config_max_depth_rejects_deep_recursion() {
     let registry = make_registry();
     let ctx = Context::new();
-    let config = EngineConfig {
-        max_formula_length: 10_000,
-        max_depth: 5,
-        max_time_ms: None,
-    };
+    let config = EngineConfig { max_formula_length: 10_000, max_depth: 5, max_time_ms: None };
     let expr_str = "(1 + (2 + (3 + (4 + (5 + (6 + 7))))))";
     let tokens = tokenize(expr_str).unwrap();
     let ast = parse(&tokens).unwrap();

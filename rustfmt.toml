@@ -1,9 +1,9 @@
-# ─── rustfmt configuration for BAMS workspace ─────────────
+# ─── rustfmt configuration for bl1z workspace ─────────────
 # Run: cargo fmt --all -- --check
 
 max_width = 100
 tab_spaces = 4
-edition = "2024"
+edition = "2021"
 use_small_heuristics = "Max"
 format_code_in_doc_comments = true
 doc_comment_code_block_width = 80

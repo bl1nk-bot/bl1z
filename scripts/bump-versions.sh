@@ -22,6 +22,22 @@ fi
 
 CONFIG_FILE=".bump-version.json"
 
+# Parse the configuration before changing any release metadata.
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "error: python3 required for version resolution and doc sync"
+    exit 1
+fi
+if [[ ! -f "$CONFIG_FILE" || ! -f "tools/sync_docs.py" ]]; then
+    echo "error: $CONFIG_FILE and tools/sync_docs.py are required"
+    exit 1
+fi
+python3 - "$CONFIG_FILE" <<'PY'
+import json, sys
+cfg = json.load(open(sys.argv[1]))
+if not isinstance(cfg.get("phase_to_version"), dict):
+    raise SystemExit("error: phase_to_version missing or invalid")
+PY
+
 # Determine version from input — phase mapping อ่านจาก config ไม่ hardcode
 if [[ "$INPUT" =~ ^[0-9]+$ ]]; then
     PHASE=$INPUT
@@ -39,16 +55,6 @@ fi
 # to prevent shell metacharacter injection via template output
 if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo "error: invalid version format '$VERSION' (expected X.Y.Z)"
-    exit 1
-fi
-
-# Validate prerequisites before making any changes
-if [[ ! -f "$CONFIG_FILE" ]]; then
-    echo "error: $CONFIG_FILE not found"
-    exit 1
-fi
-if ! command -v python3 >/dev/null 2>&1; then
-    echo "error: python3 required for doc sync and changelog"
     exit 1
 fi
 
