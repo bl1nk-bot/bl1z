@@ -12,11 +12,7 @@ pub fn map() -> BuiltinFunction {
             let arr = require_array(&args[0])?;
             let mut results = Vec::new();
             for val in arr {
-                results.push(crate::eval::apply_lambda(
-                    &args[1],
-                    std::slice::from_ref(val),
-                    reg,
-                )?);
+                results.push(crate::eval::apply_lambda(&args[1], std::slice::from_ref(val), reg)?);
             }
             Ok(Value::Array(results))
         },
@@ -248,21 +244,13 @@ pub fn range_fn() -> BuiltinFunction {
                 1 => {
                     // range(end) → 0..end:1
                     let end = to_i64(&args[0], "end")?;
-                    Ok(Value::Range {
-                        start: 0,
-                        end,
-                        step: 1,
-                    })
+                    Ok(Value::Range { start: 0, end, step: 1 })
                 }
                 2 => {
                     // range(start, end) → start..end:1
                     let start = to_i64(&args[0], "start")?;
                     let end = to_i64(&args[1], "end")?;
-                    Ok(Value::Range {
-                        start,
-                        end,
-                        step: 1,
-                    })
+                    Ok(Value::Range { start, end, step: 1 })
                 }
                 3 => {
                     // range(start, end, step) → start..end:step

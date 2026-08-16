@@ -18,6 +18,9 @@
         },
         "path": {
           "type": "string"
+        },
+        "managed": {
+          "type": "boolean"
         }
       }
     }

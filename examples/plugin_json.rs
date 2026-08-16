@@ -8,13 +8,10 @@
 //! Run with: cargo run --example plugin_json --features serialization
 
 use bl1z::builtins;
-use bl1z::{evaluate, load_json_plugin, parse, tokenize, Context, FunctionRegistry};
+use bl1z::{Context, FunctionRegistry, evaluate, load_json_plugin, parse, tokenize};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let plugin_path = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/examples/plugins/math_extra.json"
-    );
+    let plugin_path = concat!(env!("CARGO_MANIFEST_DIR"), "/examples/plugins/math_extra.json");
 
     let plugin = load_json_plugin(plugin_path)?;
     println!(

@@ -162,11 +162,7 @@ struct FunctionInfo {
 
 impl FunctionInfo {
     fn from_builtin(func: BuiltinFunction) -> Self {
-        Self {
-            builtin: func,
-            stateful: false,
-            boxed: None,
-        }
+        Self { builtin: func, stateful: false, boxed: None }
     }
 
     fn from_boxed(func: Rc<dyn Function>) -> Self {
@@ -178,11 +174,7 @@ impl FunctionInfo {
             arity: func.arity(),
             call: boxed_proxy_call,
         };
-        Self {
-            builtin: proxy,
-            stateful: true,
-            boxed: Some(func),
-        }
+        Self { builtin: proxy, stateful: true, boxed: Some(func) }
     }
 }
 
@@ -209,9 +201,7 @@ impl FunctionRegistry {
     /// assert!(registry.find("nonexistent").is_none());
     /// ```
     pub fn new() -> Self {
-        Self {
-            functions: HashMap::new(),
-        }
+        Self { functions: HashMap::new() }
     }
 
     /// Registers a function in the registry.
@@ -291,7 +281,15 @@ impl FunctionRegistry {
         self.functions.insert(info.builtin.name.clone(), info);
     }
 
-    /// Finds a function by name.
+    /// Returns all registered function names, sorted.
+    ///
+    pub fn names(&self) -> Vec<String> {
+        let mut names: Vec<String> = self.functions.keys().cloned().collect();
+        names.sort();
+        names
+    }
+
+    /// Finds a function by name in the registry.
     ///
     /// Returns `None` if no function with the given name is registered.
     /// During evaluation, missing functions cause a `FunctionError`.
@@ -300,32 +298,17 @@ impl FunctionRegistry {
     /// * `name` - Function name to look up
     ///
     /// # Returns
-    /// * `Some(&BuiltinFunction)` - Reference to the registered function
+    /// * `Some(&BuiltinFunction)` - Reference to the function
     /// * `None` - Function not found
     ///
     /// # Examples
-    ///
     /// ```
     /// use bl1z::{FunctionRegistry, builtins};
-    ///
     /// let mut registry = FunctionRegistry::new();
     /// builtins::register_all(&mut registry);
-    ///
-    /// // Built-in functions are available
     /// assert!(registry.find("len").is_some());
-    /// assert!(registry.find("sum").is_some());
-    ///
-    /// // Non-existent functions return None
     /// assert!(registry.find("nonexistent").is_none());
     /// ```
-    /// Returns all registered function names, sorted.
-    pub fn names(&self) -> Vec<String> {
-        let mut names: Vec<String> = self.functions.keys().cloned().collect();
-        names.sort();
-        names
-    }
-
-    /// Finds a function by name in the registry.
     pub fn find(&self, name: &str) -> Option<&BuiltinFunction> {
         self.functions.get(name).map(|info| &info.builtin)
     }

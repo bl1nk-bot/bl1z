@@ -86,11 +86,7 @@ impl Context {
     /// assert!(ctx.get("undefined").is_none());
     /// ```
     pub fn new() -> Self {
-        Self {
-            variables: BTreeMap::new(),
-            functions: BTreeMap::new(),
-            parent: None,
-        }
+        Self { variables: BTreeMap::new(), functions: BTreeMap::new(), parent: None }
     }
 
     /// Creates a child context that inherits from a parent.

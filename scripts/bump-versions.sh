@@ -22,6 +22,35 @@ fi
 
 CONFIG_FILE=".bump-version.json"
 
+# Parse the configuration before changing any release metadata.
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "error: python3 required for version resolution and doc sync"
+    exit 1
+fi
+if [[ ! -f "$CONFIG_FILE" || ! -f "tools/sync_docs.py" || ! -f "tools/resolve_version.py" ]]; then
+    echo "error: $CONFIG_FILE, tools/sync_docs.py, and tools/resolve_version.py are required"
+    exit 1
+fi
+python3 - "$CONFIG_FILE" <<'PY'
+import json, re, sys
+cfg = json.load(open(sys.argv[1]))
+mapping = cfg.get("phase_to_version")
+if not isinstance(mapping, dict):
+    raise SystemExit("error: phase_to_version missing or invalid")
+for span, template in mapping.items():
+    match = re.fullmatch(r"Phase (\d+)-(\d+)", span) if isinstance(span, str) else None
+    if not match or int(match[1]) > int(match[2]):
+        raise SystemExit(f"error: invalid phase range: {span!r}")
+    if not isinstance(template, str):
+        raise SystemExit(f"error: invalid version template for {span!r}")
+    try:
+        version = template.format(phase=int(match[1]))
+    except (KeyError, ValueError, IndexError, TypeError, AttributeError):
+        raise SystemExit(f"error: invalid version template for {span!r}")
+    if not re.fullmatch(r"\d+\.\d+\.\d+", version):
+        raise SystemExit(f"error: version template for {span!r} must produce X.Y.Z")
+PY
+
 # Determine version from input — phase mapping อ่านจาก config ไม่ hardcode
 if [[ "$INPUT" =~ ^[0-9]+$ ]]; then
     PHASE=$INPUT
@@ -42,16 +71,6 @@ if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     exit 1
 fi
 
-# Validate prerequisites before making any changes
-if [[ ! -f "$CONFIG_FILE" ]]; then
-    echo "error: $CONFIG_FILE not found"
-    exit 1
-fi
-if ! command -v python3 >/dev/null 2>&1; then
-    echo "error: python3 required for doc sync and changelog"
-    exit 1
-fi
-
 # Update Cargo.toml
 if [ -f "Cargo.toml" ]; then
     sed -i "s/^version = \"[^\"]*\"$/version = \"${VERSION}\"/" Cargo.toml
@@ -64,8 +83,7 @@ python3 tools/sync_docs.py version "$VERSION"
 python3 tools/sync_docs.py changelog "$VERSION"
 
 # Update .bump-version.json state (current/next)
-if [ -f "$CONFIG_FILE" ]; then
-    python3 - "$VERSION" "$INPUT" <<'PY'
+python3 - "$VERSION" "$INPUT" <<'PY'
 import json, sys
 cfg = json.load(open(".bump-version.json"))
 major, minor, patch = map(int, sys.argv[1].split("."))
@@ -87,7 +105,6 @@ else:
 json.dump(cfg, open(".bump-version.json", "w"), indent=2, ensure_ascii=False)
 print(f"Updated .bump-version.json: current={sys.argv[1]}, next={cfg['next_version']}")
 PY
-fi
 
 echo "Version bump complete: ${VERSION}"
 echo "Next: เติม changelog entries ที่ [Unreleased] (ถ้ายังว่าง), cargo check (sync Cargo.lock), git tag v${VERSION}"

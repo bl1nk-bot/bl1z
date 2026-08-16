@@ -105,9 +105,7 @@ pub struct PluginManager {
 impl PluginManager {
     /// สร้าง PluginManager ใหม่
     pub fn new() -> Self {
-        Self {
-            plugins: Vec::new(),
-        }
+        Self { plugins: Vec::new() }
     }
 
     /// ลงทะเบียนปลั๊กอินใหม่
@@ -240,6 +238,8 @@ mod json {
         runner: String,
         script: String,
         #[serde(default)]
+        files: Vec<String>,
+        #[serde(default)]
         functions: Vec<FunctionDef>,
     }
 
@@ -258,6 +258,7 @@ mod json {
         pub description: String,
         pub author: String,
         pub script: String,
+        pub files: Vec<String>,
         functions: Vec<Rc<dyn Function>>,
     }
 
@@ -305,20 +306,20 @@ mod json {
                 None,
             )
         })?;
-        if let Some(min) = &file.min_engine_version {
-            if engine_is_older_than(min) {
-                return Err(FormulaError::new(
-                    ErrorKind::PluginError,
-                    "E804",
-                    &format!(
-                        "ปลั๊กอิน '{}' ต้องการ engine >= {} แต่ bl1z นี้คือ {}",
-                        file.name,
-                        min,
-                        env!("CARGO_PKG_VERSION")
-                    ),
-                    None,
-                ));
-            }
+        if let Some(min) = &file.min_engine_version
+            && engine_is_older_than(min)
+        {
+            return Err(FormulaError::new(
+                ErrorKind::PluginError,
+                "E804",
+                &format!(
+                    "ปลั๊กอิน '{}' ต้องการ engine >= {} แต่ bl1z นี้คือ {}",
+                    file.name,
+                    min,
+                    env!("CARGO_PKG_VERSION")
+                ),
+                None,
+            ));
         }
         let script_path = {
             let base = Path::new(path).parent().unwrap_or_else(|| Path::new("."));
@@ -334,19 +335,22 @@ mod json {
             }
             raw
         };
+        for file in &file.files {
+            if file.contains("..") || file.starts_with('/') {
+                return Err(FormulaError::new(
+                    ErrorKind::PluginError,
+                    "E805",
+                    &format!("เส้นทางไฟล์ปลั๊กอินไม่ถูกต้อง: `{file}`"),
+                    None,
+                ));
+            }
+        }
         let runner = if file.runner.is_empty() {
             "python3".to_string()
         } else {
             // security: allowlist of safe runners (no arbitrary commands)
-            const ALLOWED_RUNNERS: &[&str] = &[
-                "python3",
-                "python3.11",
-                "python3.12",
-                "python3.13",
-                "node",
-                "deno",
-                "bun",
-            ];
+            const ALLOWED_RUNNERS: &[&str] =
+                &["python3", "python3.11", "python3.12", "python3.13", "node", "deno", "bun"];
             if !ALLOWED_RUNNERS.contains(&file.runner.as_str()) {
                 return Err(FormulaError::new(
                     ErrorKind::PluginError,
@@ -374,10 +378,7 @@ mod json {
                         None,
                     ));
                 }
-                if !f
-                    .name
-                    .chars()
-                    .all(|c| c.is_ascii_alphanumeric() || c == '_')
+                if !f.name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
                     || f.name.is_empty()
                     || f.name.starts_with(|c: char| c.is_ascii_digit())
                 {
@@ -414,6 +415,7 @@ mod json {
             description: file.description,
             author: file.author,
             script: file.script,
+            files: file.files,
             functions,
         })
     }
@@ -429,10 +431,7 @@ mod json {
                 return None;
             }
             // Strip pre-release suffixes (e.g. "17-alpha" → "17")
-            parts
-                .iter()
-                .map(|p| p.split('-').next().unwrap_or(p).parse::<u32>().ok())
-                .collect()
+            parts.iter().map(|p| p.split('-').next().unwrap_or(p).parse::<u32>().ok()).collect()
         };
         match (parse(env!("CARGO_PKG_VERSION")), parse(requested)) {
             (Some(current), Some(req)) => current < req,
@@ -665,16 +664,13 @@ mod json {
                 Some(Value::Array(out))
             }
             serde_json::Value::Object(map) => {
-                if map.len() == 1 {
-                    if let Some(serde_json::Value::Array(items)) = map.get("range") {
-                        if items.len() == 3 {
-                            if let (Some(start), Some(end), Some(step)) =
-                                (items[0].as_i64(), items[1].as_i64(), items[2].as_i64())
-                            {
-                                return Some(Value::Range { start, end, step });
-                            }
-                        }
-                    }
+                if map.len() == 1
+                    && let Some(serde_json::Value::Array(items)) = map.get("range")
+                    && items.len() == 3
+                    && let (Some(start), Some(end), Some(step)) =
+                        (items[0].as_i64(), items[1].as_i64(), items[2].as_i64())
+                {
+                    return Some(Value::Range { start, end, step });
                 }
                 let mut out = std::collections::HashMap::new();
                 for (k, val) in map {
@@ -705,7 +701,7 @@ mod json {
 }
 
 #[cfg(feature = "serialization")]
-pub use json::{load_json_plugin, JsonPlugin};
+pub use json::{JsonPlugin, load_json_plugin};
 
 #[cfg(test)]
 mod tests {
@@ -731,12 +727,7 @@ mod tests {
                     if let Value::Number(n) = &args[0] {
                         Ok(Value::Number(n * n))
                     } else {
-                        Err(FormulaError::new(
-                            ErrorKind::TypeError,
-                            "E401",
-                            "ต้องการตัวเลข",
-                            None,
-                        ))
+                        Err(FormulaError::new(ErrorKind::TypeError, "E401", "ต้องการตัวเลข", None))
                     }
                 },
             }]
@@ -792,6 +783,31 @@ mod tests {
         assert!(manager.merge_functions(&mut registry).is_ok());
     }
 
+    #[cfg(feature = "serialization")]
+    #[test]
+    fn json_plugin_preserves_files_and_rejects_traversal() {
+        let dir = std::env::temp_dir().join(format!("bl1z-plugin-test-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let manifest = dir.join("plugin.json");
+        std::fs::write(
+            &manifest,
+            r#"{"name":"assets","version":"1","script":"","files":["data/table.json"]}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            load_json_plugin(manifest.to_str().unwrap()).unwrap().files,
+            vec!["data/table.json"]
+        );
+        std::fs::write(
+            &manifest,
+            r#"{"name":"assets","version":"1","script":"","files":["../outside"]}"#,
+        )
+        .unwrap();
+        let err = load_json_plugin(manifest.to_str().unwrap()).err().unwrap();
+        assert_eq!(err.code, "E805");
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
     #[test]
     fn boxed_function_dispatches_through_eval() {
         use crate::context::Context;
@@ -809,12 +825,7 @@ mod tests {
                 if let Value::Number(n) = &args[0] {
                     Ok(Value::Number(n * 3.0))
                 } else {
-                    Err(FormulaError::new(
-                        ErrorKind::TypeError,
-                        "E401",
-                        "ต้องการตัวเลข",
-                        None,
-                    ))
+                    Err(FormulaError::new(ErrorKind::TypeError, "E401", "ต้องการตัวเลข", None))
                 }
             }
             fn name(&self) -> &str {

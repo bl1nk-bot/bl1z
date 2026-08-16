@@ -1,6 +1,6 @@
 use bl1z::builtins;
 use bl1z::diagnostics::format_error;
-use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry};
+use bl1z::{Context, FunctionRegistry, evaluate, parse, tokenize};
 use insta::assert_snapshot;
 
 /// Test error formatting snapshots
@@ -88,10 +88,7 @@ mod error_snapshots {
         let result = evaluate(&ast, &ctx, &registry);
         assert!(result.is_err());
         let err = result.unwrap_err();
-        assert_snapshot!(
-            "wrong_argument_count",
-            format_error("len(\"hello\", \"world\")", &err)
-        );
+        assert_snapshot!("wrong_argument_count", format_error("len(\"hello\", \"world\")", &err));
     }
 
     #[test]
@@ -124,9 +121,6 @@ mod error_snapshots {
         let result = evaluate(&ast, &ctx, &registry);
         assert!(result.is_err());
         let err = result.unwrap_err();
-        assert_snapshot!(
-            "array_function_wrong_type",
-            format_error("sum(\"not_an_array\")", &err)
-        );
+        assert_snapshot!("array_function_wrong_type", format_error("sum(\"not_an_array\")", &err));
     }
 }

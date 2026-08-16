@@ -16,7 +16,9 @@ mod table;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const MAIN_HELP: &str = concat!(
-    "bl1z ", env!("CARGO_PKG_VERSION"), "\nA high-performance, extensible formula evaluation engine for Rust\n\nUSAGE:\n    bl1z [OPTIONS] <COMMAND>\n\nCOMMANDS:\n    eval       Evaluate a formula and print the result\n    repl       Interactive calculator (open with: bl1z)\n    functions  List all available built-in functions\n    plugins    Install, link, list and manage plugins\n    help       Print this message\n\nOPTIONS:\n    -h, --help       Print help\n    -V, --version    Print version\n"
+    "bl1z ",
+    env!("CARGO_PKG_VERSION"),
+    "\nA high-performance, extensible formula evaluation engine for Rust\n\nUSAGE:\n    bl1z [OPTIONS] <COMMAND>\n\nCOMMANDS:\n    eval       Evaluate a formula and print the result\n    repl       Interactive calculator (open with: bl1z)\n    functions  List all available built-in functions\n    plugins    Install, link, list and manage plugins\n    help       Print this message\n\nOPTIONS:\n    -h, --help       Print help\n    -V, --version    Print version\n"
 );
 
 const EVAL_HELP: &str = "\
@@ -117,9 +119,8 @@ fn parse_args(args: &[String], allow_formula: bool) -> Result<ParseOutcome, Stri
                 let Some(spec) = it.next() else {
                     return Err(format!("option `{a}` requires a value"));
                 };
-                let (name, val) = spec
-                    .split_once('=')
-                    .ok_or_else(|| format!("`{spec}` ต้องเป็น NAME=VALUE"))?;
+                let (name, val) =
+                    spec.split_once('=').ok_or_else(|| format!("`{spec}` ต้องเป็น NAME=VALUE"))?;
                 vars.push((name.to_string(), parse_value(val)));
             }
             "-p" | "--plugin" => {
@@ -143,12 +144,11 @@ fn parse_args(args: &[String], allow_formula: bool) -> Result<ParseOutcome, Stri
     if allow_formula && formula.is_none() && !help {
         return Err("missing required argument `<FORMULA>`".to_string());
     }
-    if !allow_formula && !help {
-        if let Some(ref f) = formula {
-            return Err(format!(
-                "unexpected positional argument `{f}` — use `bl1z eval` for formulas"
-            ));
-        }
+    if !allow_formula
+        && !help
+        && let Some(ref f) = formula
+    {
+        return Err(format!("unexpected positional argument `{f}` — use `bl1z eval` for formulas"));
     }
     Ok((vars, plugins, formula, help))
 }
@@ -170,10 +170,7 @@ fn parse_value(s: &str) -> Value {
 fn build_registry(plugins: &[String]) -> Result<FunctionRegistry, bl1z::FormulaError> {
     let mut registry = FunctionRegistry::new();
     builtins::register_all(&mut registry);
-    for path in plugins_cmd::enabled_plugin_paths()?
-        .into_iter()
-        .chain(plugins.iter().cloned())
-    {
+    for path in plugins_cmd::enabled_plugin_paths()?.into_iter().chain(plugins.iter().cloned()) {
         let plugin = bl1z::load_json_plugin(&path)?;
         plugin.register_into(&mut registry)?;
     }
@@ -297,24 +294,25 @@ fn cmd_repl(args: &[String]) -> std::process::ExitCode {
 }
 
 fn cmd_functions(args: &[String]) -> std::process::ExitCode {
-    if args.iter().any(|a| a == "-h" || a == "--help") {
+    if args.is_empty() {
+        let mut registry = FunctionRegistry::new();
+        builtins::register_all(&mut registry);
+        for name in registry.names() {
+            println!("{name}");
+        }
+        return std::process::ExitCode::SUCCESS;
+    }
+    if args.len() == 1 && matches!(args[0].as_str(), "-h" | "--help") {
         print!("{FUNCTIONS_HELP}");
         return std::process::ExitCode::SUCCESS;
     }
-    if let Some(a) = args.first() {
-        if a.starts_with('-') {
-            eprintln!("error: unknown option `{a}`\n\n{FUNCTIONS_HELP}");
-        } else {
-            eprintln!("error: unexpected argument `{a}`\n\n{FUNCTIONS_HELP}");
-        }
-        return std::process::ExitCode::from(2);
+    let a = &args[0];
+    if a.starts_with('-') {
+        eprintln!("error: unknown option `{a}`\n\n{FUNCTIONS_HELP}");
+    } else {
+        eprintln!("error: unexpected argument `{a}`\n\n{FUNCTIONS_HELP}");
     }
-    let mut registry = FunctionRegistry::new();
-    builtins::register_all(&mut registry);
-    for name in registry.names() {
-        println!("{name}");
-    }
-    std::process::ExitCode::SUCCESS
+    std::process::ExitCode::from(2)
 }
 
 /// Levenshtein distance — small, used only for command suggestions.
@@ -326,9 +324,7 @@ pub(crate) fn edit_distance(a: &str, b: &str) -> usize {
     for (i, ca) in a.iter().enumerate() {
         cur[0] = i + 1;
         for (j, cb) in b.iter().enumerate() {
-            cur[j + 1] = (prev[j + 1] + 1)
-                .min(cur[j] + 1)
-                .min(prev[j] + usize::from(ca != cb));
+            cur[j + 1] = (prev[j + 1] + 1).min(cur[j] + 1).min(prev[j] + usize::from(ca != cb));
         }
         std::mem::swap(&mut prev, &mut cur);
     }

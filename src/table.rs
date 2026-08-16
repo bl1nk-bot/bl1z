@@ -82,17 +82,11 @@ pub struct Cell {
 
 impl Cell {
     pub fn new<T: Into<String>>(text: T) -> Self {
-        Self {
-            text: text.into(),
-            color: None,
-        }
+        Self { text: text.into(), color: None }
     }
 
     pub fn colored<T: Into<String>>(text: T, color: Color) -> Self {
-        Self {
-            text: text.into(),
-            color: Some(color),
-        }
+        Self { text: text.into(), color: Some(color) }
     }
 }
 
@@ -169,10 +163,7 @@ fn pad_to_width(s: &str, width: usize, align: Align) -> String {
 /// Escape cell text for GFM markdown tables: backslash, pipe, and newline.
 /// Must be used consistently in both width calculation and rendering.
 fn md_escape(s: &str) -> String {
-    s.replace('\\', "\\\\")
-        .replace('|', "\\|")
-        .replace('\r', " ")
-        .replace('\n', " ")
+    s.replace('\\', "\\\\").replace('|', "\\|").replace(['\r', '\n'], " ")
 }
 
 fn ansi_wrap(text: &str, color: Option<Color>) -> String {
@@ -259,12 +250,11 @@ fn make_border(
 static STTY_WIDTH: OnceLock<usize> = OnceLock::new();
 
 fn terminal_width() -> usize {
-    if let Ok(c) = std::env::var("COLUMNS") {
-        if let Ok(n) = c.trim().parse::<usize>() {
-            if n > 0 {
-                return n;
-            }
-        }
+    if let Ok(c) = std::env::var("COLUMNS")
+        && let Ok(n) = c.trim().parse::<usize>()
+        && n > 0
+    {
+        return n;
     }
     *STTY_WIDTH.get_or_init(|| {
         std::process::Command::new("stty")
@@ -318,10 +308,11 @@ fn parse_md_max_line_length(text: &str) -> Option<usize> {
             section = &line[1..line.len() - 1];
             continue;
         }
-        if let Some((k, v)) = line.split_once('=') {
-            if k.trim() == "max_line_length" && (section == "*" || section == "*.md") {
-                value = v.trim().parse().ok(); // "off" fails to parse => no cap
-            }
+        if let Some((k, v)) = line.split_once('=')
+            && k.trim() == "max_line_length"
+            && (section == "*" || section == "*.md")
+        {
+            value = v.trim().parse().ok(); // "off" fails to parse => no cap
         }
     }
     value
@@ -352,10 +343,7 @@ impl TableRenderer {
             .schema
             .columns
             .iter()
-            .map(|c| Cell {
-                text: c.title.to_string(),
-                color: c.color,
-            })
+            .map(|c| Cell { text: c.title.to_string(), color: c.color })
             .collect();
 
         let _ = writeln!(out, "{}", self.render_row(&widths, &header));
@@ -411,13 +399,8 @@ impl TableRenderer {
             shrink_to_available(&mut col_w, cap.saturating_sub(bars + pads), 4);
         }
 
-        let header: Vec<Cell> = cols
-            .iter()
-            .map(|c| Cell {
-                text: c.title.to_string(),
-                color: None,
-            })
-            .collect();
+        let header: Vec<Cell> =
+            cols.iter().map(|c| Cell { text: c.title.to_string(), color: None }).collect();
 
         let mut out = String::new();
         let _ = writeln!(out, "{}", self.md_line(&col_w, &header));
@@ -539,18 +522,8 @@ mod tests {
             left_pad: 1,
             right_pad: 1,
             columns: vec![
-                ColumnSpec {
-                    title: "ID",
-                    max_width: 10,
-                    align: Align::Left,
-                    color: None,
-                },
-                ColumnSpec {
-                    title: "STATUS",
-                    max_width: 8,
-                    align: Align::Right,
-                    color: None,
-                },
+                ColumnSpec { title: "ID", max_width: 10, align: Align::Left, color: None },
+                ColumnSpec { title: "STATUS", max_width: 8, align: Align::Right, color: None },
             ],
         }
     }
@@ -585,21 +558,14 @@ mod tests {
         let body: String = row.chars().skip(2).collect();
         let cell = body.split(" │").next().unwrap();
         assert!(cell.ends_with('…'));
-        assert!(
-            visible_width(cell) <= 10,
-            "cell width {} > 10",
-            visible_width(cell)
-        );
+        assert!(visible_width(cell) <= 10, "cell width {} > 10", visible_width(cell));
     }
 
     #[test]
     fn narrow_terminal_shrinks_columns_to_fit() {
         let r = TableRenderer::new(schema());
         let out = r.render_at(
-            &[Row::new(vec![
-                Cell::new("0123456789abcdef"),
-                Cell::new("enabled"),
-            ])],
+            &[Row::new(vec![Cell::new("0123456789abcdef"), Cell::new("enabled")])],
             24, // narrow: 24 - 3 bars - 4 pads = 17 usable
         );
         for line in out.lines() {
@@ -689,18 +655,8 @@ mod tests {
             left_pad: 1,
             right_pad: 2,
             columns: vec![
-                ColumnSpec {
-                    title: "ID",
-                    max_width: 8,
-                    align: Align::Left,
-                    color: None,
-                },
-                ColumnSpec {
-                    title: "S",
-                    max_width: 6,
-                    align: Align::Left,
-                    color: None,
-                },
+                ColumnSpec { title: "ID", max_width: 8, align: Align::Left, color: None },
+                ColumnSpec { title: "S", max_width: 6, align: Align::Left, color: None },
             ],
         };
         let r = TableRenderer::new(s);
@@ -717,18 +673,11 @@ mod tests {
     fn markdown_caps_columns_and_respects_line_cap() {
         let r = TableRenderer::new(schema()); // max_width 10/8
         let out = r.render_markdown_capped(
-            &[Row::new(vec![
-                Cell::new("0123456789abcdef"),
-                Cell::new("0123456789"),
-            ])],
+            &[Row::new(vec![Cell::new("0123456789abcdef"), Cell::new("0123456789")])],
             Some(22), // bars 3 + pads 4 => 15 usable
         );
         for l in out.lines() {
-            assert!(
-                l.chars().count() <= 22,
-                "line over cap: {l:?} ({} chars)",
-                l.chars().count()
-            );
+            assert!(l.chars().count() <= 22, "line over cap: {l:?} ({} chars)", l.chars().count());
         }
         assert!(out.contains('…'), "wide cells must truncate");
     }
@@ -739,19 +688,10 @@ mod tests {
             parse_md_max_line_length("root = true\n[*]\nmax_line_length = 120\n"),
             Some(120)
         );
-        assert_eq!(
-            parse_md_max_line_length("[*.md]\nmax_line_length = off\n"),
-            None
-        );
-        assert_eq!(
-            parse_md_max_line_length("[Makefile]\nmax_line_length = 10\n"),
-            None
-        );
+        assert_eq!(parse_md_max_line_length("[*.md]\nmax_line_length = off\n"), None);
+        assert_eq!(parse_md_max_line_length("[Makefile]\nmax_line_length = 10\n"), None);
         // [*.md] inherits the root value when it doesn't set its own
-        assert_eq!(
-            parse_md_max_line_length("[*]\nmax_line_length = 80\n[*.md]\n"),
-            Some(80)
-        );
+        assert_eq!(parse_md_max_line_length("[*]\nmax_line_length = 80\n[*.md]\n"), Some(80));
     }
 
     fn strip_ansi(s: &str) -> String {

@@ -57,13 +57,7 @@ struct Lexer<'a> {
 
 impl<'a> Lexer<'a> {
     fn new(source: &'a str) -> Self {
-        Self {
-            source,
-            pos: 0,
-            line: 1,
-            col: 1,
-            tokens: Vec::new(),
-        }
+        Self { source, pos: 0, line: 1, col: 1, tokens: Vec::new() }
     }
 
     /// ดูตัวอักษรปัจจุบันโดยไม่เลื่อนตำแหน่ง
@@ -89,14 +83,8 @@ impl<'a> Lexer<'a> {
     /// สร้าง Span จากตำแหน่งที่บันทึกไว้
     fn make_span(&self, start_line: usize, start_col: usize) -> Span {
         Span {
-            start: Position {
-                line: start_line,
-                column: start_col,
-            },
-            end: Position {
-                line: self.line,
-                column: self.col,
-            },
+            start: Position { line: start_line, column: start_col },
+            end: Position { line: self.line, column: self.col },
         }
     }
 
@@ -113,7 +101,7 @@ impl<'a> Lexer<'a> {
         let mut lexeme = String::new();
         lexeme.push(first);
         self.advance(); // เลื่อนไปหลัง first
-                        // เดินหน้าต่อไปตราบใดเป็นตัวอักษร ตัวเลข หรือ '_'
+        // เดินหน้าต่อไปตราบใดเป็นตัวอักษร ตัวเลข หรือ '_'
         while let Some(c) = self.peek() {
             if c.is_alphanumeric() || c == '_' {
                 lexeme.push(c);
@@ -380,33 +368,28 @@ impl<'a> Lexer<'a> {
 
                     // Optional: If the next char is a digit, we can help the parser by
                     // scanning the whole date-like sequence as an identifier
-                    if let Some(c) = self.peek() {
-                        if c.is_ascii_digit() {
-                            let start_line = self.line;
-                            let start_col = self.col;
-                            let mut lexeme = String::new();
-                            while let Some(c) = self.peek() {
-                                if c.is_ascii_digit()
-                                    || c == '-'
-                                    || c == ':'
-                                    || c == 'T'
-                                    || c == 'Z'
-                                    || c == '.'
-                                {
-                                    lexeme.push(c);
-                                    self.advance();
-                                } else {
-                                    break;
-                                }
+                    if let Some(c) = self.peek()
+                        && c.is_ascii_digit()
+                    {
+                        let start_line = self.line;
+                        let start_col = self.col;
+                        let mut lexeme = String::new();
+                        while let Some(c) = self.peek() {
+                            if c.is_ascii_digit()
+                                || c == '-'
+                                || c == ':'
+                                || c == 'T'
+                                || c == 'Z'
+                                || c == '.'
+                            {
+                                lexeme.push(c);
+                                self.advance();
+                            } else {
+                                break;
                             }
-                            if !lexeme.is_empty() {
-                                self.push_token(
-                                    TokenKind::Identifier,
-                                    lexeme,
-                                    start_line,
-                                    start_col,
-                                );
-                            }
+                        }
+                        if !lexeme.is_empty() {
+                            self.push_token(TokenKind::Identifier, lexeme, start_line, start_col);
                         }
                     }
                 }
@@ -630,10 +613,7 @@ mod tests {
     fn test_empty_map_braces() {
         let tokens = tokenize("{}").unwrap();
         let kinds: Vec<TokenKind> = tokens.iter().map(|t| t.kind.clone()).collect();
-        assert_eq!(
-            kinds,
-            vec![TokenKind::LBrace, TokenKind::RBrace, TokenKind::Eof]
-        );
+        assert_eq!(kinds, vec![TokenKind::LBrace, TokenKind::RBrace, TokenKind::Eof]);
     }
 
     #[test]

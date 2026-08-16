@@ -22,11 +22,7 @@ pub struct EngineConfig {
 
 impl Default for EngineConfig {
     fn default() -> Self {
-        Self {
-            max_formula_length: 10_000,
-            max_depth: 100,
-            max_time_ms: None,
-        }
+        Self { max_formula_length: 10_000, max_depth: 100, max_time_ms: None }
     }
 }
 
@@ -44,11 +40,8 @@ mod tests {
 
     #[test]
     fn test_custom_config() {
-        let config = EngineConfig {
-            max_formula_length: 500,
-            max_depth: 50,
-            max_time_ms: Some(100),
-        };
+        let config =
+            EngineConfig { max_formula_length: 500, max_depth: 50, max_time_ms: Some(100) };
         assert_eq!(config.max_formula_length, 500);
         assert_eq!(config.max_depth, 50);
         assert_eq!(config.max_time_ms, Some(100));
@@ -56,11 +49,8 @@ mod tests {
 
     #[test]
     fn test_config_clone() {
-        let config = EngineConfig {
-            max_formula_length: 2000,
-            max_depth: 75,
-            max_time_ms: Some(500),
-        };
+        let config =
+            EngineConfig { max_formula_length: 2000, max_depth: 75, max_time_ms: Some(500) };
         let cloned = config.clone();
         assert_eq!(config.max_formula_length, cloned.max_formula_length);
         assert_eq!(config.max_depth, cloned.max_depth);

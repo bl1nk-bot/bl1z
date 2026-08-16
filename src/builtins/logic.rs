@@ -17,14 +17,10 @@ pub fn if_fn() -> BuiltinFunction {
                         "E501",
                         &format!("if เงื่อนไขต้องเป็น Bool แต่ได้ {}", cond.type_name()),
                         None,
-                    ))
+                    ));
                 }
             };
-            if is_true {
-                Ok(args[1].clone())
-            } else {
-                Ok(args[2].clone())
-            }
+            if is_true { Ok(args[1].clone()) } else { Ok(args[2].clone()) }
         },
     }
 }
