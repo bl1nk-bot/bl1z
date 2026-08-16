@@ -889,3 +889,189 @@ fn evaluate_range_to_array_empty() {
         Ok(Value::Array(vec![]))
     );
 }
+
+// Phase 16: weekday, date_add with units
+#[test]
+fn weekday_returns_iso_day() {
+    let reg = crate::functions::FunctionRegistry::new();
+    let mut reg = reg;
+    crate::builtins::register_all(&mut reg);
+    let ctx = crate::context::Context::new();
+    // 2026-08-11 is Tuesday
+    let v = crate::evaluate(
+        &crate::parse(&crate::tokenize("weekday(\"2026-08-11\")").unwrap()).unwrap(),
+        &ctx,
+        &reg,
+    )
+    .unwrap();
+    assert_eq!(v, crate::value::Value::Number(2.0));
+}
+
+#[test]
+fn date_add_hours() {
+    let reg = crate::functions::FunctionRegistry::new();
+    let mut reg = reg;
+    crate::builtins::register_all(&mut reg);
+    let ctx = crate::context::Context::new();
+    let v = crate::evaluate(
+        &crate::parse(&crate::tokenize("date_add(\"2026-01-01\", 5, \"hours\")").unwrap()).unwrap(),
+        &ctx,
+        &reg,
+    )
+    .unwrap();
+    assert!(format!("{v}").contains("05:00"));
+}
+
+#[test]
+fn date_add_wrong_unit_errors() {
+    let reg = crate::functions::FunctionRegistry::new();
+    let mut reg = reg;
+    crate::builtins::register_all(&mut reg);
+    let ctx = crate::context::Context::new();
+    let r = crate::evaluate(
+        &crate::parse(&crate::tokenize("date_add(\"2026-01-01\", 1, \"lightyears\")").unwrap())
+            .unwrap(),
+        &ctx,
+        &reg,
+    );
+    assert!(r.is_err());
+}
+
+// Plugin: function name validation
+#[test]
+fn plugin_loads_valid_manifest() {
+    use crate::plugins::load_json_plugin;
+    let r = load_json_plugin("examples/plugins/math_extra.json");
+    assert!(r.is_ok());
+    let p = r.unwrap();
+    assert_eq!(p.name, "Math Extra");
+}
+
+// Plugin: prerelease minEngineVersion is parsed correctly (strips suffix)
+#[test]
+fn prerelease_min_engine_version_is_rejected_when_behind() {
+    use crate::plugins::load_json_plugin;
+    // Compute a version just above current engine so the test stays valid
+    let ver: Vec<u32> = env!("CARGO_PKG_VERSION")
+        .split('.')
+        .filter_map(|s| s.parse().ok())
+        .collect();
+    assert!(ver.len() >= 2, "CARGO_PKG_VERSION must be semver");
+    let req = format!("{}.{}.99-alpha", ver[0], ver[1] + 1);
+    let tmp = std::env::temp_dir().join("bl1z_test_prerelease.json");
+    std::fs::write(
+        &tmp,
+        format!(
+            r#"{{"id":"prerelease_test","name":"Pretest","version":"0.1.0","runner":"python3","script":"noop.py","minEngineVersion":"{}","functions":[]}}"#,
+            req
+        ),
+    )
+    .unwrap();
+    let r = load_json_plugin(tmp.to_str().unwrap());
+    match r {
+        Err(e) => assert!(
+            e.message.contains(&req),
+            "error should mention version: {}",
+            e.message
+        ),
+        Ok(_) => panic!("should reject plugin requiring newer engine"),
+    }
+    let _ = std::fs::remove_file(&tmp);
+}
+
+// Plugin: prerelease minEngineVersion accepted when engine is new enough
+#[test]
+fn prerelease_min_engine_version_is_accepted_when_current() {
+    use crate::plugins::load_json_plugin;
+    // Current engine is 0.2.16, plugin requires 0.2.15-beta (parsed as 0.2.15) — should load
+    let tmp = std::env::temp_dir().join("bl1z_test_prerelease_ok.json");
+    std::fs::write(
+        &tmp,
+        r#"{
+            "id": "prerelease_test",
+            "name": "Pretest",
+            "version": "0.1.0",
+            "runner": "python3",
+            "script": "noop.py",
+            "minEngineVersion": "0.2.15-beta",
+            "functions": []
+        }"#,
+    )
+    .unwrap();
+    let r = load_json_plugin(tmp.to_str().unwrap());
+    assert!(
+        r.is_ok(),
+        "should accept plugin with older prerelease requirement"
+    );
+    let _ = std::fs::remove_file(&tmp);
+}
+
+// Phase 16: CLI argument parsing
+#[test]
+fn parse_args_accepts_negative_number_as_formula() {
+    // eval should accept -1 as a formula
+    let ctx = crate::context::Context::new();
+    let reg = crate::functions::FunctionRegistry::new();
+    let mut reg = reg;
+    crate::builtins::register_all(&mut reg);
+    let v = crate::evaluate(
+        &crate::parse(&crate::tokenize("-1 + 2").unwrap()).unwrap(),
+        &ctx,
+        &reg,
+    )
+    .unwrap();
+    assert_eq!(v, crate::value::Value::Number(1.0));
+}
+
+// Phase 16: Plugin system
+#[test]
+fn plugin_runner_allowlist() {
+    use crate::plugins::load_json_plugin;
+    // Valid runner (python3) should load
+    let r = load_json_plugin("examples/plugins/math_extra.json");
+    assert!(r.is_ok());
+}
+
+#[test]
+fn plugin_runner_allowlist_rejects_disallowed() {
+    use crate::plugins::load_json_plugin;
+    // Disallowed runner should fail with E806
+    let tmp = std::env::temp_dir().join("bl1z_test_bad_runner.json");
+    std::fs::write(
+        &tmp,
+        r#"{"id":"test","name":"Test","version":"0.1.0","runner":"sh","script":"x.py","functions":[]}"#,
+    )
+    .unwrap();
+    let r = load_json_plugin(tmp.to_str().unwrap());
+    match r {
+        Err(e) => assert_eq!(e.code, "E806"),
+        Ok(_) => panic!("should reject disallowed runner 'sh'"),
+    }
+    let _ = std::fs::remove_file(&tmp);
+}
+
+#[test]
+fn plugin_script_path_blocks_traversal() {
+    use crate::plugins::load_json_plugin;
+    // math_extra.json has script: "math_extra.py" which should be valid
+    let r = load_json_plugin("examples/plugins/math_extra.json");
+    assert!(r.is_ok());
+}
+
+#[test]
+fn plugin_script_path_rejects_traversal() {
+    use crate::plugins::load_json_plugin;
+    // Script with .. should fail with E805
+    let tmp = std::env::temp_dir().join("bl1z_test_traversal.json");
+    std::fs::write(
+        &tmp,
+        r#"{"id":"test","name":"Test","version":"0.1.0","runner":"python3","script":"../evil.py","functions":[]}"#,
+    )
+    .unwrap();
+    let r = load_json_plugin(tmp.to_str().unwrap());
+    match r {
+        Err(e) => assert_eq!(e.code, "E805"),
+        Ok(_) => panic!("should reject script with '..'"),
+    }
+    let _ = std::fs::remove_file(&tmp);
+}

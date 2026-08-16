@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+import "google/protobuf/struct.proto";
+
+// bl1z plugin ecosystem — the IDL contract for every interface between
+// bl1z and the outside world.
+//
+// Single source of truth. From this file, `python3 tools/gen_schema.py`
+// generates one JSON Schema per root message (proto3 JSON mapping,
+// camelCase):
+//   - plugin-manifest.schema.json   <- Plugin          (the plugin.json a
+//                                                       plugin author ships)
+//   - schema-store.schema.json      <- PluginStoreState (the CLI store's
+//                                                       state.json; bl1z-internal,
+//                                                       plugin devs never touch it)
+//   - plugin-protocol.schema.json   <- ScriptCall      (script stdin/stdout
+//                                                       wire protocol)
+// SDKs for any language can also be generated with protoc. The engine does
+// NOT compile this file: like a backend that connects to a DB without
+// carrying the schema, bl1z consumes the wire formats (JSON) directly.
+// Interface change = edit THIS file + regen — nothing else.
+package bl1zplugin;
+
+message Plugin {
+  // Stable plugin ID; defaults to name when absent.
+  optional string id = 1;
+  string name = 2;
+  string version = 3;
+  optional string description = 4;
+  optional string author = 5;
+  // Minimum engine version required; load fails with E804 when unmet.
+  optional string min_engine_version = 6;
+  // Interpreter that runs the script (e.g. "python3", "node"). Defaults to
+  // python3 when absent. The runner executes the logic — bl1z only spawns it.
+  optional string runner = 7;
+  // Path to the script file, relative to this manifest. Read as JSON args
+  // from stdin, write a JSON value to stdout.
+  string script = 8;
+  // Function registry: names/params this plugin exposes to formulas.
+  repeated FunctionDef functions = 9;
+}
+
+message FunctionDef {
+  // Function name as used in formulas.
+  string name = 1;
+  // Parameter names, bound positionally to call args.
+  repeated string params = 2;
+}
+
+// The CLI plugin store's state file (<store>/state.json): a JSON object
+// mapping each plugin id to its entry. The JSON document IS the bare map —
+// proto cannot express a bare map root, so gen_schema.py renders this
+// message's single map field at the document root.
+message PluginStoreState {
+  map<string, PluginEntry> plugins = 1;
+}
+
+// One installed plugin in the store.
+message PluginEntry {
+  // Whether eval/repl auto-load this plugin.
+  bool enabled = 1;
+  // Absolute path to its plugin.json (may point outside the store for
+  // `link`ed plugins).
+  string path = 2;
+}
+
+// Script wire protocol: how bl1z and a plugin script exchange data. The
+// engine spawns `<runner> <script> <function>` and writes the call
+// arguments as a JSON array to stdin; the script prints a single JSON
+// value to stdout. No envelope — this message documents the exchange for
+// SDK/tooling codegen, not a file to validate.
+message ScriptCall {
+  // The invoked function's name (passed to the script as argv).
+  string function = 1;
+  // Arguments bound positionally to the function's params (JSON array on
+  // stdin). Any plain JSON value; bl1z sends numbers as numbers so scripts
+  // see 7, not 7.0.
+  repeated google.protobuf.Value args = 2;
+  // The script's reply (JSON on stdout). Any plain JSON value; ranges
+  // encode as {"range": [start, end, step]}.
+  google.protobuf.Value result = 3;
+}

@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.2.16] - 2026-08-05
+
+### Added
+- **CLI Binary**: New `bl1z` binary with `eval`, `repl`, `functions`, and `plugins` subcommands (cargo-style exit codes: 0 = ok, 1 = eval error, 2 = usage error).
+- **JSON Plugins**: Manifest-driven function registration via `load_json_plugin` / `JsonPlugin`, with engine-version pinning. Script functions delegate to external interpreters (python3, python3.11-13, node, deno, bun) via JSON on stdin/stdout.
+- **Plugin Store**: CLI management of installed plugins (`~/.bl1z/plugins`, overridable with `BL1Z_PLUGINS_DIR`) — `install`, `link`, `list`, `enable`, `disable`.
+- **Plugin Contract**: `proto/bl1z_plugin.proto` as the single source of truth; `tools/gen_schema.py` generates `plugin-manifest.schema.json`, `schema-store.schema.json`, and `plugin-protocol.schema.json` from it (all plugin-system interfaces).
+- **Plugin Examples**: `math_extra`, `string_utils`, and `obsidian_like` manifests with Python script functions under `examples/plugins/`.
+
+### Changed
+- **Docs**: Thai documentation reorganized into `docs/th/`; learnings archived.
+- **CI**: Added crates.io publish workflow; version-bump tooling (`scripts/bump-versions.sh`, `.bump-version.json`).
+- **Dependencies**: `jiff` and the rust-dependencies group updated (dependabot #44–#48).
+
+### Removed
+- Stale duplicate sources: `src/value_main.rs`, `src/value_pr26.rs`, `src/builtins/higher_order_original.rs`, `acp.yaml`.
+
 ## [0.2.15] - 2026-06-17
 
 ### Added

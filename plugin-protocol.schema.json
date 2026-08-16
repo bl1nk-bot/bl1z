@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/bl1nk-bot/bl1z/main/plugin-protocol.schema.json",
+  "$comment": "owner: plugin-dev — ไฟล์ที่คนสร้างปลั๊กอินต้องดู",
+  "title": "bl1z plugin script protocol",
+  "description": "GENERATED from proto/bl1z_plugin.proto by tools/gen_schema.py — do not edit by hand.",
+  "type": "object",
+  "required": [
+    "function",
+    "result"
+  ],
+  "properties": {
+    "function": {
+      "type": "string"
+    },
+    "args": {
+      "type": "array",
+      "items": {
+        "description": "any JSON value (null, number, string, bool, array, object)"
+      }
+    },
+    "result": {
+      "description": "any JSON value (null, number, string, bool, array, object)"
+    }
+  }
+}

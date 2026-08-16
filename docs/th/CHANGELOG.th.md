@@ -5,6 +5,25 @@
 รูปแบบอ้างอิงตาม [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 และโปรเจกต์นี้ปฏิบัติตามกฎ [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [Unreleased]
+
+## [0.2.16] - 2026-08-05
+
+### เพิ่มเติม (Added)
+- **CLI Binary**: ไบนารี `bl1z` ใหม่พร้อมซับคอมมานด์ `eval`, `repl`, `functions` และ `plugins` (exit codes แบบ cargo: 0 = สำเร็จ, 1 = ผิดพลาดตอนประเมินผล, 2 = ใช้งานผิด)
+- **JSON Plugins**: ลงทะเบียนฟังก์ชันผ่าน manifest ด้วย `load_json_plugin` / `JsonPlugin` พร้อมการกำหนดเวอร์ชัน engine ขั้นต่ำ ฟังก์ชันแบบสคริปต์เรียกใช้ interpreter ภายนอก (Python, Node, shell) ผ่าน JSON ทาง stdin/stdout
+- **Plugin Store**: จัดการปลั๊กอินที่ติดตั้งผ่าน CLI (`~/.bl1z/plugins` หรือตั้งค่า `BL1Z_PLUGINS_DIR`) — `install`, `link`, `list`, `enable`, `disable`
+- **Plugin Contract**: `proto/bl1z_plugin.proto` เป็นแหล่งอ้างอิงเดียว; `tools/gen_schema.py` สร้าง `plugin-manifest.schema.json`, `schema-store.schema.json` และ `plugin-protocol.schema.json` จากไฟล์นั้น (ครอบคลุมทุกอินเตอร์เฟซของระบบปลั๊กอิน)
+- **ตัวอย่างปลั๊กอิน**: `math_extra`, `string_utils` และ `obsidian_like` พร้อมฟังก์ชันสคริปต์ Python ใน `examples/plugins/`
+
+### เปลี่ยนแปลง (Changed)
+- **เอกสาร**: ย้ายเอกสารภาษาไทยไปที่ `docs/th/`; เก็บถาวรบทเรียนที่เรียนรู้
+- **CI**: เพิ่ม workflow เผยแพร่ crates.io; เครื่องมือเพิ่มเวอร์ชัน (`scripts/bump-versions.sh`, `.bump-version.json`)
+- **Dependencies**: อัปเดต `jiff` และกลุ่ม rust-dependencies (dependabot #44–#48)
+
+### ลบออก (Removed)
+- แหล่งโค้ดซ้ำที่ล้าสมัย: `src/value_main.rs`, `src/value_pr26.rs`, `src/builtins/higher_order_original.rs`, `acp.yaml`
+
 ## [0.2.15] - 2026-06-17
 
 ### เพิ่มเติม (Added)

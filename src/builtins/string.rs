@@ -58,6 +58,67 @@ pub fn lower() -> BuiltinFunction {
     }
 }
 
+/// to_string(x) → String
+/// แปลงค่าใด ๆ เป็นข้อความ (ใช้ Display ของ Value)
+pub fn to_string() -> BuiltinFunction {
+    BuiltinFunction {
+        name: "to_string".to_string(),
+        arity: 1,
+        call: |args, _| Ok(Value::String(format!("{}", args[0]))),
+    }
+}
+
+/// pad(n, width) → String
+/// เติมเลข 0 ด้านหน้าให้ n จนครบ width หลัก เช่น pad(8, 2) = "08"
+pub fn pad() -> BuiltinFunction {
+    BuiltinFunction {
+        name: "pad".to_string(),
+        arity: 2,
+        call: |args, _| {
+            let Value::Number(n) = args[0] else {
+                return Err(FormulaError::new(
+                    ErrorKind::FunctionError,
+                    "E501",
+                    &format!("pad ต้องการ Number แต่ได้ {}", args[0].type_name()),
+                    None,
+                ));
+            };
+            let Value::Number(width) = args[1] else {
+                return Err(FormulaError::new(
+                    ErrorKind::FunctionError,
+                    "E501",
+                    &format!("pad ต้องการ width เป็น Number แต่ได้ {}", args[1].type_name()),
+                    None,
+                ));
+            };
+            if !width.is_finite() || width.fract() != 0.0 || width < 0.0 {
+                return Err(FormulaError::new(
+                    ErrorKind::FunctionError,
+                    "E501",
+                    &format!("pad width ต้องเป็นจำนวนเต็มไม่ลบ แต่ได้ {}", width),
+                    None,
+                ));
+            }
+            let width = width as usize;
+            const MAX_PAD_WIDTH: usize = 10_000;
+            if width > MAX_PAD_WIDTH {
+                return Err(FormulaError::new(
+                    ErrorKind::FunctionError,
+                    "E502",
+                    &format!("pad width exceeds maximum allowed ({})", MAX_PAD_WIDTH),
+                    None,
+                ));
+            }
+            let formatted = if n < 0.0 {
+                format!("-{:0>width$}", (-n) as i64, width = width.saturating_sub(1))
+            } else {
+                format!("{:0>width$}", n as i64, width = width)
+            };
+            Ok(Value::String(formatted))
+        },
+    }
+}
+
 pub fn contains() -> BuiltinFunction {
     BuiltinFunction {
         name: "contains".to_string(),

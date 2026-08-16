@@ -1,13 +1,13 @@
 {
   "version_scheme": "phase_based",
   "phase_to_version": {
-    "Phase 1-11": "0.1.x",
-    "Phase 12-15": "0.2.x",
-    "Phase 16-20": "0.2.x to 0.2.20"
+    "Phase 1-11": "0.1.{phase}",
+    "Phase 12-15": "0.2.{phase}",
+    "Phase 16-20": "0.2.{phase}"
   },
-  "current_phase": 15,
-  "current_version": "0.2.15",
-  "next_version": "0.2.16",
+  "current_phase": 16,
+  "current_version": "0.2.16",
+  "next_version": "0.2.17",
   "files": {
     "version": "Cargo.toml",
     "release_tag_format": "v{version}",

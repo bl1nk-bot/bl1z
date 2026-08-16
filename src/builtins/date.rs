@@ -185,29 +185,87 @@ pub fn day() -> BuiltinFunction {
     }
 }
 
-/// date_add(dt, days) → DateTime
-/// เพิ่มจำนวนวันให้กับ DateTime/String แล้วคืนเป็น Value::DateTime
+/// weekday(dt) → Number
+/// คืนวันในสัปดาห์ 1=จันทร์ ... 7=อาทิตย์ (ISO 8601)
+pub fn weekday() -> BuiltinFunction {
+    BuiltinFunction {
+        name: "weekday".to_string(),
+        arity: 1,
+        call: |args, _| {
+            let ts = require_datetime_or_string(&args[0])?;
+            let zdt = ts.to_zoned(jiff::tz::TimeZone::UTC);
+            Ok(Value::Number(zdt.weekday().to_monday_one_offset() as f64))
+        },
+    }
+}
+
+/// date_add(dt, n, [unit]) → DateTime
+/// คืนวันที่บวกเพิ่ม n หน่วย; unit: 'days' (default), 'hours', 'months', 'years'
 pub fn date_add() -> BuiltinFunction {
     BuiltinFunction {
         name: "date_add".to_string(),
-        arity: 2,
+        arity: 999,
         call: |args, _| {
+            if args.len() != 2 && args.len() != 3 {
+                return Err(FormulaError::new(
+                    ErrorKind::FunctionError,
+                    "E503",
+                    &format!("date_add ต้องการ 2 หรือ 3 อาร์กิวเมนต์ แต่ได้ {}", args.len()),
+                    None,
+                ));
+            }
             let ts = require_datetime_or_string(&args[0])?;
-            let days = require_number(&args[1])?;
+            let n = require_number(&args[1])?;
+            if !n.is_finite() || n.fract() != 0.0 {
+                return Err(FormulaError::new(
+                    ErrorKind::TypeError,
+                    "E501",
+                    "date_add ต้องการจำนวนเต็มเป็นอาร์กิวเมนต์ที่สอง",
+                    None,
+                ));
+            }
 
-            let days_i64 = days as i64;
-            let span = jiff::Span::new().days(days_i64);
+            let unit_str = if args.len() == 3 {
+                require_string(&args[2])?
+            } else {
+                "days".to_string()
+            };
 
-            // Timestamp ไม่รองรับ calendar units โดยตรง ต้องแปลงเป็น Zoned ก่อน
             let zdt = ts.to_zoned(jiff::tz::TimeZone::UTC);
-            let new_zdt = zdt.checked_add(span).map_err(|_| {
+            let new_zdt = match unit_str.to_lowercase().as_str() {
+                "days" | "day" => {
+                    let span = jiff::Span::new().days(n as i64);
+                    zdt.checked_add(span)
+                }
+                "hours" | "hour" => {
+                    let span = jiff::Span::new().hours(n as i64);
+                    zdt.checked_add(span)
+                }
+                "months" | "month" => {
+                    let span = jiff::Span::new().months(n as i64);
+                    zdt.checked_add(span)
+                }
+                "years" | "year" => {
+                    let span = jiff::Span::new().years(n as i64);
+                    zdt.checked_add(span)
+                }
+                _ => {
+                    return Err(FormulaError::new(
+                        ErrorKind::FunctionError,
+                        "E503",
+                        &format!(
+                            "หน่วย '{}' ไม่ถูกต้อง — ใช้ได้ 'days', 'hours', 'months', หรือ 'years'",
+                            unit_str
+                        ),
+                        None,
+                    ));
+                }
+            }
+            .map_err(|_| {
                 FormulaError::new(
                     ErrorKind::FunctionError,
-                    "E301",
-                    &format!(
-                        "ไม่สามารถเพิ่ม {} วันจากวันที่ {} ได้ — การคำนวณล้มเหลว",
-                        days_i64, ts
-                    ),
+                    "E503",
+                    &format!("ไม่สามารถเพิ่ม {} {} จากวันที่ {} ได้", n, unit_str, ts),
                     None,
                 )
             })?;

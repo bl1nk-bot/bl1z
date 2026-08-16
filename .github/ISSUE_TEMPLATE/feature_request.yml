@@ -1,0 +1,35 @@
+name: Feature request / Code change
+description: ใช้เทมเพลตเดียวกับ local request และ Linear (~/.hermes/templates/request.md)
+title: "[feat]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: "1. เป้าหมาย (Goal)"
+      description: ทำไมต้องทำ / ปัญหาที่เจอ / outcome ที่ต้องการ
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: "2. ขอบเขตงาน (Scope)"
+      description: ไฟล์/โค้ดที่จะแก้ + เอกสารที่ต้องอัปเดต + สิ่งที่ห้ามแตะ (ใช้ checklist)
+      placeholder: |
+        - [ ] ไฟล์ที่จะแก้ — สิ่งที่เปลี่ยน
+        - [ ] เอกสารที่ต้องอัปเดต (ถ้ามี)
+        - [ ] นอกขอบเขต
+    validations:
+      required: true
+  - type: textarea
+    id: dod
+    attributes:
+      label: "3. เกณฑ์สำเร็จ (Definition of Done)"
+      description: คำสั่งตรวจที่ต้องผ่าน + ตัวอย่าง input → output
+    validations:
+      required: true
+  - type: textarea
+    id: refs
+    attributes:
+      label: "4. ข้อมูลอ้างอิง"
+      description: เวอร์ชัน/เฟสที่เกี่ยวข้อง, ลิงก์ PR/issue ที่เกี่ยวข้อง

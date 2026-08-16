@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/bl1nk-bot/bl1z/main/plugin-manifest.schema.json",
+  "$comment": "owner: plugin-dev — ไฟล์ที่คนสร้างปลั๊กอินต้องดู",
+  "title": "bl1z plugin manifest",
+  "description": "GENERATED from proto/bl1z_plugin.proto by tools/gen_schema.py — do not edit by hand.",
+  "type": "object",
+  "$defs": {
+    "FunctionDef": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "params": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "name",
+    "version",
+    "script"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "author": {
+      "type": "string"
+    },
+    "minEngineVersion": {
+      "type": "string"
+    },
+    "runner": {
+      "type": "string"
+    },
+    "script": {
+      "type": "string"
+    },
+    "functions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/FunctionDef"
+      }
+    }
+  }
+}

@@ -2,6 +2,11 @@
 target/
 Cargo.lock
 
+# Node.js / npm
+node_modules/
+dist/
+build/
+
 # IDE files
 .vscode/
 .idea/
@@ -54,3 +59,8 @@ context*.json
 # Snapshot files (insta)
 *.snap
 tests/snapshots/
+
+# Python
+__pycache__/
+*.pyc
+skills-log.json

@@ -1,6 +1,6 @@
 # รายงานการทดสอบประสิทธิภาพของ bl1z (Benchmark Report - 2026-06-17)
 
-เกณฑ์มาตรฐานประสิทธิภาพ (Performance baseline) สำหรับ bl1z v0.2.15
+เกณฑ์มาตรฐานประสิทธิภาพ (Performance baseline) สำหรับ bl1z v0.2.16
 
 ## สรุปผล (Summary)
 
