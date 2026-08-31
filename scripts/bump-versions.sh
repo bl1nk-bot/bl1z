@@ -36,28 +36,20 @@ import json, re, sys
 cfg = json.load(open(sys.argv[1]))
 mapping = cfg.get("phase_to_version")
 # Parse the configuration before changing any release metadata.
-if ! command -v python3 >/dev/null 2>&1; then
-    echo "error: python3 required for version resolution and doc sync"
-    exit 1
-fi
-if [[ ! -f "$CONFIG_FILE" || ! -f "tools/sync_docs.py" ]]; then
-    echo "error: $CONFIG_FILE and tools/sync_docs.py are required"
-    exit 1
-fi
-if [[ "$INPUT" =~ ^[0-9]+$ && ! -f "tools/resolve_version.py" ]]; then
-    echo "error: tools/resolve_version.py is required for phase input"
-    exit 1
-fi
-python3 - "$CONFIG_FILE" <<'PY'
-import json, re, sys
-with open(sys.argv[1], encoding="utf-8") as f:
-    cfg = json.load(f)
-mapping = cfg.get("phase_to_version")
 if not isinstance(mapping, dict) or not mapping:
     raise SystemExit("error: phase_to_version missing or invalid")
 for span, template in mapping.items():
-    if not isinstance(template, str) or re.fullmatch(r"Phase [0-9]+-[0-9]+", span) is None:
-        raise SystemExit("error: invalid phase_to_version entry")
+    match = re.fullmatch(r"Phase (\d+)-(\d+)", span) if isinstance(span, str) else None
+    if not match or int(match[1]) > int(match[2]):
+        raise SystemExit(f"error: invalid phase range: {span!r}")
+    if not isinstance(template, str):
+        raise SystemExit(f"error: invalid version template for {span!r}")
+    try:
+        version = template.format(phase=int(match[1]))
+    except (KeyError, ValueError, IndexError, TypeError, AttributeError):
+        raise SystemExit(f"error: invalid version template for {span!r}")
+    if not re.fullmatch(r"\d+\.\d+\.\d+", version):
+        raise SystemExit(f"error: version template for {span!r} must produce X.Y.Z")
 PY
 # Determine version from input — phase mapping อ่านจาก config ไม่ hardcode
 if [[ "$INPUT" =~ ^[0-9]+$ ]]; then
