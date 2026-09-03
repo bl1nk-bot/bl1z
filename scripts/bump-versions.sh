@@ -38,13 +38,20 @@ mapping = cfg.get("phase_to_version")
 # Parse the configuration before changing any release metadata.
 if not isinstance(mapping, dict) or not mapping:
     raise SystemExit("error: phase_to_version missing or invalid")
+validated_ranges = []
 for span, template in mapping.items():
     match = re.fullmatch(r"Phase (\d+)-(\d+)", span) if isinstance(span, str) else None
-    if not match or int(match[1]) > int(match[2]):
+    if not match:
         raise SystemExit(f"error: invalid phase range: {span!r}")
+    lo, hi = map(int, match.groups())
+    if lo > hi:
+        raise SystemExit(f"error: invalid phase range: {span!r}")
+    if any(lo <= previous_hi and previous_lo <= hi for previous_lo, previous_hi in validated_ranges):
+        raise SystemExit(f"error: overlapping phase range: {span!r}")
+    validated_ranges.append((lo, hi))
     if not isinstance(template, str):
         raise SystemExit(f"error: invalid version template for {span!r}")
-    for phase in range(int(match[1]), int(match[2]) + 1):
+    for phase in range(lo, hi + 1):
         try:
             version = template.format(phase=phase)
         except (KeyError, ValueError, IndexError, TypeError, AttributeError):
