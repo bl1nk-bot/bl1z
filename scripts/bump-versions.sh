@@ -44,12 +44,13 @@ for span, template in mapping.items():
         raise SystemExit(f"error: invalid phase range: {span!r}")
     if not isinstance(template, str):
         raise SystemExit(f"error: invalid version template for {span!r}")
-    try:
-        version = template.format(phase=int(match[1]))
-    except (KeyError, ValueError, IndexError, TypeError, AttributeError):
-        raise SystemExit(f"error: invalid version template for {span!r}")
-    if not re.fullmatch(r"\d+\.\d+\.\d+", version):
-        raise SystemExit(f"error: version template for {span!r} must produce X.Y.Z")
+    for phase in range(int(match[1]), int(match[2]) + 1):
+        try:
+            version = template.format(phase=phase)
+        except (KeyError, ValueError, IndexError, TypeError, AttributeError):
+            raise SystemExit(f"error: invalid version template for {span!r}")
+        if not re.fullmatch(r"\d+\.\d+\.\d+", version):
+            raise SystemExit(f"error: version template for {span!r} must produce X.Y.Z")
 PY
 # Determine version from input — phase mapping อ่านจาก config ไม่ hardcode
 if [[ "$INPUT" =~ ^[0-9]+$ ]]; then
