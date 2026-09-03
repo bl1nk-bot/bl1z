@@ -178,11 +178,11 @@
 - [x] 16.3 Script runner: spawn `<runner> <script> <fn>`, args JSON stdin → result JSON stdout
 - [x] 16.4 Plugin store: install/link/uninstall/list/enable/disable/reload/debug/fmt/fix, `state.json`, `BL1Z_PLUGINS_DIR`
 - [x] 16.5 Auto-load ปลั๊กอินที่ enabled ใน eval/repl (`enabled_plugin_paths`)
-- [x] 16.6 IDL: `proto/bl1z_plugin.proto` → `tools/gen_schema.py` → 3 schemas (manifest/store/protocol)
+- [x] 16.6 IDL: `proto/bl1z_plugin.proto` กำหนด manifest/store/protocol contracts
 - [x] 16.7 ตัวอย่างปลั๊กอิน: math_extra, string_utils, obsidian_like (Python scripts)
 - [x] 16.8 ลบโค้ดซ้ำ: value_main.rs, value_pr26.rs, higher_order_original.rs, acp.yaml
 
-**Files:** `main.rs`, `plugins.rs`, `plugins_cmd.rs`, `proto/`, `tools/gen_schema.py`
+**Files:** `main.rs`, `plugins.rs`, `plugins_cmd.rs`, `proto/`
 
 ---
 

@@ -182,12 +182,10 @@ impl Default for PluginManager {
 // cannot — I/O, network, state — that's the point of a plugin.
 //
 // The plugin contract is defined in proto/bl1z_plugin.proto — the single
-// source of truth. That IDL generates the JSON Schema
-// (tools/gen_schema.py → plugin-manifest.schema.json) for editors/SDK
-// tooling. The engine does NOT carry proto machinery: like a backend
-// connecting to a DB without carrying the schema, it just consumes the
-// manifest's wire format (JSON, proto3 JSON mapping). Schema change = edit
-// the proto + regen — nothing hand-maintained.
+// source of truth for SDK/tooling. The engine does NOT carry proto machinery:
+// like a backend connecting to a DB without carrying the schema, it consumes
+// the manifest JSON directly. Interface change = edit the proto and update
+// the affected consumer.
 //
 // plugin.json:
 // {

@@ -305,9 +305,8 @@ pub enum ErrorKind {
 
 Plugin SDK ขยายจาก trait-only (Phase 13) เป็น ecosystem ที่ใช้จริง: JSON
 plugins, CLI store, และ IDL เดียว. **Single source of truth:**
-`proto/bl1z_plugin.proto` → `python3 tools/gen_schema.py` สร้าง
-`plugin-manifest.schema.json`, `schema-store.schema.json`, และ
-`plugin-protocol.schema.json` (ห้ามแก้ schema ด้วยมือ).
+`proto/bl1z_plugin.proto` กำหนด contract ของ manifest, store state และ
+script protocol; runtime อ่าน JSON โดยตรง.
 
 - **Plugin manifest** (`plugin.json`): `id`, `name`, `version`, `description`,
   `author`, `min_engine_version`, `runner`, `script`,
