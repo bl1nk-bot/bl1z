@@ -2,7 +2,7 @@
 //!
 //! This module provides tools for analyzing and optimizing formula evaluation performance.
 
-use crate::{error::FormulaError, evaluate, parse, tokenize, Context, FunctionRegistry};
+use crate::{Context, FunctionRegistry, error::FormulaError, evaluate, parse, tokenize};
 use std::time::{Duration, Instant};
 
 /// Performance metrics for formula evaluation.
@@ -148,10 +148,7 @@ pub fn analyze_formula(formula: &str) -> Result<OptimizationSuggestions, Formula
     // Analyze AST structure
     analyze_ast(&ast, &mut suggestions, &mut complexity);
 
-    Ok(OptimizationSuggestions {
-        suggestions,
-        complexity,
-    })
+    Ok(OptimizationSuggestions { suggestions, complexity })
 }
 
 fn analyze_ast(
@@ -234,19 +231,11 @@ mod tests {
 
     #[test]
     fn test_analyze_large_array() {
-        let large_array = format!(
-            "sum([{}])",
-            (0..150)
-                .map(|n| n.to_string())
-                .collect::<Vec<_>>()
-                .join(",")
-        );
+        let large_array =
+            format!("sum([{}])", (0..150).map(|n| n.to_string()).collect::<Vec<_>>().join(","));
         let analysis = analyze_formula(&large_array).unwrap();
         assert_eq!(analysis.complexity, FormulaComplexity::High);
         assert!(!analysis.suggestions.is_empty());
-        assert!(analysis
-            .suggestions
-            .iter()
-            .any(|s| s.contains("external data sources")));
+        assert!(analysis.suggestions.iter().any(|s| s.contains("external data sources")));
     }
 }

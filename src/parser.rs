@@ -1,14 +1,11 @@
 use crate::ast::*;
 use crate::error::{ErrorKind, FormulaError};
-use crate::lexer::{tokenize, Token, TokenKind};
+use crate::lexer::{Token, TokenKind, tokenize};
 use crate::span::Span;
 
 /// สร้าง Span จาก token list โดยอ้างอิง index
 fn token_span(tokens: &[Token], idx: usize) -> Span {
-    tokens
-        .get(idx)
-        .map(|t| t.span)
-        .expect("BUG: token index out of bounds")
+    tokens.get(idx).map(|t| t.span).expect("BUG: token index out of bounds")
 }
 
 pub struct Parser<'a> {
@@ -19,18 +16,11 @@ pub struct Parser<'a> {
 
 impl<'a> Parser<'a> {
     pub fn new(tokens: &'a [Token]) -> Self {
-        Self {
-            tokens,
-            pos: 0,
-            config_depth_limit: 100,
-        }
+        Self { tokens, pos: 0, config_depth_limit: 100 }
     }
 
     fn peek(&self) -> TokenKind {
-        self.tokens
-            .get(self.pos)
-            .map(|t| t.kind.clone())
-            .unwrap_or(TokenKind::Eof)
+        self.tokens.get(self.pos).map(|t| t.kind.clone()).unwrap_or(TokenKind::Eof)
     }
 
     fn advance(&mut self) -> &Token {
@@ -67,16 +57,9 @@ impl<'a> Parser<'a> {
         while let Some((_, op)) = token_ops.iter().find(|(token, _)| *token == self.peek()) {
             self.advance();
             let right = next_parser(self)?;
-            let span = Span {
-                start: left.meta.span.start,
-                end: right.meta.span.end,
-            };
+            let span = Span { start: left.meta.span.start, end: right.meta.span.end };
             left = SpannedExpr::new(
-                Expr::BinaryExpr {
-                    left: Box::new(left),
-                    op: op.clone(),
-                    right: Box::new(right),
-                },
+                Expr::BinaryExpr { left: Box::new(left), op: op.clone(), right: Box::new(right) },
                 span,
             );
         }
@@ -149,18 +132,8 @@ impl<'a> Parser<'a> {
         self.expect(TokenKind::Eq, "ต้องการ '=' หลังพารามิเตอร์")?;
 
         let body = self.parse_expression()?;
-        let span = Span {
-            start: fn_span.start,
-            end: body.meta.span.end,
-        };
-        Ok(SpannedExpr::new(
-            Expr::FunctionDef {
-                name,
-                params,
-                body: Box::new(body),
-            },
-            span,
-        ))
+        let span = Span { start: fn_span.start, end: body.meta.span.end };
+        Ok(SpannedExpr::new(Expr::FunctionDef { name, params, body: Box::new(body) }, span))
     }
 
     /// logical_or = logical_and ('||' logical_and)*
@@ -183,10 +156,7 @@ impl<'a> Parser<'a> {
     fn parse_equality(&mut self) -> Result<SpannedExpr, FormulaError> {
         self.parse_left_associative_binary(
             Self::parse_comparison,
-            &[
-                (TokenKind::EqEq, BinaryOp::Eq),
-                (TokenKind::NotEq, BinaryOp::NotEq),
-            ],
+            &[(TokenKind::EqEq, BinaryOp::Eq), (TokenKind::NotEq, BinaryOp::NotEq)],
         )
     }
 
@@ -207,10 +177,7 @@ impl<'a> Parser<'a> {
     fn parse_term(&mut self) -> Result<SpannedExpr, FormulaError> {
         self.parse_left_associative_binary(
             Self::parse_factor,
-            &[
-                (TokenKind::Plus, BinaryOp::Add),
-                (TokenKind::Minus, BinaryOp::Sub),
-            ],
+            &[(TokenKind::Plus, BinaryOp::Add), (TokenKind::Minus, BinaryOp::Sub)],
         )
     }
 
@@ -218,10 +185,7 @@ impl<'a> Parser<'a> {
     fn parse_factor(&mut self) -> Result<SpannedExpr, FormulaError> {
         self.parse_left_associative_binary(
             Self::parse_unary,
-            &[
-                (TokenKind::Star, BinaryOp::Mul),
-                (TokenKind::Slash, BinaryOp::Div),
-            ],
+            &[(TokenKind::Star, BinaryOp::Mul), (TokenKind::Slash, BinaryOp::Div)],
         )
     }
 
@@ -240,17 +204,8 @@ impl<'a> Parser<'a> {
             let op_span = token_span(self.tokens, self.pos);
             self.advance();
             let expr = self.parse_unary()?;
-            let span = Span {
-                start: op_span.start,
-                end: expr.meta.span.end,
-            };
-            return Ok(SpannedExpr::new(
-                Expr::UnaryExpr {
-                    op,
-                    expr: Box::new(expr),
-                },
-                span,
-            ));
+            let span = Span { start: op_span.start, end: expr.meta.span.end };
+            return Ok(SpannedExpr::new(Expr::UnaryExpr { op, expr: Box::new(expr) }, span));
         }
         self.parse_postfix()
     }
@@ -271,10 +226,7 @@ impl<'a> Parser<'a> {
                             Some(field_tok.span),
                         ));
                     }
-                    let span = Span {
-                        start: expr.meta.span.start,
-                        end: field_tok.span.end,
-                    };
+                    let span = Span { start: expr.meta.span.start, end: field_tok.span.end };
                     expr = SpannedExpr::new(
                         Expr::PropertyAccess {
                             object: Box::new(expr),
@@ -287,15 +239,9 @@ impl<'a> Parser<'a> {
                     self.advance();
                     let index = self.parse_expression()?;
                     self.expect(TokenKind::RBracket, "ต้องการ ']' ปิดท้าย index")?;
-                    let span = Span {
-                        start: expr.meta.span.start,
-                        end: index.meta.span.end,
-                    };
+                    let span = Span { start: expr.meta.span.start, end: index.meta.span.end };
                     expr = SpannedExpr::new(
-                        Expr::IndexAccess {
-                            object: Box::new(expr),
-                            index: Box::new(index),
-                        },
+                        Expr::IndexAccess { object: Box::new(expr), index: Box::new(index) },
                         span,
                     );
                 }
@@ -319,27 +265,19 @@ impl<'a> Parser<'a> {
                         Some(span),
                     )
                 })?;
-                Ok(SpannedExpr::new(
-                    Expr::Literal(crate::value::Value::Number(n)),
-                    span,
-                ))
+                Ok(SpannedExpr::new(Expr::Literal(crate::value::Value::Number(n)), span))
             }
             TokenKind::String => Ok(SpannedExpr::new(
                 Expr::Literal(crate::value::Value::String(tok.lexeme.clone())),
                 span,
             )),
-            TokenKind::True => Ok(SpannedExpr::new(
-                Expr::Literal(crate::value::Value::Bool(true)),
-                span,
-            )),
-            TokenKind::False => Ok(SpannedExpr::new(
-                Expr::Literal(crate::value::Value::Bool(false)),
-                span,
-            )),
-            TokenKind::Null => Ok(SpannedExpr::new(
-                Expr::Literal(crate::value::Value::Null),
-                span,
-            )),
+            TokenKind::True => {
+                Ok(SpannedExpr::new(Expr::Literal(crate::value::Value::Bool(true)), span))
+            }
+            TokenKind::False => {
+                Ok(SpannedExpr::new(Expr::Literal(crate::value::Value::Bool(false)), span))
+            }
+            TokenKind::Null => Ok(SpannedExpr::new(Expr::Literal(crate::value::Value::Null), span)),
             // Phase 11: DateTime literal with @ prefix
             TokenKind::At => {
                 // Expect a string (date or datetime) after @
@@ -385,10 +323,7 @@ impl<'a> Parser<'a> {
                     })?;
                 Ok(SpannedExpr::new(
                     Expr::Literal(crate::value::Value::DateTime(parsed)),
-                    Span {
-                        start: span.start,
-                        end: self.tokens[self.pos - 1].span.end,
-                    },
+                    Span { start: span.start, end: self.tokens[self.pos - 1].span.end },
                 ))
             }
             TokenKind::Identifier => {
@@ -397,15 +332,9 @@ impl<'a> Parser<'a> {
                 if self.peek() == TokenKind::Arrow {
                     self.advance(); // consume '=>'
                     let body = self.parse_expression()?;
-                    let span = Span {
-                        start: span.start,
-                        end: body.meta.span.end,
-                    };
+                    let span = Span { start: span.start, end: body.meta.span.end };
                     return Ok(SpannedExpr::new(
-                        Expr::Lambda {
-                            params: vec![name],
-                            body: Box::new(body),
-                        },
+                        Expr::Lambda { params: vec![name], body: Box::new(body) },
                         span,
                     ));
                 }
@@ -443,15 +372,9 @@ impl<'a> Parser<'a> {
                     if self.peek() == TokenKind::Arrow {
                         self.advance(); // consume '=>'
                         let body = self.parse_expression()?;
-                        let span = Span {
-                            start: lparen_span.start,
-                            end: body.meta.span.end,
-                        };
+                        let span = Span { start: lparen_span.start, end: body.meta.span.end };
                         return Ok(SpannedExpr::new(
-                            Expr::Lambda {
-                                params: vec![],
-                                body: Box::new(body),
-                            },
+                            Expr::Lambda { params: vec![], body: Box::new(body) },
                             span,
                         ));
                     }
@@ -489,15 +412,9 @@ impl<'a> Parser<'a> {
                                 }
                             }
                             let body = self.parse_expression()?;
-                            let span = Span {
-                                start: lparen_span.start,
-                                end: body.meta.span.end,
-                            };
+                            let span = Span { start: lparen_span.start, end: body.meta.span.end };
                             return Ok(SpannedExpr::new(
-                                Expr::Lambda {
-                                    params,
-                                    body: Box::new(body),
-                                },
+                                Expr::Lambda { params, body: Box::new(body) },
                                 span,
                             ));
                         }
@@ -509,10 +426,7 @@ impl<'a> Parser<'a> {
                 // Not a lambda - parse as grouping expression
                 let inner = self.parse_expression()?;
                 self.expect(TokenKind::RParen, "ต้องการ ')'")?;
-                let span = Span {
-                    start: lparen_span.start,
-                    end: inner.meta.span.end,
-                };
+                let span = Span { start: lparen_span.start, end: inner.meta.span.end };
                 Ok(SpannedExpr::new(Expr::Grouping(Box::new(inner)), span))
             }
             TokenKind::LBracket => {
@@ -588,7 +502,7 @@ pub fn parse_with_config(
         let mut exprs = vec![first_expr];
         while parser.peek() == TokenKind::Semicolon {
             parser.advance(); // consume ';'
-                              // Allow trailing semicolons
+            // Allow trailing semicolons
             if parser.peek() == TokenKind::Eof {
                 break;
             }
@@ -699,11 +613,7 @@ pub fn parse_with_recovery_config(
             start: crate::span::Position { line: 1, column: 1 },
             end: crate::span::Position { line: 1, column: 1 },
         });
-        stmt_tokens.push(Token {
-            kind: TokenKind::Eof,
-            span: eof_span,
-            lexeme: String::new(),
-        });
+        stmt_tokens.push(Token { kind: TokenKind::Eof, span: eof_span, lexeme: String::new() });
 
         // Try to parse this statement
         match Parser::new(&stmt_tokens).parse_expression() {
@@ -754,12 +664,7 @@ mod tests {
         let ast = parse(&tokens).unwrap();
         if let Expr::BinaryExpr { left: _, op, right } = &ast.expr {
             assert_eq!(*op, BinaryOp::Add);
-            if let Expr::BinaryExpr {
-                left: _,
-                op: op2,
-                right: _,
-            } = &right.expr
-            {
+            if let Expr::BinaryExpr { left: _, op: op2, right: _ } = &right.expr {
                 assert_eq!(*op2, BinaryOp::Mul);
             } else {
                 panic!("expected multiplication");

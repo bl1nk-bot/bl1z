@@ -41,12 +41,7 @@ pub struct FormulaError {
 impl FormulaError {
     /// สร้างข้อผิดพลาดใหม่
     pub fn new(kind: ErrorKind, code: &str, message: &str, span: Option<Span>) -> Self {
-        Self {
-            kind,
-            code: code.to_string(),
-            message: message.to_string(),
-            span,
-        }
+        Self { kind, code: code.to_string(), message: message.to_string(), span }
     }
 }
 

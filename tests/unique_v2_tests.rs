@@ -1,5 +1,5 @@
 use bl1z::builtins;
-use bl1z::{evaluate_mut, parse, tokenize, Context, FunctionRegistry, Value};
+use bl1z::{Context, FunctionRegistry, Value, evaluate_mut, parse, tokenize};
 use std::collections::HashMap;
 
 fn prepared_registry() -> FunctionRegistry {
@@ -23,10 +23,7 @@ fn test_complex_lambda_and_nesting() {
         "meta".to_string(),
         Value::Map({
             let mut m = HashMap::new();
-            m.insert(
-                "tags".to_string(),
-                Value::Array(vec![Value::String("rust".to_string())]),
-            );
+            m.insert("tags".to_string(), Value::Array(vec![Value::String("rust".to_string())]));
             m
         }),
     );
@@ -37,27 +34,18 @@ fn test_complex_lambda_and_nesting() {
         "meta".to_string(),
         Value::Map({
             let mut m = HashMap::new();
-            m.insert(
-                "tags".to_string(),
-                Value::Array(vec![Value::String("formula".to_string())]),
-            );
+            m.insert("tags".to_string(), Value::Array(vec![Value::String("formula".to_string())]));
             m
         }),
     );
 
-    ctx.set(
-        "users",
-        Value::Array(vec![Value::Map(user1), Value::Map(user2)]),
-    );
+    ctx.set("users", Value::Array(vec![Value::Map(user1), Value::Map(user2)]));
 
     // map(users, u => u.meta.tags[0])
     let result = eval_v2("map(users, u => u.meta.tags[0])", &mut ctx);
     assert_eq!(
         result,
-        Value::Array(vec![
-            Value::String("rust".to_string()),
-            Value::String("formula".to_string())
-        ])
+        Value::Array(vec![Value::String("rust".to_string()), Value::String("formula".to_string())])
     );
 }
 
@@ -80,18 +68,12 @@ fn test_lambda_capture_and_property_access() {
 fn test_datetime_literal_comparison() {
     let mut ctx = Context::new();
 
-    assert_eq!(
-        eval_v2("@2024-01-01 < @2024-01-02", &mut ctx),
-        Value::Bool(true)
-    );
+    assert_eq!(eval_v2("@2024-01-01 < @2024-01-02", &mut ctx), Value::Bool(true));
     assert_eq!(
         eval_v2("@2024-06-17T10:00:00Z > @2024-06-17T09:00:00Z", &mut ctx),
         Value::Bool(true)
     );
-    assert_eq!(
-        eval_v2("@2024-01-01 == @2024-01-01", &mut ctx),
-        Value::Bool(true)
-    );
+    assert_eq!(eval_v2("@2024-01-01 == @2024-01-01", &mut ctx), Value::Bool(true));
 }
 
 #[test]

@@ -2,10 +2,7 @@ use crate::span::Span;
 use crate::value::Value;
 
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(
-    feature = "serialization",
-    derive(serde::Serialize, serde::Deserialize)
-)]
+#[cfg_attr(feature = "serialization", derive(serde::Serialize, serde::Deserialize))]
 pub enum BinaryOp {
     Add,
     Sub,
@@ -22,10 +19,7 @@ pub enum BinaryOp {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(
-    feature = "serialization",
-    derive(serde::Serialize, serde::Deserialize)
-)]
+#[cfg_attr(feature = "serialization", derive(serde::Serialize, serde::Deserialize))]
 pub enum UnaryOp {
     Neg,
     Pos,
@@ -34,20 +28,14 @@ pub enum UnaryOp {
 
 /// ข้อมูลตำแหน่งของ expression ใน source
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(
-    feature = "serialization",
-    derive(serde::Serialize, serde::Deserialize)
-)]
+#[cfg_attr(feature = "serialization", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExprMeta {
     pub span: Span,
 }
 
 /// นิพจน์แต่ละตัวจะมีข้อมูล Span ติดไปด้วย
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(
-    feature = "serialization",
-    derive(serde::Serialize, serde::Deserialize)
-)]
+#[cfg_attr(feature = "serialization", derive(serde::Serialize, serde::Deserialize))]
 pub struct SpannedExpr {
     pub expr: Expr,
     pub meta: ExprMeta,
@@ -56,18 +44,12 @@ pub struct SpannedExpr {
 // ทำให้ SpannedExpr สามารถแกะค่า expr ได้ง่าย
 impl SpannedExpr {
     pub fn new(expr: Expr, span: Span) -> Self {
-        Self {
-            expr,
-            meta: ExprMeta { span },
-        }
+        Self { expr, meta: ExprMeta { span } }
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(
-    feature = "serialization",
-    derive(serde::Serialize, serde::Deserialize)
-)]
+#[cfg_attr(feature = "serialization", derive(serde::Serialize, serde::Deserialize))]
 pub enum Expr {
     Literal(Value),
     Variable(String),

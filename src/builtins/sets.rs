@@ -104,41 +104,29 @@ mod tests {
 
     #[test]
     fn test_set_union_basic() {
-        let result = call_fn(
-            set_union(),
-            vec![num_set(&[1.0, 2.0]), num_set(&[2.0, 3.0])],
-        )
-        .unwrap();
+        let result =
+            call_fn(set_union(), vec![num_set(&[1.0, 2.0]), num_set(&[2.0, 3.0])]).unwrap();
         assert_eq!(result, num_set(&[1.0, 2.0, 3.0]));
     }
 
     #[test]
     fn test_set_union_disjoint() {
-        let result = call_fn(
-            set_union(),
-            vec![num_set(&[1.0, 2.0]), num_set(&[3.0, 4.0])],
-        )
-        .unwrap();
+        let result =
+            call_fn(set_union(), vec![num_set(&[1.0, 2.0]), num_set(&[3.0, 4.0])]).unwrap();
         assert_eq!(result, num_set(&[1.0, 2.0, 3.0, 4.0]));
     }
 
     #[test]
     fn test_set_union_empty() {
-        let result = call_fn(
-            set_union(),
-            vec![num_set(&[1.0]), Value::Set(HashSet::new())],
-        )
-        .unwrap();
+        let result =
+            call_fn(set_union(), vec![num_set(&[1.0]), Value::Set(HashSet::new())]).unwrap();
         assert_eq!(result, num_set(&[1.0]));
     }
 
     #[test]
     fn test_set_union_array_as_set() {
-        let result = call_fn(
-            set_union(),
-            vec![num_arr(&[1.0, 2.0]), num_set(&[2.0, 3.0])],
-        )
-        .unwrap();
+        let result =
+            call_fn(set_union(), vec![num_arr(&[1.0, 2.0]), num_set(&[2.0, 3.0])]).unwrap();
         assert_eq!(result, num_set(&[1.0, 2.0, 3.0]));
     }
 
@@ -154,40 +142,30 @@ mod tests {
 
     #[test]
     fn test_set_intersection_basic() {
-        let result = call_fn(
-            set_intersection(),
-            vec![num_set(&[1.0, 2.0, 3.0]), num_set(&[2.0, 3.0, 4.0])],
-        )
-        .unwrap();
+        let result =
+            call_fn(set_intersection(), vec![num_set(&[1.0, 2.0, 3.0]), num_set(&[2.0, 3.0, 4.0])])
+                .unwrap();
         assert_eq!(result, num_set(&[2.0, 3.0]));
     }
 
     #[test]
     fn test_set_intersection_disjoint() {
-        let result = call_fn(
-            set_intersection(),
-            vec![num_set(&[1.0, 2.0]), num_set(&[3.0, 4.0])],
-        )
-        .unwrap();
+        let result =
+            call_fn(set_intersection(), vec![num_set(&[1.0, 2.0]), num_set(&[3.0, 4.0])]).unwrap();
         assert_eq!(result, Value::Set(HashSet::new()));
     }
 
     #[test]
     fn test_set_intersection_empty() {
-        let result = call_fn(
-            set_intersection(),
-            vec![num_set(&[1.0]), Value::Set(HashSet::new())],
-        )
-        .unwrap();
+        let result =
+            call_fn(set_intersection(), vec![num_set(&[1.0]), Value::Set(HashSet::new())]).unwrap();
         assert_eq!(result, Value::Set(HashSet::new()));
     }
 
     #[test]
     fn test_set_intersection_type_error() {
-        let result = call_fn(
-            set_intersection(),
-            vec![Value::String("bad".to_string()), num_set(&[1.0])],
-        );
+        let result =
+            call_fn(set_intersection(), vec![Value::String("bad".to_string()), num_set(&[1.0])]);
         assert!(result.is_err());
         assert_eq!(result.unwrap_err().kind, ErrorKind::TypeError);
     }
@@ -196,41 +174,29 @@ mod tests {
 
     #[test]
     fn test_set_difference_basic() {
-        let result = call_fn(
-            set_difference(),
-            vec![num_set(&[1.0, 2.0, 3.0]), num_set(&[2.0])],
-        )
-        .unwrap();
+        let result =
+            call_fn(set_difference(), vec![num_set(&[1.0, 2.0, 3.0]), num_set(&[2.0])]).unwrap();
         assert_eq!(result, num_set(&[1.0, 3.0]));
     }
 
     #[test]
     fn test_set_difference_no_overlap() {
-        let result = call_fn(
-            set_difference(),
-            vec![num_set(&[1.0, 2.0]), num_set(&[3.0, 4.0])],
-        )
-        .unwrap();
+        let result =
+            call_fn(set_difference(), vec![num_set(&[1.0, 2.0]), num_set(&[3.0, 4.0])]).unwrap();
         assert_eq!(result, num_set(&[1.0, 2.0]));
     }
 
     #[test]
     fn test_set_difference_subtract_all() {
-        let result = call_fn(
-            set_difference(),
-            vec![num_set(&[1.0, 2.0]), num_set(&[1.0, 2.0])],
-        )
-        .unwrap();
+        let result =
+            call_fn(set_difference(), vec![num_set(&[1.0, 2.0]), num_set(&[1.0, 2.0])]).unwrap();
         assert_eq!(result, Value::Set(HashSet::new()));
     }
 
     #[test]
     fn test_set_difference_array_as_set() {
-        let result = call_fn(
-            set_difference(),
-            vec![num_arr(&[1.0, 2.0, 3.0]), num_set(&[2.0])],
-        )
-        .unwrap();
+        let result =
+            call_fn(set_difference(), vec![num_arr(&[1.0, 2.0, 3.0]), num_set(&[2.0])]).unwrap();
         assert_eq!(result, num_set(&[1.0, 3.0]));
     }
 
@@ -245,62 +211,42 @@ mod tests {
 
     #[test]
     fn test_set_in_found() {
-        let result = call_fn(
-            set_in(),
-            vec![Value::Number(2.0), num_set(&[1.0, 2.0, 3.0])],
-        )
-        .unwrap();
+        let result =
+            call_fn(set_in(), vec![Value::Number(2.0), num_set(&[1.0, 2.0, 3.0])]).unwrap();
         assert_eq!(result, Value::Bool(true));
     }
 
     #[test]
     fn test_set_in_not_found() {
-        let result = call_fn(
-            set_in(),
-            vec![Value::Number(5.0), num_set(&[1.0, 2.0, 3.0])],
-        )
-        .unwrap();
+        let result =
+            call_fn(set_in(), vec![Value::Number(5.0), num_set(&[1.0, 2.0, 3.0])]).unwrap();
         assert_eq!(result, Value::Bool(false));
     }
 
     #[test]
     fn test_set_in_array() {
-        let result = call_fn(
-            set_in(),
-            vec![Value::Number(2.0), num_arr(&[1.0, 2.0, 3.0])],
-        )
-        .unwrap();
+        let result =
+            call_fn(set_in(), vec![Value::Number(2.0), num_arr(&[1.0, 2.0, 3.0])]).unwrap();
         assert_eq!(result, Value::Bool(true));
     }
 
     #[test]
     fn test_set_in_type_error() {
-        let result = call_fn(
-            set_in(),
-            vec![Value::Number(1.0), Value::String("bad".to_string())],
-        );
+        let result = call_fn(set_in(), vec![Value::Number(1.0), Value::String("bad".to_string())]);
         assert!(result.is_err());
         assert_eq!(result.unwrap_err().kind, ErrorKind::TypeError);
     }
 
     #[test]
     fn test_set_in_string_values() {
-        let s: HashSet<Value> = ["a", "b", "c"]
-            .iter()
-            .map(|s| Value::String(s.to_string()))
-            .collect();
-        let result = call_fn(
-            set_in(),
-            vec![Value::String("b".to_string()), Value::Set(s.clone())],
-        )
-        .unwrap();
+        let s: HashSet<Value> =
+            ["a", "b", "c"].iter().map(|s| Value::String(s.to_string())).collect();
+        let result =
+            call_fn(set_in(), vec![Value::String("b".to_string()), Value::Set(s.clone())]).unwrap();
         assert_eq!(result, Value::Bool(true));
 
-        let result = call_fn(
-            set_in(),
-            vec![Value::String("d".to_string()), Value::Set(s)],
-        )
-        .unwrap();
+        let result =
+            call_fn(set_in(), vec![Value::String("d".to_string()), Value::Set(s)]).unwrap();
         assert_eq!(result, Value::Bool(false));
     }
 }

@@ -6,8 +6,8 @@
 
 use bl1z::builtins;
 use bl1z::{
-    error::FormulaError, evaluate, functions::BuiltinFunction, parse, tokenize, Context,
-    FunctionRegistry, Value,
+    Context, FunctionRegistry, Value, error::FormulaError, evaluate, functions::BuiltinFunction,
+    parse, tokenize,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -39,20 +39,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Advanced array operations
     println!("\n3. Advanced Array Operations:");
-    evaluate_and_print(
-        "max([fibonacci(1), fibonacci(2), fibonacci(3)])",
-        &ctx,
-        &registry,
-    )?;
+    evaluate_and_print("max([fibonacci(1), fibonacci(2), fibonacci(3)])", &ctx, &registry)?;
     evaluate_and_print("avg([10.5, 20.3, 15.8, 12.1])", &ctx, &registry)?;
 
     // Date manipulation
     println!("\n4. Date Manipulation:");
-    evaluate_and_print(
-        "date_diff(now(), \"2023-01-01\", \"days\")",
-        &ctx,
-        &registry,
-    )?;
+    evaluate_and_print("date_diff(now(), \"2023-01-01\", \"days\")", &ctx, &registry)?;
     evaluate_and_print("month(date_add(user.created_at, 365))", &ctx, &registry)?;
 
     // Nested expressions
@@ -145,29 +137,13 @@ fn register_custom_functions(registry: &mut FunctionRegistry) {
         }
     }
 
-    registry.register(BuiltinFunction {
-        name: "fibonacci".to_string(),
-        arity: 1,
-        call: fibonacci,
-    });
+    registry.register(BuiltinFunction { name: "fibonacci".to_string(), arity: 1, call: fibonacci });
 
-    registry.register(BuiltinFunction {
-        name: "power".to_string(),
-        arity: 2,
-        call: power,
-    });
+    registry.register(BuiltinFunction { name: "power".to_string(), arity: 2, call: power });
 
-    registry.register(BuiltinFunction {
-        name: "is_even".to_string(),
-        arity: 1,
-        call: is_even,
-    });
+    registry.register(BuiltinFunction { name: "is_even".to_string(), arity: 1, call: is_even });
 
-    registry.register(BuiltinFunction {
-        name: "clamp".to_string(),
-        arity: 3,
-        call: clamp,
-    });
+    registry.register(BuiltinFunction { name: "clamp".to_string(), arity: 3, call: clamp });
 }
 
 fn create_complex_context() -> Context {
@@ -179,17 +155,11 @@ fn create_complex_context() -> Context {
 
     // User object (using Map)
     let mut user = std::collections::HashMap::new();
-    user.insert(
-        "name".to_string(),
-        Value::String("Alice Johnson".to_string()),
-    );
+    user.insert("name".to_string(), Value::String("Alice Johnson".to_string()));
     user.insert("score".to_string(), Value::Number(87.5));
     user.insert("level".to_string(), Value::Number(3.0));
     user.insert("active".to_string(), Value::Bool(true));
-    user.insert(
-        "created_at".to_string(),
-        Value::String("2023-06-15".to_string()),
-    );
+    user.insert("created_at".to_string(), Value::String("2023-06-15".to_string()));
 
     // Nested arrays
     user.insert(

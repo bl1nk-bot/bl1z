@@ -7,7 +7,7 @@
 //! - Error handling
 
 use bl1z::builtins;
-use bl1z::{evaluate, parse, tokenize, Context, FunctionRegistry, Value};
+use bl1z::{Context, FunctionRegistry, Value, evaluate, parse, tokenize};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("bl1z - Basic Example");
@@ -40,11 +40,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     evaluate_and_print("sum([1, 2, 3, 4, 5])", &Context::new(), &registry)?;
     evaluate_and_print("avg([10, 20, 30])", &Context::new(), &registry)?;
     evaluate_and_print("count([\"a\", \"b\", \"c\"])", &Context::new(), &registry)?;
-    evaluate_and_print(
-        "join([\"hello\", \"world\"], \" \")",
-        &Context::new(),
-        &registry,
-    )?;
+    evaluate_and_print("join([\"hello\", \"world\"], \" \")", &Context::new(), &registry)?;
 
     // Example 5: Date operations
     println!("\n5. Date Operations:");
@@ -100,10 +96,7 @@ fn show_error_example(formula: &str, ctx: &Context, registry: &FunctionRegistry)
         Err(err) => {
             println!("→ ERROR: {}", err.message);
             if let Some(span) = err.span {
-                println!(
-                    "   Location: line {}, column {}",
-                    span.start.line, span.start.column
-                );
+                println!("   Location: line {}, column {}", span.start.line, span.start.column);
             }
         }
     }

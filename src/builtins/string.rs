@@ -104,8 +104,8 @@ pub fn pad() -> BuiltinFunction {
             if width > MAX_PAD_WIDTH {
                 return Err(FormulaError::new(
                     ErrorKind::FunctionError,
-                    "E502",
-                    &format!("pad width exceeds maximum allowed ({})", MAX_PAD_WIDTH),
+                    "E501",
+                    &format!("pad width ต้องไม่เกิน {}", MAX_PAD_WIDTH),
                     None,
                 ));
             }

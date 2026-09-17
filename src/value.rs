@@ -105,16 +105,8 @@ impl PartialEq for Value {
             (Value::Duration(a), Value::Duration(b)) => a == b,
             (Value::Set(a), Value::Set(b)) => a == b,
             (
-                Value::Range {
-                    start: a_start,
-                    end: a_end,
-                    step: a_step,
-                },
-                Value::Range {
-                    start: b_start,
-                    end: b_end,
-                    step: b_step,
-                },
+                Value::Range { start: a_start, end: a_end, step: a_step },
+                Value::Range { start: b_start, end: b_end, step: b_step },
             ) => a_start == b_start && a_end == b_end && a_step == b_step,
             _ => false,
         }
@@ -371,9 +363,9 @@ mod serde_impl {
                     map.serialize_entry("value", m)?;
                     map.end()
                 }
-                Value::Lambda(..) => Err(serde::ser::Error::custom(
-                    "cannot serialize Lambda (runtime closure)",
-                )),
+                Value::Lambda(..) => {
+                    Err(serde::ser::Error::custom("cannot serialize Lambda (runtime closure)"))
+                }
                 Value::DateTime(dt) => {
                     let mut map = serializer.serialize_map(Some(2))?;
                     map.serialize_entry("type", "datetime")?;
@@ -501,9 +493,7 @@ mod serde_impl {
                         .ok_or_else(|| serde::de::Error::custom("invalid range step"))?;
                     Ok(Value::Range { start, end, step })
                 }
-                other => Err(serde::de::Error::custom(format!(
-                    "unknown Value type: {other}"
-                ))),
+                other => Err(serde::de::Error::custom(format!("unknown Value type: {other}"))),
             }
         }
     }

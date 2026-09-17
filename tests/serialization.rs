@@ -9,7 +9,7 @@
 use bl1z::builtins;
 use bl1z::cache::FormulaCache;
 use bl1z::context::Context;
-use bl1z::{evaluate, parse, tokenize, FunctionRegistry, Value};
+use bl1z::{FunctionRegistry, Value, evaluate, parse, tokenize};
 
 // ── Value round-trip ────────────────────────────────────────────────────
 
@@ -75,11 +75,7 @@ fn value_roundtrip_nested() {
 
 #[test]
 fn value_roundtrip_range() {
-    let v = Value::Range {
-        start: 1,
-        end: 10,
-        step: 2,
-    };
+    let v = Value::Range { start: 1, end: 10, step: 2 };
     assert_eq!(roundtrip(&v), v);
 }
 
@@ -106,10 +102,7 @@ fn value_lambda_not_serializable() {
     let body = SpannedExpr {
         expr: Expr::Variable("x".to_string()),
         meta: ExprMeta {
-            span: Span::new(
-                Position { line: 1, column: 1 },
-                Position { line: 1, column: 2 },
-            ),
+            span: Span::new(Position { line: 1, column: 1 }, Position { line: 1, column: 2 }),
         },
     };
     let v = Value::Lambda(
@@ -135,10 +128,7 @@ fn context_to_json_and_back() {
     let restored = Context::from_json(&json).expect("from_json failed");
 
     assert_eq!(restored.get("score"), Some(&Value::Number(100.0)));
-    assert_eq!(
-        restored.get("name"),
-        Some(&Value::String("Alice".to_string()))
-    );
+    assert_eq!(restored.get("name"), Some(&Value::String("Alice".to_string())));
     assert_eq!(restored.get("active"), Some(&Value::Bool(true)));
 }
 

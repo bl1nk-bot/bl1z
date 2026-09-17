@@ -132,13 +132,13 @@ pub use eval::evaluate_optimized;
 pub use eval::evaluate_with_config;
 pub use functions::FunctionRegistry;
 pub use lexer::tokenize;
+pub use parser::RecoveryResult;
 pub use parser::parse;
 pub use parser::parse_formula_with_config;
 pub use parser::parse_with_config;
 pub use parser::parse_with_recovery;
-pub use parser::RecoveryResult;
 #[cfg(feature = "serialization")]
-pub use plugins::{load_json_plugin, JsonPlugin};
+pub use plugins::{JsonPlugin, load_json_plugin};
 pub use plugins::{Plugin, PluginManager};
 pub use value::Value;
 
@@ -479,17 +479,11 @@ mod integration_tests {
         // min
         let tokens = tokenize("min([5, 2, 8])").unwrap();
         let ast = parse(&tokens).unwrap();
-        assert_eq!(
-            evaluate(&ast, &Context::new(), &reg).unwrap(),
-            Value::Number(2.0)
-        );
+        assert_eq!(evaluate(&ast, &Context::new(), &reg).unwrap(), Value::Number(2.0));
         // max
         let tokens = tokenize("max([5, 2, 8])").unwrap();
         let ast = parse(&tokens).unwrap();
-        assert_eq!(
-            evaluate(&ast, &Context::new(), &reg).unwrap(),
-            Value::Number(8.0)
-        );
+        assert_eq!(evaluate(&ast, &Context::new(), &reg).unwrap(), Value::Number(8.0));
     }
 
     #[test]
@@ -508,10 +502,7 @@ mod integration_tests {
         let tokens = tokenize("count([1, 2, 3, 4, 5])").unwrap();
         let ast = parse(&tokens).unwrap();
         let reg = prepared_registry();
-        assert_eq!(
-            evaluate(&ast, &Context::new(), &reg).unwrap(),
-            Value::Number(5.0)
-        );
+        assert_eq!(evaluate(&ast, &Context::new(), &reg).unwrap(), Value::Number(5.0));
     }
 
     #[test]
@@ -519,10 +510,7 @@ mod integration_tests {
         let tokens = tokenize("[]").unwrap();
         let ast = parse(&tokens).unwrap();
         let reg = prepared_registry();
-        assert_eq!(
-            evaluate(&ast, &Context::new(), &reg).unwrap(),
-            Value::Array(vec![])
-        );
+        assert_eq!(evaluate(&ast, &Context::new(), &reg).unwrap(), Value::Array(vec![]));
     }
 
     #[test]
@@ -735,10 +723,7 @@ mod integration_tests {
             Value::Array(vec![Value::Number(1.0), Value::Number(2.0)]),
             Value::Array(vec![Value::Number(1.0), Value::Number(2.0)])
         );
-        assert_ne!(
-            Value::Array(vec![Value::Number(1.0)]),
-            Value::Array(vec![Value::Number(2.0)])
-        );
+        assert_ne!(Value::Array(vec![Value::Number(1.0)]), Value::Array(vec![Value::Number(2.0)]));
     }
 
     #[test]
@@ -748,10 +733,7 @@ mod integration_tests {
         let ast = parse(&tokens).unwrap();
         let reg = prepared_registry();
         let result = evaluate(&ast, &Context::new(), &reg).unwrap();
-        assert_eq!(
-            result,
-            Value::Array(vec![Value::Bool(true), Value::Bool(false)])
-        );
+        assert_eq!(result, Value::Array(vec![Value::Bool(true), Value::Bool(false)]));
     }
 
     #[test]

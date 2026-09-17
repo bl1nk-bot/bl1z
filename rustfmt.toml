@@ -1,4 +1,4 @@
-# ─── rustfmt configuration for BAMS workspace ─────────────
+# ─── rustfmt configuration for bl1z workspace ─────────────
 # Run: cargo fmt --all -- --check
 
 max_width = 100

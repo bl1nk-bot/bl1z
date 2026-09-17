@@ -130,18 +130,9 @@ fn evaluate_math_builtins() {
 
 #[test]
 fn evaluate_string_builtins() {
-    assert_eq!(
-        eval_formula("trim(\"  abc  \")"),
-        Ok(Value::String("abc".to_string()))
-    );
-    assert_eq!(
-        eval_formula("trim_start(\"  abc\")"),
-        Ok(Value::String("abc".to_string()))
-    );
-    assert_eq!(
-        eval_formula("trim_end(\"abc  \")"),
-        Ok(Value::String("abc".to_string()))
-    );
+    assert_eq!(eval_formula("trim(\"  abc  \")"), Ok(Value::String("abc".to_string())));
+    assert_eq!(eval_formula("trim_start(\"  abc\")"), Ok(Value::String("abc".to_string())));
+    assert_eq!(eval_formula("trim_end(\"abc  \")"), Ok(Value::String("abc".to_string())));
     assert_eq!(
         eval_formula("split(\"a,b,c\", \",\")"),
         Ok(Value::Array(vec![
@@ -154,10 +145,7 @@ fn evaluate_string_builtins() {
         eval_formula("replace(\"hello world\", \"world\", \"bl1z\")"),
         Ok(Value::String("hello bl1z".to_string()))
     );
-    assert_eq!(
-        eval_formula("substring(\"hello\", 1, 3)"),
-        Ok(Value::String("ell".to_string()))
-    );
+    assert_eq!(eval_formula("substring(\"hello\", 1, 3)"), Ok(Value::String("ell".to_string())));
 }
 
 #[test]
@@ -184,18 +172,12 @@ fn evaluate_string_concatenation() {
 
 #[test]
 fn evaluate_string_concatenation_empty_left() {
-    assert_eq!(
-        eval_formula("\"\" + \"hello\""),
-        Ok(Value::String("hello".to_string()))
-    );
+    assert_eq!(eval_formula("\"\" + \"hello\""), Ok(Value::String("hello".to_string())));
 }
 
 #[test]
 fn evaluate_string_concatenation_empty_right() {
-    assert_eq!(
-        eval_formula("\"hello\" + \"\""),
-        Ok(Value::String("hello".to_string()))
-    );
+    assert_eq!(eval_formula("\"hello\" + \"\""), Ok(Value::String("hello".to_string())));
 }
 
 #[test]
@@ -205,18 +187,12 @@ fn evaluate_builtin_function_len() {
 
 #[test]
 fn evaluate_builtin_function_upper() {
-    assert_eq!(
-        eval_formula("upper(\"hello\")"),
-        Ok(Value::String("HELLO".to_string()))
-    );
+    assert_eq!(eval_formula("upper(\"hello\")"), Ok(Value::String("HELLO".to_string())));
 }
 
 #[test]
 fn evaluate_builtin_function_lower() {
-    assert_eq!(
-        eval_formula("lower(\"HELLO\")"),
-        Ok(Value::String("hello".to_string()))
-    );
+    assert_eq!(eval_formula("lower(\"HELLO\")"), Ok(Value::String("hello".to_string())));
 }
 
 #[test]
@@ -297,11 +273,7 @@ fn evaluate_complex_expression() {
 fn evaluate_array_literal() {
     assert_eq!(
         eval_formula("[1, 2, 1 + 2]"),
-        Ok(Value::Array(vec![
-            Value::Number(1.0),
-            Value::Number(2.0),
-            Value::Number(3.0)
-        ]))
+        Ok(Value::Array(vec![Value::Number(1.0), Value::Number(2.0), Value::Number(3.0)]))
     );
 }
 
@@ -355,20 +327,11 @@ fn evaluate_complex_access_chain() {
     let mut ctx = Context::new();
     let mut user = HashMap::new();
     user.insert("name".to_string(), Value::String("John".to_string()));
-    user.insert(
-        "scores".to_string(),
-        Value::Array(vec![Value::Number(90.0), Value::Number(85.0)]),
-    );
+    user.insert("scores".to_string(), Value::Array(vec![Value::Number(90.0), Value::Number(85.0)]));
     ctx.set("user", Value::Map(user));
 
-    assert_eq!(
-        eval_with_ctx("user.name", &ctx),
-        Ok(Value::String("John".to_string()))
-    );
-    assert_eq!(
-        eval_with_ctx("user.scores[0]", &ctx),
-        Ok(Value::Number(90.0))
-    );
+    assert_eq!(eval_with_ctx("user.name", &ctx), Ok(Value::String("John".to_string())));
+    assert_eq!(eval_with_ctx("user.scores[0]", &ctx), Ok(Value::Number(90.0)));
 }
 
 #[test]
@@ -408,10 +371,7 @@ fn evaluate_postfix_precedence() {
 fn evaluate_complex_chain_with_unary() {
     let mut ctx = Context::new();
     let mut map = HashMap::new();
-    map.insert(
-        "nums".to_string(),
-        Value::Array(vec![Value::Number(-5.0), Value::Number(10.0)]),
-    );
+    map.insert("nums".to_string(), Value::Array(vec![Value::Number(-5.0), Value::Number(10.0)]));
     ctx.set("data", Value::Map(map));
 
     // -data.nums[0] -> -(-5) -> 5
@@ -425,11 +385,7 @@ fn evaluate_single_identifier_lambda() {
     let result = eval_formula("map([1, 2, 3], x => x + 1)").unwrap();
     assert_eq!(
         result,
-        Value::Array(vec![
-            Value::Number(2.0),
-            Value::Number(3.0),
-            Value::Number(4.0)
-        ])
+        Value::Array(vec![Value::Number(2.0), Value::Number(3.0), Value::Number(4.0)])
     );
 }
 
@@ -438,11 +394,7 @@ fn evaluate_parenthesized_lambda() {
     let result = eval_formula("map([1, 2, 3], (x) => x * 2)").unwrap();
     assert_eq!(
         result,
-        Value::Array(vec![
-            Value::Number(2.0),
-            Value::Number(4.0),
-            Value::Number(6.0)
-        ])
+        Value::Array(vec![Value::Number(2.0), Value::Number(4.0), Value::Number(6.0)])
     );
 }
 
@@ -468,18 +420,9 @@ fn evaluate_lambda_display_and_debug() {
 
 #[test]
 fn evaluate_string_and_bool_comparison() {
-    assert_eq!(
-        eval_formula("\"apple\" < \"banana\""),
-        Ok(Value::Bool(true))
-    );
-    assert_eq!(
-        eval_formula("\"apple\" > \"banana\""),
-        Ok(Value::Bool(false))
-    );
-    assert_eq!(
-        eval_formula("\"apple\" <= \"apple\""),
-        Ok(Value::Bool(true))
-    );
+    assert_eq!(eval_formula("\"apple\" < \"banana\""), Ok(Value::Bool(true)));
+    assert_eq!(eval_formula("\"apple\" > \"banana\""), Ok(Value::Bool(false)));
+    assert_eq!(eval_formula("\"apple\" <= \"apple\""), Ok(Value::Bool(true)));
     assert_eq!(eval_formula("false < true"), Ok(Value::Bool(true)));
     assert_eq!(eval_formula("true >= false"), Ok(Value::Bool(true)));
 }
@@ -517,10 +460,7 @@ fn evaluate_recursion_limit_exceeded() {
 #[test]
 fn evaluate_filter_function() {
     let result = eval_formula("filter([1, 2, 3, 4], x => x > 2)").unwrap();
-    assert_eq!(
-        result,
-        Value::Array(vec![Value::Number(3.0), Value::Number(4.0)])
-    );
+    assert_eq!(result, Value::Array(vec![Value::Number(3.0), Value::Number(4.0)]));
 }
 
 #[test]
@@ -534,11 +474,7 @@ fn evaluate_sort_with_function() {
     let result = eval_formula("sort_with([3, 1, 2], (a, b) => b - a)").unwrap();
     assert_eq!(
         result,
-        Value::Array(vec![
-            Value::Number(3.0),
-            Value::Number(2.0),
-            Value::Number(1.0)
-        ])
+        Value::Array(vec![Value::Number(3.0), Value::Number(2.0), Value::Number(1.0)])
     );
 }
 
@@ -556,11 +492,7 @@ fn evaluate_unique_function_various_types() {
     let result = eval_formula("unique([1, 2, 2, 1, 3])").unwrap();
     assert_eq!(
         result,
-        Value::Array(vec![
-            Value::Number(1.0),
-            Value::Number(2.0),
-            Value::Number(3.0)
-        ])
+        Value::Array(vec![Value::Number(1.0), Value::Number(2.0), Value::Number(3.0)])
     );
 }
 
@@ -642,26 +574,17 @@ fn eval_formula_mut(formula: &str) -> Result<Value, FormulaError> {
 
 #[test]
 fn evaluate_user_defined_function_basic() {
-    assert_eq!(
-        eval_formula_mut("fn double(x) = x * 2; double(5)"),
-        Ok(Value::Number(10.0))
-    );
+    assert_eq!(eval_formula_mut("fn double(x) = x * 2; double(5)"), Ok(Value::Number(10.0)));
 }
 
 #[test]
 fn evaluate_user_defined_function_two_params() {
-    assert_eq!(
-        eval_formula_mut("fn add(a, b) = a + b; add(3, 4)"),
-        Ok(Value::Number(7.0))
-    );
+    assert_eq!(eval_formula_mut("fn add(a, b) = a + b; add(3, 4)"), Ok(Value::Number(7.0)));
 }
 
 #[test]
 fn evaluate_user_defined_function_zero_params() {
-    assert_eq!(
-        eval_formula_mut("fn val() = 1.2345; val()"),
-        Ok(Value::Number(1.2345))
-    );
+    assert_eq!(eval_formula_mut("fn val() = 1.2345; val()"), Ok(Value::Number(1.2345)));
 }
 
 #[test]
@@ -733,10 +656,7 @@ fn evaluate_user_defined_function_with_property_access() {
 
 #[test]
 fn evaluate_sequence_returns_last_value() {
-    assert_eq!(
-        eval_formula_mut("1 + 1; 2 + 2; 3 + 3"),
-        Ok(Value::Number(6.0))
-    );
+    assert_eq!(eval_formula_mut("1 + 1; 2 + 2; 3 + 3"), Ok(Value::Number(6.0)));
 }
 
 #[test]
@@ -802,18 +722,12 @@ fn evaluate_set_difference() {
 
 #[test]
 fn evaluate_set_in_found() {
-    assert_eq!(
-        eval_formula("set_in(2, set([1, 2, 3]))"),
-        Ok(Value::Bool(true))
-    );
+    assert_eq!(eval_formula("set_in(2, set([1, 2, 3]))"), Ok(Value::Bool(true)));
 }
 
 #[test]
 fn evaluate_set_in_not_found() {
-    assert_eq!(
-        eval_formula("set_in(5, set([1, 2, 3]))"),
-        Ok(Value::Bool(false))
-    );
+    assert_eq!(eval_formula("set_in(5, set([1, 2, 3]))"), Ok(Value::Bool(false)));
 }
 
 // -- Phase 11.7: Range Operations Tests --
@@ -861,11 +775,7 @@ fn evaluate_range_three_args() {
 fn evaluate_range_to_array() {
     assert_eq!(
         eval_formula("range_to_array(range(1, 4))"),
-        Ok(Value::Array(vec![
-            Value::Number(1.0),
-            Value::Number(2.0),
-            Value::Number(3.0)
-        ]))
+        Ok(Value::Array(vec![Value::Number(1.0), Value::Number(2.0), Value::Number(3.0)]))
     );
 }
 
@@ -884,10 +794,7 @@ fn evaluate_range_to_array_with_step() {
 
 #[test]
 fn evaluate_range_to_array_empty() {
-    assert_eq!(
-        eval_formula("range_to_array(range(5, 3))"),
-        Ok(Value::Array(vec![]))
-    );
+    assert_eq!(eval_formula("range_to_array(range(5, 3))"), Ok(Value::Array(vec![])));
 }
 
 // Phase 16: weekday, date_add with units
@@ -952,10 +859,8 @@ fn plugin_loads_valid_manifest() {
 fn prerelease_min_engine_version_is_rejected_when_behind() {
     use crate::plugins::load_json_plugin;
     // Compute a version just above current engine so the test stays valid
-    let ver: Vec<u32> = env!("CARGO_PKG_VERSION")
-        .split('.')
-        .filter_map(|s| s.parse().ok())
-        .collect();
+    let ver: Vec<u32> =
+        env!("CARGO_PKG_VERSION").split('.').filter_map(|s| s.parse().ok()).collect();
     assert!(ver.len() >= 2, "CARGO_PKG_VERSION must be semver");
     let req = format!("{}.{}.99-alpha", ver[0], ver[1] + 1);
     let tmp = std::env::temp_dir().join("bl1z_test_prerelease.json");
@@ -969,11 +874,7 @@ fn prerelease_min_engine_version_is_rejected_when_behind() {
     .unwrap();
     let r = load_json_plugin(tmp.to_str().unwrap());
     match r {
-        Err(e) => assert!(
-            e.message.contains(&req),
-            "error should mention version: {}",
-            e.message
-        ),
+        Err(e) => assert!(e.message.contains(&req), "error should mention version: {}", e.message),
         Ok(_) => panic!("should reject plugin requiring newer engine"),
     }
     let _ = std::fs::remove_file(&tmp);
@@ -999,10 +900,7 @@ fn prerelease_min_engine_version_is_accepted_when_current() {
     )
     .unwrap();
     let r = load_json_plugin(tmp.to_str().unwrap());
-    assert!(
-        r.is_ok(),
-        "should accept plugin with older prerelease requirement"
-    );
+    assert!(r.is_ok(), "should accept plugin with older prerelease requirement");
     let _ = std::fs::remove_file(&tmp);
 }
 
@@ -1014,12 +912,9 @@ fn parse_args_accepts_negative_number_as_formula() {
     let reg = crate::functions::FunctionRegistry::new();
     let mut reg = reg;
     crate::builtins::register_all(&mut reg);
-    let v = crate::evaluate(
-        &crate::parse(&crate::tokenize("-1 + 2").unwrap()).unwrap(),
-        &ctx,
-        &reg,
-    )
-    .unwrap();
+    let v =
+        crate::evaluate(&crate::parse(&crate::tokenize("-1 + 2").unwrap()).unwrap(), &ctx, &reg)
+            .unwrap();
     assert_eq!(v, crate::value::Value::Number(1.0));
 }
 

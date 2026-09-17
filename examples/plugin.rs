@@ -10,7 +10,7 @@ use bl1z::builtins;
 use bl1z::error::{ErrorKind, FormulaError};
 use bl1z::functions::{BuiltinFunction, FunctionRegistry};
 use bl1z::plugins::{Plugin, PluginManager};
-use bl1z::{evaluate, parse, tokenize, Context, Value};
+use bl1z::{Context, Value, evaluate, parse, tokenize};
 
 /// A plugin adding extra math functions on top of the built-ins.
 struct MathExtraPlugin;
